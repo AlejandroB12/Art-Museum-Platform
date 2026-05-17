@@ -66,7 +66,7 @@ Museo-Contemporaneo/
 │   └── 🛢️ database.sql
 ├── 📁 docs/
 │   ├── 🖼️ MERE_1.Jpeg
-│   └── 🖼️ MERE_1.jpeg
+│   └── 🖼️ MERE_2.jpeg
 ├── 📁 routes/
 │   ├── 🟨 Admin.js
 │   ├── 🟨 Catalogo.js
