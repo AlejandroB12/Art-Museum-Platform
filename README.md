@@ -1,3 +1,5 @@
+![Texto alternativo]()
+
 #  🏛️ Museo Contemporáneo - Sistema de Gestión
 
 Este proyecto es una plataforma web integral diseñada para la administración de un **Museo Contemporáneo**. Permite gestionar el catálogo de obras de arte, organizar la información por autores y manejar un sistema de suscripciones para los usuarios.
@@ -22,8 +24,7 @@ Antes de comenzar, asegúrate de tener instalado:
 - Node.js (v14 o superior)
 - MySQL Server
 - Un gestor de paquetes como NPM (incluido con Node.js)
-
-
+  
 ## ✒️ Autores
 
 El desarrollo de este proyecto fue realizado por:
@@ -36,19 +37,59 @@ El desarrollo de este proyecto fue realizado por:
 
 ```text
 Museo-Contemporaneo/
-├── 📁 Administrador/        # Lógica y vistas de administración
-│   ├── 📄 (Archivo HTML 1)
-│   └── 📄 (Archivo HTML 2)
-├── 📁 Assets/               # Recursos (CSS, Imágenes)
-├── 📁 Diseño BD/            # Documentación del modelo de datos
-├── 📁 Iconos/               # Recursos gráficos
-├── 📁 Inicio_sesion/        # Módulo de autenticación
-├── 📁 SQL/                  # Scripts de creación de tablas
-├── 📁 views/                # Vistas generales del sistema
-├── 📄 Admin.js              # Controlador de administración
-├── 📄 Catalogo.js           # Lógica del catálogo
-├── 📄 Inicio.html           # Página principal
-├── 📄 Login.js              # Lógica de acceso
-├── 📄 Servidor.js           # Archivo principal de Node.js (Express)
-├── 📄 database.js           # Configuración de conexión MySQL
-└── 📄 README.md             # Documentación del proyecto
+├── 📁 assets/
+│   ├── 📁 icons/
+│   │   ├── 🖼️ museo.png
+│   │   ├── 🖼️ registro.png
+│   │   └── 🖼️ usuario.png
+│   ├── 📁 images/
+│   │   ├── 📁 art_previews/
+│   │   └── 📁 authors/
+│   └── 📁 styles/
+│       ├── 🎨 Estilo-correo-exitoso.css
+│       ├── 🎨 Estilo-inicio.css
+│       ├── 🎨 Estilo-login.css
+│       ├── 🎨 Estilo-obra.css
+│       ├── 🎨 Estilo-recuperacion.css
+│       └── 🎨 Estilo-registro.css
+├── 📁 config/
+│   └── 🛢️ database.sql
+├── 📁 docs/
+│   ├── 🖼️ MERE_1.Jpeg
+│   └── 🖼️ MERE_1.jpeg
+├── 📁 routes/
+│   ├── 🟨 Admin.js
+│   ├── 🟨 Catalogo.js
+│   └── 🟨 Login.js
+├── 📁 server/
+│   └── 🟢 serve.js
+├── 📁 sql/
+│   └── 🛢️ scripts.sql
+└── 📁 views/
+    ├── 📁 admin/
+    │   ├── 🌐 Credenciales-incorrectas-administrador.html
+    │   ├── 🌐 Login-administrador.html
+    │   ├── 🌐 Mensaje-exitoso.html
+    │   ├── 🌐 Panel-administrador.html
+    │   └── 🌐 Registrar-administrador.html
+    ├── 📁 public/
+    │   ├── 🌐 Artista.html
+    │   ├── 🌐 Autor.html
+    │   ├── 🌐 Obra.html
+    │   └── 🌐 inicio.html
+    ├── 📁 recovery/
+    │   ├── 🌐 Actualizacion-contraseña.html
+    │   ├── 🌐 Confirmacion-envio.html
+    │   ├── 🌐 Correo-exitoso.html
+    │   └── 🌐 Recuperacion-contraseña.html
+    └── 📁 user/
+        ├── 🌐 Credenciales-incorrectas.html
+        ├── 🌐 Cuenta-pendiente.html
+        ├── 🌐 Envio-exitoso.html
+        ├── 🌐 Login.html
+        ├── 🌐 Mensaje-exitoso.html
+        ├── 🌐 Panel-usuario.html
+        ├── 🌐 Preguntas_codigo.html
+        ├── 🌐 Registrar-envio.html
+        ├── 🌐 Registro.html
+        └── 🌐 pago.html           
