@@ -1,3 +1,5 @@
+![Texto alternativo]()
+
 #  🏛️ Museo Contemporáneo - Sistema de Gestión
 
 Este proyecto es una plataforma web integral diseñada para la administración de un **Museo Contemporáneo**. Permite gestionar el catálogo de obras de arte, organizar la información por autores y manejar un sistema de suscripciones para los usuarios.
