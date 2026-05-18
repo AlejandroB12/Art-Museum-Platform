@@ -1,105 +1,699 @@
- create database museodb;
- drop database museodb;
+-- create database museodb;
+-- drop database museodb;
 
--- -----------------------------------------------------
--- AREA DE CONTENIDO
--- -----------------------------------------------------
-
---  Crear la tabla de Nacionalidades (Referencia para Autores)
-CREATE TABLE IF NOT EXISTS Nacionalidad (
-    id_Nacionalidad INT PRIMARY KEY,
-    Descripcion VARCHAR(100) NOT NULL
+CREATE TABLE `Usuario` (
+  `id_usuario` int PRIMARY KEY AUTO_INCREMENT,
+  `Email` varchar(45) UNIQUE NOT NULL,
+  `Contraseña` varchar(45) NOT NULL,
+  `Nombre` varchar(45),
+  `Apellido` varchar(45),
+  `Estatus` tinyint,
+  `Rol` enum('administrador','comprador') NOT NULL
 );
 
---  Crear la tabla de Géneros (Pintura, Escultura, etc.)
-CREATE TABLE IF NOT EXISTS Genero (
-    id_Genero INT PRIMARY KEY,
-    Descripcion VARCHAR(50) NOT NULL
+CREATE TABLE `Comprador` (
+  `id_usuario` int PRIMARY KEY,
+  `Cedula` int UNIQUE NOT NULL,
+  `Telefono` varchar(15),
+  `CodigoVerificacion` int,
+  `id_parroquia` int,
+  `Calle` varchar(100),
+  FOREIGN KEY (`id_usuario`) REFERENCES `Usuario` (`id_usuario`) ON DELETE CASCADE
 );
 
---  Crear la tabla de Autores
-CREATE TABLE IF NOT EXISTS Autor (
-    id_Autor INT PRIMARY KEY,
-    Nombre VARCHAR(100) NOT NULL,
-    Apellido VARCHAR(100) NOT NULL,
-    Biografia TEXT,
-    Fecha_nacimiento DATE,
-    Nacionalidad_id_Nacionalidad INT,
-    FOREIGN KEY (Nacionalidad_id_Nacionalidad) REFERENCES Nacionalidad(id_Nacionalidad)
+CREATE TABLE `Administrador` (
+  `id_usuario` int PRIMARY KEY,
+  FOREIGN KEY (`id_usuario`) REFERENCES `Usuario` (`id_usuario`) ON DELETE CASCADE
 );
 
---  Crear la tabla base de Obras
-CREATE TABLE IF NOT EXISTS Obra (
-    id_Obra INT PRIMARY KEY,
-    Nombre VARCHAR(150) NOT NULL,
-    Fecha_creacion DATE,
-    Precio DECIMAL(15, 2),
-    Estado_obra VARCHAR(50),
-    Genero_id_Genero INT,
-    FOREIGN KEY (Genero_id_Genero) REFERENCES Genero(id_Genero)
+CREATE TABLE `Membresia` (
+  `idMembresia` int PRIMARY KEY AUTO_INCREMENT,
+  `FechaPago` date,
+  `MontoPagado` decimal(10,2),
+  `id_usuario` int,
+  FOREIGN KEY (`id_usuario`) REFERENCES `Usuario` (`id_usuario`) ON DELETE CASCADE
 );
 
---  Tabla intermedia para la relación Muchos a Muchos entre Obra y Autor
-CREATE TABLE IF NOT EXISTS Obra_autor (
-    Obra_id_Obra INT,
-    Autor_id_Autor INT,
-    PRIMARY KEY (Obra_id_Obra, Autor_id_Autor),
-    FOREIGN KEY (Obra_id_Obra) REFERENCES Obra(id_Obra),
-    FOREIGN KEY (Autor_id_Autor) REFERENCES Autor(id_Autor)
+CREATE TABLE `CodigoSeguridad` (
+  `idCodigoSeguridad` int PRIMARY KEY AUTO_INCREMENT,
+  `Pregunta` varchar(45),
+  `Respuesta` varchar(45),
+  `id_usuario` int,
+  FOREIGN KEY (`id_usuario`) REFERENCES `Usuario` (`id_usuario`) ON DELETE CASCADE
 );
 
--- =============================================
--- TABLAS DE DETALLE (ESPECIALIZACIONES)
--- =============================================
-
---  Detalle para Pintura
-CREATE TABLE IF NOT EXISTS Detalle_Pintura (
-    id_Obra INT PRIMARY KEY,
-    Tecnica VARCHAR(100),
-    Soporte VARCHAR(100),
-    dimensiones_cm VARCHAR(50), -- Nueva columna solicitada
-    FOREIGN KEY (id_Obra) REFERENCES Obra(id_Obra)
+CREATE TABLE `SolicitudPago` (
+  `id_solicitud` int PRIMARY KEY AUTO_INCREMENT,
+  `id_usuario` int,
+  `FechaSolicitud` datetime,
+  `Monto` decimal(10,2) DEFAULT 10,
+  `Estatus` varchar(20) DEFAULT 'Pendiente',
+  FOREIGN KEY (`id_usuario`) REFERENCES `Usuario` (`id_usuario`)
 );
 
---  Detalle para Fotografía (Sin Tipo_Papel y con Formato ENUM)
-CREATE TABLE IF NOT EXISTS Detalle_Fotografia (
-    id_Obra INT PRIMARY KEY,
-    Formato ENUM('Digital', 'Analógica') NOT NULL,
-    Camara_usada VARCHAR(100),
-    FOREIGN KEY (id_Obra) REFERENCES Obra(id_Obra)
+CREATE TABLE `Nacionalidad` (
+  `id_Nacionalidad` int PRIMARY KEY AUTO_INCREMENT,
+  `Descripcion` varchar(100) NOT NULL
 );
 
--- Detalle para Escultura y Cerámica
-CREATE TABLE IF NOT EXISTS Detalle_Escultura_Ceramica (
-    id_Obra INT PRIMARY KEY,
-    Material VARCHAR(100),
-    Peso_kg DECIMAL(10, 2),
-    Largo_cm DECIMAL(10, 2),
-    Ancho_cm DECIMAL(10, 2),
-    Profundidad_cm DECIMAL(10, 2),
-    FOREIGN KEY (id_Obra) REFERENCES Obra(id_Obra)
+CREATE TABLE `Genero` (
+  `id_Genero` int PRIMARY KEY,
+  `Nombre` varchar(50) NOT NULL
 );
 
--- Detalle para Orfebrería (Estructura de 5 parámetros)
-CREATE TABLE IF NOT EXISTS Detalle_Orfebreria (
-    id_Obra INT PRIMARY KEY,
-    metal_base VARCHAR(100),
-    Kilataje VARCHAR(50),
-    Peso_Gramos DECIMAL(10, 2),
-    Piedras_Preciosas TEXT,
-    FOREIGN KEY (id_Obra) REFERENCES Obra(id_Obra)
+CREATE TABLE `Autor` (
+  `id_Autor` int PRIMARY KEY,
+  `Nombre` varchar(100) NOT NULL,
+  `Apellido` varchar(100) NOT NULL,
+  `Fecha_nacimiento` date,
+  `Fotografia` varchar(255),
+  `Biografia` TEXT,
+  `id_Nacionalidad` int,
+  FOREIGN KEY (`id_Nacionalidad`) REFERENCES `Nacionalidad` (`id_Nacionalidad`)
 );
 
--- -----------------------------------------------------
--- AREA DE CLIENTES Y PERFILES
--- -----------------------------------------------------
-
--- Tablas Geográficas 
-CREATE TABLE Estado (
-    id_estado INT PRIMARY KEY AUTO_INCREMENT,
-    nombre VARCHAR(100) NOT NULL,
-    iso_3166_2 VARCHAR(10)
+CREATE TABLE `Obra` (
+  `id_Obra` int PRIMARY KEY,
+  `Nombre` varchar(150) NOT NULL,
+  `Fecha_creacion` date,
+  `Precio` decimal(15,2),
+  `Estado_obra` ENUM('Disponible', 'Reservado', 'Vendida') NOT NULL DEFAULT 'Disponible',
+  `id_Genero` int,
+  `Fotografia` varchar(255),
+  FOREIGN KEY (`id_Genero`) REFERENCES `Genero` (`id_Genero`)
 );
+
+CREATE TABLE `Obra_autor` (
+  `id_Obra_autor` int PRIMARY KEY AUTO_INCREMENT,
+  `id_Obra` int NOT NULL,
+  `id_Autor` int NOT NULL,
+  UNIQUE KEY `unique_obra_autor` (`id_Obra`, `id_Autor`),
+  FOREIGN KEY (`id_Obra`) REFERENCES `Obra`(`id_Obra`),
+  FOREIGN KEY (`id_Autor`) REFERENCES `Autor`(`id_Autor`)
+);
+
+CREATE TABLE `Pintura` (
+  `id_Obra` int PRIMARY KEY, -- Cambiado de id_Genero a id_Obra
+  `Tecnica_Principal` enum('Óleo', 'Acrílico', 'Acuarela', 'Témpera', 'Fresco', 'Mixta') NOT NULL,
+  `Soporte_Base` enum('Lienzo', 'Tabla/Madera', 'Papel', 'Muro', 'Metal', 'Otro') NOT NULL,
+  `Requiere_Enmarcado` tinyint(1) NOT NULL DEFAULT 0,
+  FOREIGN KEY (`id_Obra`) REFERENCES `Obra` (`id_Obra`) ON DELETE CASCADE
+);
+
+CREATE TABLE `Escultura` (
+  `id_Obra` int PRIMARY KEY, -- Cambiado de id_Genero a id_Obra
+  `Material_Predominante` enum('Mármol', 'Bronce', 'Madera', 'Arcilla', 'Acero Inoxidable', 'Piedra', 'Resina', 'Múltiples Materiales', 'Platino') NOT NULL,
+  `Requiere_Pedestal` tinyint(1) NOT NULL DEFAULT 0,
+  `Clasificacion_Espacio` enum('Interior', 'Exterior', 'Ambivalente') NOT NULL DEFAULT 'Interior',
+  FOREIGN KEY (`id_Obra`) REFERENCES `Obra` (`id_Obra`) ON DELETE CASCADE
+);
+
+CREATE TABLE `Fotografia` (
+  `id_Obra` int PRIMARY KEY, -- Cambiado de id_Genero a id_Obra
+  `Formato_Origen` enum('Digital', 'Analógica') NOT NULL,
+  `Tipo_Impresion_Estandar` enum('Inyección de tinta', 'Platinotipo', 'Gelatina de plata', 'Cianotipo', 'Digital') NOT NULL,
+  `Requiere_Revelado_Quimico` tinyint(1) NOT NULL DEFAULT 0,
+  FOREIGN KEY (`id_Obra`) REFERENCES `Obra` (`id_Obra`) ON DELETE CASCADE
+);
+
+CREATE TABLE `Orfebreria` (
+  `id_Obra` int PRIMARY KEY, -- Cambiado de id_Genero a id_Obra
+  `Metal_Base_Dominante` enum('Oro', 'Plata', 'Platino', 'Titanio', 'Cobre', 'Bronce') NOT NULL,
+  `Kilataje_Estandar` enum('14K', '18K', '22K', '24K', 'No Aplica') DEFAULT 'No Aplica',
+  `Requeres_Certificado_Autenticidad` tinyint(1) NOT NULL DEFAULT 1,
+  FOREIGN KEY (`id_Obra`) REFERENCES `Obra` (`id_Obra`) ON DELETE CASCADE
+);
+
+CREATE TABLE `Ceramica` (
+  `id_Obra` int PRIMARY KEY, -- Cambiado de id_Genero a id_Obra
+  `Tecnica_Acabado` enum('Esmaltado', 'Vidriado', 'Bruñido', 'Terracota', 'Bizcocho') NOT NULL,
+  `Tipo_Arcilla_Base` enum('Gres', 'Porcelana', 'Barro común', 'Refractario') NOT NULL,
+  `Temperatura_Coccion_Promedio_Celsius` int,
+  FOREIGN KEY (`id_Obra`) REFERENCES `Obra` (`id_Obra`) ON DELETE CASCADE
+);
+
+CREATE TABLE `Estado` (
+  `id_estado` int PRIMARY KEY AUTO_INCREMENT,
+  `nombre` varchar(100) NOT NULL,
+  `iso_3166_2` varchar(10)
+);
+
+CREATE TABLE `Municipio` (
+  `id_municipio` int PRIMARY KEY AUTO_INCREMENT,
+  `nombre` varchar(100) NOT NULL,
+  `id_estado` int,
+  FOREIGN KEY (`id_estado`) REFERENCES `Estado` (`id_estado`)
+);
+
+CREATE TABLE `Parroquia` (
+  `id_parroquia` int PRIMARY KEY AUTO_INCREMENT,
+  `nombre` varchar(100) NOT NULL,
+  `id_municipio` int,
+  FOREIGN KEY (`id_municipio`) REFERENCES `Municipio` (`id_municipio`)
+);
+
+-- Primero se crea Factura sin la FK que referencia a Envio (porque Envio aún no existe)
+CREATE TABLE `Factura` (
+  `id_factura` int PRIMARY KEY AUTO_INCREMENT,
+  `Fecha_Venta` timestamp,
+  `Monto_Neto` decimal(15,2) NOT NULL,
+  `IVA` decimal(15,2) NOT NULL,
+  `Total_Pagado` decimal(15,2) NOT NULL,
+  `Ganancia_Museo_USD` decimal(15,2) NOT NULL,
+  `Porcentaje_Comision` decimal(5,2) NOT NULL COMMENT '5-10%',
+  `id_obra` int UNIQUE NOT NULL,
+  `id_comprador` int NOT NULL,
+  `id_admin` int NOT NULL,
+  FOREIGN KEY (`id_comprador`) REFERENCES `Usuario` (`id_usuario`),
+  FOREIGN KEY (`id_admin`) REFERENCES `Usuario` (`id_usuario`)
+);
+
+-- Luego se agrega la FK de Obra a Factura (relación circular)
+ALTER TABLE `Obra` ADD FOREIGN KEY (`id_Obra`) REFERENCES `Factura` (`id_obra`);
+
+CREATE TABLE `Reserva` (
+  `id_reserva` int PRIMARY KEY AUTO_INCREMENT,
+  `id_obra` int NOT NULL,
+  `id_usuario` int NOT NULL,
+  `Fecha_Reserva` timestamp,
+  FOREIGN KEY (`id_obra`) REFERENCES `Obra`(`id_Obra`),
+  FOREIGN KEY (`id_usuario`) REFERENCES `Usuario`(`id_usuario`)
+);
+
+CREATE TABLE `Envio` (
+  `id_Envio` int PRIMARY KEY AUTO_INCREMENT,
+  `Monto_total` varchar(45),
+  `Estado_entrega` enum("En proceso","Enviado","Entregado"),
+  `Municipio` varchar(45),
+  `Parroquia` varchar(45),
+  `Calle` varchar(45),
+  `Factura_id_Factura` int,
+  FOREIGN KEY (`Factura_id_Factura`) REFERENCES `Factura` (`id_factura`)
+);
+
+-- FK de Comprador a Parroquia (después de que Parroquia existe)
+ALTER TABLE `Comprador` ADD FOREIGN KEY (`id_parroquia`) REFERENCES `Parroquia` (`id_parroquia`);
+
+-- Insertar Nacionalidades
+INSERT INTO `Nacionalidad` (`id_Nacionalidad`, `Descripcion`) VALUES
+(1, 'Australia'),
+(2, 'Austria'),
+(3, 'Azerbaiyán'),
+(4, 'Anguilla'),
+(5, 'Argentina'),
+(6, 'Armenia'),
+(7, 'Bielorrusia'),
+(8, 'Belice'),
+(9, 'Bélgica'),
+(10, 'Bermudas'),
+(11, 'Bulgaria'),
+(12, 'Brasil'),
+(13, 'Reino Unido'),
+(14, 'Hungría'),
+(15, 'Vietnam'),
+(16, 'Haiti'),
+(17, 'Guadalupe'),
+(18, 'Alemania'),
+(19, 'Países Bajos, Holanda'),
+(20, 'Grecia'),
+(21, 'Georgia'),
+(22, 'Dinamarca'),
+(23, 'Egipto'),
+(24, 'Israel'),
+(25, 'India'),
+(26, 'Irán'),
+(27, 'Irlanda'),
+(28, 'España'),
+(29, 'Italia'),
+(30, 'Kazajstán'),
+(31, 'Camerún'),
+(32, 'Canadá'),
+(33, 'Chipre'),
+(34, 'Kirguistán'),
+(35, 'China'),
+(36, 'Costa Rica'),
+(37, 'Kuwait'),
+(38, 'Letonia'),
+(39, 'Libia'),
+(40, 'Lituania'),
+(41, 'Luxemburgo'),
+(42, 'México'),
+(43, 'Moldavia'),
+(44, 'Mónaco'),
+(45, 'Nueva Zelanda'),
+(46, 'Noruega'),
+(47, 'Polonia'),
+(48, 'Portugal'),
+(49, 'Reunión'),
+(50, 'Rusia'),
+(51, 'El Salvador'),
+(52, 'Eslovaquia'),
+(53, 'Eslovenia'),
+(54, 'Surinam'),
+(55, 'Estados Unidos'),
+(56, 'Tadjikistan'),
+(57, 'Turkmenistan'),
+(58, 'Islas Turcas y Caicos'),
+(59, 'Turquía'),
+(60, 'Uganda'),
+(61, 'Uzbekistán'),
+(62, 'Ucrania'),
+(63, 'Finlandia'),
+(64, 'Francia'),
+(65, 'República Checa'),
+(66, 'Suiza'),
+(67, 'Suecia'),
+(68, 'Estonia'),
+(69, 'Corea del Sur'),
+(70, 'Japón'),
+(71, 'Croacia'),
+(72, 'Rumanía'),
+(73, 'Hong Kong'),
+(74, 'Indonesia'),
+(75, 'Jordania'),
+(76, 'Malasia'),
+(77, 'Singapur'),
+(78, 'Taiwan'),
+(79, 'Bosnia y Herzegovina'),
+(80, 'Bahamas'),
+(81, 'Chile'),
+(82, 'Colombia'),
+(83, 'Islandia'),
+(84, 'Corea del Norte'),
+(85, 'Macedonia'),
+(86, 'Malta'),
+(87, 'Pakistán'),
+(88, 'Papúa-Nueva Guinea'),
+(89, 'Perú'),
+(90, 'Filipinas'),
+(91, 'Arabia Saudita'),
+(92, 'Tailandia'),
+(93, 'Emiratos árabes Unidos'),
+(94, 'Groenlandia'),
+(95, 'Venezuela'),
+(96, 'Zimbabwe'),
+(97, 'Kenia'),
+(98, 'Algeria'),
+(99, 'Líbano'),
+(100, 'Botsuana'),
+(101, 'Tanzania'),
+(102, 'Namibia'),
+(103, 'Ecuador'),
+(104, 'Marruecos'),
+(105, 'Ghana'),
+(106, 'Siria'),
+(107, 'Nepal'),
+(108, 'Mauritania'),
+(109, 'Seychelles'),
+(110, 'Paraguay'),
+(111, 'Uruguay'),
+(112, 'Congo (Brazzaville)'),
+(113, 'Cuba'),
+(114, 'Albania'),
+(115, 'Nigeria'),
+(116, 'Zambia'),
+(117, 'Mozambique'),
+(119, 'Angola'),
+(120, 'Sri Lanka'),
+(121, 'Etiopía'),
+(122, 'Túnez'),
+(123, 'Bolivia'),
+(124, 'Panamá'),
+(125, 'Malawi'),
+(126, 'Liechtenstein'),
+(127, 'Bahrein'),
+(128, 'Barbados'),
+(130, 'Chad'),
+(131, 'Man, Isla de'),
+(132, 'Jamaica'),
+(133, 'Malí'),
+(134, 'Madagascar'),
+(135, 'Senegal'),
+(136, 'Togo'),
+(137, 'Honduras'),
+(138, 'República Dominicana'),
+(139, 'Mongolia'),
+(140, 'Irak'),
+(141, 'Sudáfrica'),
+(142, 'Aruba'),
+(143, 'Gibraltar'),
+(144, 'Afganistán'),
+(145, 'Andorra'),
+(147, 'Antigua y Barbuda'),
+(149, 'Bangladesh'),
+(151, 'Benín'),
+(152, 'Bután'),
+(154, 'Islas Virgenes Británicas'),
+(155, 'Brunéi'),
+(156, 'Burkina Faso'),
+(157, 'Burundi'),
+(158, 'Camboya'),
+(159, 'Cabo Verde'),
+(164, 'Comores'),
+(165, 'Congo (Kinshasa)'),
+(166, 'Cook, Islas'),
+(168, 'Costa de Marfil'),
+(169, 'Djibouti, Yibuti'),
+(171, 'Timor Oriental'),
+(172, 'Guinea Ecuatorial'),
+(173, 'Eritrea'),
+(175, 'Feroe, Islas'),
+(176, 'Fiyi'),
+(178, 'Polinesia Francesa'),
+(180, 'Gabón'),
+(181, 'Gambia'),
+(184, 'Granada'),
+(185, 'Guatemala'),
+(186, 'Guernsey'),
+(187, 'Guinea'),
+(188, 'Guinea-Bissau'),
+(189, 'Guyana'),
+(193, 'Jersey'),
+(195, 'Kiribati'),
+(196, 'Laos'),
+(197, 'Lesotho'),
+(198, 'Liberia'),
+(200, 'Maldivas'),
+(201, 'Martinica'),
+(202, 'Mauricio'),
+(205, 'Myanmar'),
+(206, 'Nauru'),
+(207, 'Antillas Holandesas'),
+(208, 'Nueva Caledonia'),
+(209, 'Nicaragua'),
+(210, 'Níger'),
+(212, 'Norfolk Island'),
+(213, 'Omán'),
+(215, 'Isla Pitcairn'),
+(216, 'Qatar'),
+(217, 'Ruanda'),
+(218, 'Santa Elena'),
+(219, 'San Cristobal y Nevis'),
+(220, 'Santa Lucía'),
+(221, 'San Pedro y Miquelón'),
+(222, 'San Vincente y Granadinas'),
+(223, 'Samoa'),
+(224, 'San Marino'),
+(225, 'San Tomé y Príncipe'),
+(226, 'Serbia y Montenegro'),
+(227, 'Sierra Leona'),
+(228, 'Islas Salomón'),
+(229, 'Somalia'),
+(232, 'Sudán'),
+(234, 'Swazilandia'),
+(235, 'Tokelau'),
+(236, 'Tonga'),
+(237, 'Trinidad y Tobago'),
+(239, 'Tuvalu'),
+(240, 'Vanuatu'),
+(241, 'Wallis y Futuna'),
+(242, 'Sáhara Occidental'),
+(243, 'Yemen'),
+(246, 'Puerto Rico');
+
+-- Insertar Géneros artísticos
+INSERT INTO `Genero` (`id_Genero`, `Nombre`) VALUES
+(1, 'Pintura'),
+(2, 'Escultura'),
+(3, 'Fotografía'),
+(4, 'Orfebreria'),
+(5, 'Ceramica');
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ==========================================
+-- 1. INSERTAR AUTORES
+-- ==========================================
+-- Columnas: id_Autor, Nombre, Apellido, Fecha_nacimiento, Fotografia, id_Nacionalidad
+INSERT INTO `Autor` (`id_Autor`, `Nombre`, `Apellido`, `Fecha_nacimiento`, `Fotografia`, `Biografia`, `id_Nacionalidad`) VALUES
+(1, 'Ai-Da', 'Robot', '2019-02-01', '/images/authors/AiDARobot.jpg', 'Ai-Da es el primer robot artista ultrarrrealista del mundo. Creada en Oxford, Reino Unido, utiliza inteligencia artificial para crear dibujos, pinturas y esculturas. Su obra explora la relación entre tecnología, creatividad y conciencia artificial.', 13),
+(2, 'Ai', 'Weiwei', '1957-08-28', '/images/authors/AiWeiwei.jpg', 'Artista conceptual, activista y arquitecto chino. Conocido por su crítica al gobierno chino y su defensa de los derechos humanos. Su obra abarca escultura, instalación, fotografía y cine documental.', 35),
+(3, 'Anish', 'Kapoor', '1954-03-12', '/images/authors/AnishKapoor.jpg', 'Escultor británico-indio famoso por sus instalaciones a gran escala y esculturas monumentales. Su obra más conocida es "Cloud Gate" en Chicago. Explora el vacío, la luz y el color, especialmente con su exclusivo Vantablack.', 13),
+(4, 'Carlos', 'Cruz-Diez', '1923-08-17', '/images/authors/CarlosCruzDiez.jpg', 'Pintor y escultor venezolano, uno de los máximos representantes del arte cinético y óptico. Su obra se centra en el estudio del color como realidad autónoma en constante transformación.', 95),
+(5, 'Cindy', 'Sherman', '1954-01-19', '/images/authors/CindySherman.jpg', 'Fotógrafa y cineasta estadounidense conocida por sus autorretratos conceptuales que exploran la identidad, el género y los estereotipos sociales. Su serie "Untitled Film Stills" es icónica.', 55),
+(6, 'Damien', 'Hirst', '1965-06-07', '/images/authors/DamienHirst.jpg', 'Artista británico líder del grupo Young British Artists. Conocido por obras controvertidas como tiburones en formol, pastillas, calaveras de diamante y puntos multicolores. Explora la muerte y la mortalidad.', 13),
+(7, 'Doris', 'Salcedo', '1958-01-01', '/images/authors/DorisSalcedo.jpg', 'Escultora colombiana reconocida por sus instalaciones que abordan la violencia política y el trauma social. Crea obras con muebles, ropa y objetos cotidianos intervenidos con hormigón.', 82),
+(8, 'Edmund', 'de Waal', '1964-01-02', '/images/authors/EdmunddeWaal.jpg', 'Ceramista y escritor británico, autor del bestseller "La liebre con ojos de ámbar". Sus obras minimalistas exploran la relación entre objetos, memoria y lugar, utilizando porcelana blanca.', 13),
+(9, 'Gabriel', 'Orozco', '1962-04-27', '/images/authors/GabrielOrozco.jpg', 'Artista conceptual mexicano conocido por sus fotografías, esculturas e instalaciones que transforman objetos cotidianos en experiencias poéticas. Explora el azar, el juego y la geografía.', 42),
+(10, 'Grayson', 'Perry', '1960-03-24', '/images/authors/GraysonPerry.jpg', 'Ceramista, bordador y artista británico conocido por sus jarrones decorativos que narran historias controvertidas sobre clase, género y sexualidad. Viste frecuentemente como su alter ego femenino "Claire".', 13),
+(11, 'Jeff', 'Koons', '1955-01-21', '/images/authors/JeffKoons.jpg', 'Artista estadounidense famoso por sus esculturas brillantes de animales globo y objetos kitsch. Su obra explora el consumismo, la cultura pop y lo camp. Posee el récord de obra más cara de un artista vivo.', 55),
+(12, 'Kiki', 'Smith', '1954-01-18', '/images/authors/KikiSmith.jpg', 'Artista estadounidense nacida en Alemania que trabaja escultura, grabado y dibujo. Aborda temas como el cuerpo humano, la mortalidad, la naturaleza y la espiritualidad con materiales orgánicos.', 55),
+(13, 'Marina', 'Abramović', '1946-11-30', '/images/authors/MarinaAbramović.jpg', 'Pionera del arte performance, conocida por sus obras de resistencia física y mental. Su pieza "The Artist is Present" en el MoMA la estableció como la "abuela del arte performance".', 226),
+(14, 'Ólafur', 'Elíasson', '1967-02-05', '/images/authors/ÓlafurElíasson.jpg', 'Artista danés-islandés conocido por instalaciones de gran escala que utilizan elementos naturales como luz, agua y niebla. Su obra "The Weather Project" en la Tate Modern es legendaria.', 83),
+(15, 'Takashi', 'Murakami', '1962-02-01', '/images/authors/TakashiMurakami.jpg', 'Artista japonés fundador del movimiento Superflat, que fusiona el arte tradicional japonés con la cultura pop contemporánea. Conocido por sus flores sonrientes y colaboraciones con marcas de lujo.', 70),
+(16, 'Theaster', 'Gates', '1973-08-28', '/images/authors/TheasterGates.jpg', 'Artista, músico y urbanista estadounidense. Transforma edificios abandonados en espacios culturales. Su obra aborda la historia afroamericana, la religión, la música y el desarrollo comunitario.', 55),
+(17, 'Vik', 'Muniz', '1961-12-20', '/images/authors/VikMuniz.jpg', 'Artista conceptual brasileño conocido por recrear obras maestras con materiales inusuales como chocolate, basura o juguetes. Su documental "Waste Land" fue nominado al Oscar.', 12),
+(18, 'Wallace', 'Chan', '1956-01-01', '/images/authors/WallaceChan.jpg', 'Artista hongkonés conocido por sus esculturas cinéticas que utilizan máquinas para explorar la relación entre cuerpo, tecnología y sociedad en el contexto asiático contemporáneo.', 73),
+(19, 'Yayoi', 'Kusama', '1929-03-22', '/images/authors/YayoiKusama.jpg', 'Artista japonesa conocida por sus obras con lunares infinitos, calabazas y espejos. Vive voluntariamente en un hospital psiquiátrico desde 1977. Su serie "Infinity Mirror Rooms" es mundialmente famosa.', 70),
+(20, 'Zeng', 'Fanzhi', '1964-01-01', '/images/authors/ZengFanzhi.jpg', 'Pintor chino contemporáneo famoso por sus retratos expresionistas con máscaras y sus series abstractas "Hospital" y "Máscara". Refleja la ansiedad y alienación en la China moderna.', 35);
+
+-- ==========================================
+-- 2. INSERTAR OBRAS
+-- ==========================================
+-- Géneros: 1 = Pintura, 2 = Escultura, 3 = Fotografía, 4 = Orfebreria, 5 = Ceramica
+-- Columnas: id_Obra, Nombre, Fecha_creacion, Precio, Estado_obra, id_Genero, Fotografia
+INSERT INTO `Obra` (`id_Obra`, `Nombre`, `Fecha_creacion`, `Precio`, `Estado_obra`, `id_Genero`, `Fotografia`) VALUES
+-- Ai-Da Robot
+(1, 'First Humanoid Sculpture', '2021-01-01', 150000.00, 'Disponible', 2, '/images/art_previews/AiDaRobot-FirstHumanoidSculpture.jpg'),
+(2, 'Self Portrait', '2019-01-01', 95000.00, 'Disponible', 1, '/images/art_previews/AiDaRobot-SelfPortrait.jpg'),
+
+-- Ai Weiwei
+(3, 'Dropping a Han Dynasty Urn', '1995-01-01', 1200000.00, 'Disponible', 3, '/images/art_previews/AiWeiwei-DroppingAHanDynastyUrn.jpg'),
+(4, 'Forever Bicycles', '2011-01-01', 2500000.00, 'Disponible', 2, '/images/art_previews/AiWeiwei-ForeverBicycles.jpg'),
+(5, 'He Xie', '2010-01-01', 850000.00, 'Disponible', 5, '/images/art_previews/AiWeiwei-HeXie.jpg'),
+(6, 'Straight', '2012-01-01', 3200000.00, 'Disponible', 2, '/images/art_previews/AiWeiwei-Straight.jpg'),
+(7, 'Sunflowers Seeds', '2010-01-01', 4500000.00, 'Disponible', 5, '/images/art_previews/AiWeiwei-SunflowersSeeds.jpg'),
+
+-- Anish Kapoor
+(8, 'Cloud Gate', '2006-01-01', 6000000.00, 'Disponible', 2, '/images/art_previews/AnishKapoor-CloudGate.jpg'),
+(9, 'Jewel Ring', '2014-01-01', 750000.00, 'Disponible', 2, '/images/art_previews/AnishKapoor-JewelRing.jpg'),
+(10, 'Leviathan', '2011-01-01', 1800000.00, 'Disponible', 2, '/images/art_previews/AnishKapoor-Leviathan.jpg'),
+(11, 'Sky Mirror', '2001-01-01', 2200000.00, 'Disponible', 2, '/images/art_previews/AnishKapoor-SkyMirror.jpg'),
+(12, 'VantaBlack Art Piece', '2016-01-01', 990000.00, 'Disponible', 2, '/images/art_previews/AnishKapoor-VantaBlack.jpg'),
+
+-- Carlos Cruz-Diez
+(13, 'Chromosaturation', '1965-01-01', 1400000.00, 'Disponible', 1, '/images/art_previews/CarlosCruzDiez-Chromosaturation.jpg'),
+(14, 'Fisicromía', '1980-01-01', 350000.00, 'Disponible', 1, '/images/art_previews/CarlosCruzDiez-Fisicromía.jpg'),
+(15, 'Induction Cromática', '2010-01-01', 280000.00, 'Disponible', 1, '/images/art_previews/CarlosCruzDiez-InductionCromatica.jpg'),
+(16, 'Transcromía', '1970-01-01', 420000.00, 'Disponible', 1, '/images/art_previews/CarlosCruzDiez-Transcromía.jpg'),
+
+-- Cindy Sherman
+(17, 'Untitled #153', '1985-01-01', 2100000.00, 'Disponible', 3, '/images/art_previews/CindySherman-Untitled153.jpg'),
+(18, 'Untitled #96', '1981-01-01', 3890000.00, 'Disponible', 3, '/images/art_previews/CindySherman-Untitled96.jpg'),
+(19, 'Untitled Film Still #21', '1978-01-01', 1500000.00, 'Disponible', 3, '/images/art_previews/CindySherman-UntitledFilmStill21.jpg'),
+
+-- Damien Hirst
+(20, 'For The Love Of God', '2007-01-01', 50000000.00, 'Disponible', 2, '/images/art_previews/DamienHirts-ForTheLoveOfGod.jpg'),
+(21, 'Lullaby Spring', '2002-01-01', 19000000.00, 'Disponible', 2, '/images/art_previews/DamienHirts-LullabySpring.jpg'),
+(22, 'Spin Painting', '1995-01-01', 250000.00, 'Disponible', 1, '/images/art_previews/DamienHirts-SpinPainting.jpg'),
+(23, 'Spot Painting', '2000-01-01', 400000.00, 'Disponible', 1, '/images/art_previews/DamienHirts-SpotPainting.jpg'),
+(24, 'The Physical Impossibility of Death', '1991-01-01', 12000000.00, 'Disponible', 2, '/images/art_previews/DamienHirts-ThePhysicalImpossibility.jpg'),
+
+-- Doris Salcedo
+(25, 'Noviembre 6 y 7', '2002-01-01', 800000.00, 'Disponible', 2, '/images/art_previews/DorisSalcedo-Noviembre67.jpg'),
+(26, 'Plegaria Muda', '2010-01-01', 950000.00, 'Disponible', 2, '/images/art_previews/DorisSalcedo-PlegariaMuda.jpg'),
+
+-- Edmund de Waal
+(27, 'Atmosphere', '2014-01-01', 180000.00, 'Disponible', 5, '/images/art_previews/EdmunddeWaal-Atmosphere.jpg'),
+(28, 'Irrereglere', '2012-01-01', 140000.00, 'Disponible', 5, '/images/art_previews/EdmunddeWaal-Irrereglere.jpg'),
+(29, 'Library Of Exile', '2019-01-01', 300000.00, 'Disponible', 5, '/images/art_previews/EdmunddeWaal-LibraryOfExile.jpg'),
+(30, 'The Hare With Amber Eyes', '2010-01-01', 220000.00, 'Disponible', 5, '/images/art_previews/EdmunddeWaalTheHareWithAmberEyes.jpg'),
+
+-- Gabriel Orozco
+(31, 'Black Kites', '1997-01-01', 550000.00, 'Disponible', 2, '/images/art_previews/Gabriel Orozco-BlackKites.jpg'),
+(32, 'La DS', '1993-01-01', 900000.00, 'Disponible', 2, '/images/art_previews/Gabriel Orozco-LaDS.jpg'),
+(33, 'Samurai Tree Invariant', '2005-01-01', 120000.00, 'Disponible', 1, '/images/art_previews/Gabriel Orozco-SamuraiTreeInvariant.jpg'),
+
+-- Grayson Perry
+(34, 'Difficult Background', '2011-01-01', 190000.00, 'Disponible', 5, '/images/art_previews/GraysonPerry-DifficultBackground.jpg'),
+(35, 'The Injustice Line', '2014-01-01', 160000.00, 'Disponible', 5, '/images/art_previews/GraysonPerry-TheInjusticeLine.jpg'),
+(36, 'The Walthamstow Tapestry', '2009-01-01', 450000.00, 'Disponible', 1, '/images/art_previews/GraysonPerry-TheWalthamstowTapestry.jpg'),
+
+-- Jeff Koons
+(37, 'Antiquity 1', '2012-01-01', 2000000.00, 'Disponible', 1, '/images/art_previews/JeffKoons-Antiquity1.jpg'),
+(38, 'Balloon Dog Orange', '1994-01-01', 58400000.00, 'Disponible', 2, '/images/art_previews/JeffKoons-BallonDogOrange.jpg'),
+(39, 'Puppy', '1992-01-01', 5000000.00, 'Disponible', 2, '/images/art_previews/JeffKoons-Puppy.jpg'),
+(40, 'Rabbit', '1986-01-01', 91000000.00, 'Disponible', 2, '/images/art_previews/JeffKoons-Rabbit.jpg'),
+(41, 'Triple Elvis', '2007-01-01', 8000000.00, 'Disponible', 2, '/images/art_previews/JeffKoons-TripleElvis.jpg'),
+
+-- Kiki Smith
+(42, 'Annunciation', '2010-01-01', 210000.00, 'Disponible', 2, '/images/art_previews/KikiSmith-Annunciation.jpg'),
+(43, 'Blue Girl', '1998-01-01', 185000.00, 'Disponible', 2, '/images/art_previews/KikiSmith-BlueGirl.jpg'),
+(44, 'Lying with the Wolf', '2001-01-01', 320000.00, 'Disponible', 1, '/images/art_previews/KikiSmith-LyingwiththeWorf.jpg'),
+(45, 'Sleeping Witch', '2000-01-01', 240000.00, 'Disponible', 2, '/images/art_previews/KikiSmith-SleepingWitch.jpg'),
+
+-- Marina Abramović
+(46, 'Balkan Baroque', '1997-01-01', 450000.00, 'Disponible', 3, '/images/art_previews/MarinaAbramovic-BalkanBaroque.jpg'),
+(47, 'Rest Energy', '1980-01-01', 600000.00, 'Disponible', 3, '/images/art_previews/MarinaAbramovic-RestEnergy.jpg'),
+(48, 'The Artist Is Present', '2010-01-01', 1200000.00, 'Disponible', 3, '/images/art_previews/MarinaAbramovic-TheArtistIsPresent.jpg'),
+
+-- Ólafur Elíasson
+(49, 'Contact Portfolio', '2014-01-01', 130000.00, 'Disponible', 3, '/images/art_previews/OlafurEliasson-ContactPortfolio.jpg'),
+(50, 'The Weather Project', '2003-01-01', 3500000.00, 'Disponible', 2, '/images/art_previews/OlafurEliasson-TheWeatherProject.jpg'),
+(51, 'Your Rainbow Panorama', '2011-01-01', 4000000.00, 'Disponible', 2, '/images/art_previews/OlafurEliasson-YourRainbowParonama.jpg'),
+
+-- Takashi Murakami
+(52, '727', '1996-01-01', 3800000.00, 'Disponible', 1, '/images/art_previews/TakashiMurakami-727.jpg'),
+(53, 'Flower Matango', '2001-01-01', 2200000.00, 'Disponible', 2, '/images/art_previews/TakashiMurakami-FlowerMatango.jpg'),
+
+-- Theaster Gates
+(54, 'Black Vessel', '2020-01-01', 280000.00, 'Disponible', 5, '/images/art_previews/TheasterGates-BlackVessel.jpg'),
+(55, 'Civil Tapestry 4', '2011-01-01', 450000.00, 'Disponible', 1, '/images/art_previews/TheasterGates-CivilTapestry4.jpg'),
+
+-- Vik Muniz
+(56, 'Marat (Pictures of Garbage)', '2008-01-01', 350000.00, 'Disponible', 3, '/images/art_previews/VikMuniz-Marat.jpg'),
+(57, 'Sugar Children', '1996-01-01', 280000.00, 'Disponible', 3, '/images/art_previews/VikMuniz-SugarChildren.jpg'),
+
+-- Wallace Chan
+(58, 'A Tale Of Two Dragons', '2015-01-01', 1500000.00, 'Disponible', 4, '/images/art_previews/WallaceChan-ATaleOfTwoDragons.jpg'),
+(59, 'Fluttery', '2018-01-01', 850000.00, 'Disponible', 4, '/images/art_previews/WallaceChan-Fluttery.jpg'),
+(60, 'Stardust', '2017-01-01', 620000.00, 'Disponible', 4, '/images/art_previews/WallaceChan-Stardust.jpg'),
+(61, 'The Wallace Cut', '1987-01-01', 3000000.00, 'Disponible', 4, '/images/art_previews/WallaceChan-TheWallaceCut.jpg'),
+
+-- Yayoi Kusama
+(62, 'Dots Obsession', '1997-01-01', 2800000.00, 'Disponible', 2, '/images/art_previews/YayoiKusama-DotsObsession.jpg'),
+(63, 'Infinity Nets', '1959-01-01', 7100000.00, 'Disponible', 1, '/images/art_previews/YayoiKusama-InfinityNets.jpg'),
+(64, 'Pumpkin', '1994-01-01', 4000000.00, 'Disponible', 2, '/images/art_previews/YayoiKusama-Pumpkin.jpg'),
+(65, 'Self Obliteration', '1967-01-01', 1500000.00, 'Disponible', 3, '/images/art_previews/YayoiKusama-SelfObliteration.jpg'),
+(66, 'The Obliteration Room', '2002-01-01', 3200000.00, 'Disponible', 2, '/images/art_previews/YayoiKusama-TheObliterationRoom.jpg'),
+
+-- Zeng Fanzhi
+(67, 'Mask Series', '1996-01-01', 9600000.00, 'Disponible', 1, '/images/art_previews/ZengFanzhi-MaskSeries.jpg'),
+(68, 'The Last Supper', '2001-01-01', 23300000.00, 'Disponible', 1, '/images/art_previews/ZengFanzhi-TheLastSupper.jpg'),
+(69, 'Tiananmen', '2004-01-01', 4100000.00, 'Disponible', 1, '/images/art_previews/ZengFanzhi-Tiananmen.jpg'),
+(70, 'Untitled (Bacon)', '2010-01-01', 3500000.00, 'Disponible', 1, '/images/art_previews/ZengFanzhi-Untitled(Bacon).jpg');
+
+
+-- ==========================================
+-- 3. INTERSECCIÓN OBRA_AUTOR
+-- ==========================================
+-- Vincula las llaves primarias de Obra y Autor (Mapeadas del 1 al 70)
+INSERT INTO `Obra_autor` (`id_Obra`, `id_Autor`) VALUES
+(1, 1), (2, 1), -- Ai-Da Robot
+(3, 2), (4, 2), (5, 2), (6, 2), (7, 2), -- Ai Weiwei
+(8, 3), (9, 3), (10, 3), (11, 3), (12, 3), -- Anish Kapoor
+(13, 4), (14, 4), (15, 4), (16, 4), -- Carlos Cruz-Diez
+(17, 5), (18, 5), (19, 5), -- Cindy Sherman
+(20, 6), (21, 6), (22, 6), (23, 6), (24, 6), -- Damien Hirst
+(25, 7), (26, 7), -- Doris Salcedo
+(27, 8), (28, 8), (29, 8), (30, 8), -- Edmund de Waal
+(31, 9), (32, 9), (33, 9), -- Gabriel Orozco
+(34, 10), (35, 10), (36, 10), -- Grayson Perry
+(37, 11), (38, 11), (39, 11), (40, 11), (41, 11), -- Jeff Koons
+(42, 12), (43, 12), (44, 12), (45, 12), -- Kiki Smith
+(46, 13), (47, 13), (48, 13), -- Marina Abramović
+(49, 14), (50, 14), (51, 14), -- Ólafur Elíasson
+(52, 15), (53, 15), -- Takashi Murakami
+(54, 16), (55, 16), -- Theaster Gates
+(56, 17), (57, 17), -- Vik Muniz
+(58, 18), (59, 18), (60, 18), (61, 18), -- Wallace Chan
+(62, 19), (63, 19), (64, 19), (65, 19), (66, 19), -- Yayoi Kusama
+(67, 20), (68, 20), (69, 20), (70, 20); -- Zeng Fanzhi
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- ------------------------------------------
+-- SUBTIPO: PINTURA (Obras de Género 1)
+-- ------------------------------------------
+-- Columnas: id_Obra, Tecnica_Principal, Soporte_Base, Requiere_Enmarcado
+INSERT INTO `Pintura` (`id_Obra`, `Tecnica_Principal`, `Soporte_Base`, `Requiere_Enmarcado`) VALUES
+(2, 'Acrílico', 'Lienzo', 1),        -- Ai-Da Robot - Self Portrait
+(13, 'Mixta', 'Otro', 0),             -- Carlos Cruz-Diez - Chromosaturation
+(14, 'Mixta', 'Metal', 1),            -- Carlos Cruz-Diez - Fisicromía
+(15, 'Acrílico', 'Lienzo', 1),        -- Carlos Cruz-Diez - Induction Cromática
+(16, 'Mixta', 'Otro', 0),             -- Carlos Cruz-Diez - Transcromía
+(22, 'Óleo', 'Lienzo', 1),            -- Damien Hirst - Spin Painting
+(23, 'Acrílico', 'Lienzo', 1),        -- Damien Hirst - Spot Painting
+(33, 'Óleo', 'Lienzo', 1),            -- Gabriel Orozco - Samurai Tree Invariant
+(36, 'Mixta', 'Lienzo', 0),           -- Grayson Perry - The Walthamstow Tapestry
+(37, 'Óleo', 'Lienzo', 1),            -- Jeff Koons - Antiquity 1
+(44, 'Óleo', 'Papel', 1),             -- Kiki Smith - Lying with the Wolf
+(52, 'Acrílico', 'Tabla/Madera', 1),  -- Takashi Murakami - 727
+(55, 'Mixta', 'Otro', 0),             -- Theaster Gates - Civil Tapestry 4
+(63, 'Óleo', 'Lienzo', 1),            -- Yayoi Kusama - Infinity Nets
+(67, 'Óleo', 'Lienzo', 1),            -- Zeng Fanzhi - Mask Series
+(68, 'Óleo', 'Lienzo', 1),            -- Zeng Fanzhi - The Last Supper
+(69, 'Óleo', 'Lienzo', 1),            -- Zeng Fanzhi - Tiananmen
+(70, 'Óleo', 'Lienzo', 1);            -- Zeng Fanzhi - Untitled (Bacon)
+
+
+-- ------------------------------------------
+-- SUBTIPO: ESCULTURA (Obras de Género 2)
+-- ------------------------------------------
+-- Columnas: id_Obra, Material_Predominante, Requiere_Pedestal, Clasificacion_Espacio
+INSERT INTO `Escultura` (`id_Obra`, `Material_Predominante`, `Requiere_Pedestal`, `Clasificacion_Espacio`) VALUES
+(1, 'Multiples Materiales', 1, 'Interior'),    -- Cambiado a 'Multiples' sin tilde
+(4, 'Acero Inoxidable', 0, 'Ambivalente'),      
+(6, 'Acero Inoxidable', 0, 'Interior'),         
+(8, 'Acero Inoxidable', 0, 'Exterior'),         
+(9, 'Acero Inoxidable', 1, 'Interior'),         
+(10, 'Resina', 0, 'Interior'),                  
+(11, 'Acero Inoxidable', 0, 'Exterior'),         
+(12, 'Multiples Materiales', 1, 'Interior'),    -- Cambiado a 'Multiples' sin tilde
+(20, 'Platino', 1, 'Interior'),                  
+(21, 'Multiples Materiales', 0, 'Interior'),    -- Cambiado a 'Multiples' sin tilde
+(24, 'Multiples Materiales', 0, 'Interior'),    -- Cambiado a 'Multiples' sin tilde
+(25, 'Madera', 0, 'Interior'),                  
+(26, 'Multiples Materiales', 0, 'Interior'),    -- Cambiado a 'Multiples' sin tilde
+(31, 'Piedra', 1, 'Interior'),                  
+(32, 'Multiples Materiales', 0, 'Interior'),    -- Cambiado a 'Multiples' sin tilde
+(38, 'Acero Inoxidable', 0, 'Ambivalente'),      
+(39, 'Multiples Materiales', 0, 'Exterior'),    -- Cambiado a 'Multiples' sin tilde
+(40, 'Acero Inoxidable', 1, 'Interior'),         
+(41, 'Bronce', 0, 'Interior'),                  
+(42, 'Bronce', 0, 'Interior'),                  
+(43, 'Bronce', 1, 'Interior'),                  
+(45, 'Bronce', 0, 'Interior'),                  
+(50, 'Multiples Materiales', 0, 'Interior'),    -- Cambiado a 'Multiples' sin tilde
+(51, 'Multiples Materiales', 0, 'Exterior'),    -- Cambiado a 'Multiples' sin tilde
+(53, 'Resina', 1, 'Interior'),                  
+(62, 'Multiples Materiales', 0, 'Interior'),    -- Cambiado a 'Multiples' sin tilde
+(64, 'Bronce', 0, 'Exterior'),                  
+(66, 'Multiples Materiales', 0, 'Interior');    -- Cambiado a 'Multiples' sin tilde
+
+-- ------------------------------------------
+-- SUBTIPO: FOTOGRAFÍA (Obras de Género 3)
+-- ------------------------------------------
+-- Columnas: id_Obra, Formato_Origen, Tipo_Impresion_Estandar, Requiere_Revelado_Quimico
+INSERT INTO `Fotografia` (`id_Obra`, `Formato_Origen`, `Tipo_Impresion_Estandar`, `Requiere_Revelado_Quimico`) VALUES
+(3, 'Analógica', 'Gelatina de plata', 1),   -- Ai Weiwei - Dropping a Han Dynasty Urn
+(17, 'Analógica', 'Gelatina de plata', 1),  -- Cindy Sherman - Untitled #153
+(18, 'Analógica', 'Gelatina de plata', 1),  -- Cindy Sherman - Untitled #96
+(19, 'Analógica', 'Gelatina de plata', 1),  -- Cindy Sherman - Untitled Film Still #21
+(46, 'Digital', 'Digital', 0),              -- Marina Abramović - Balkan Baroque
+(47, 'Analógica', 'Gelatina de plata', 1),  -- Marina Abramović - Rest Energy
+(48, 'Digital', 'Inyección de tinta', 0),   -- Marina Abramović - The Artist Is Present
+(49, 'Digital', 'Inyección de tinta', 0),   -- Ólafur Elíasson - Contact Portfolio
+(56, 'Digital', 'Inyección de tinta', 0),   -- Vik Muniz - Marat (Pictures of Garbage)
+(57, 'Analógica', 'Gelatina de plata', 1),  -- Vik Muniz - Sugar Children
+(65, 'Analógica', 'Digital', 0);            -- Yayoi Kusama - Self Obliteration
+
+
+-- ------------------------------------------
+-- SUBTIPO: ORFEBRERÍA (Obras de Género 4)
+-- ------------------------------------------
+-- Columnas: id_Obra, Metal_Base_Dominante, Kilataje_Estandar, Requeres_Certificado_Autenticidad
+INSERT INTO `Orfebreria` (`id_Obra`, `Metal_Base_Dominante`, `Kilataje_Estandar`, `Requeres_Certificado_Autenticidad`) VALUES
+(58, 'Titanio', 'No Aplica', 1),  -- Wallace Chan - A Tale Of Two Dragons
+(59, 'Oro', '18K', 1),             -- Wallace Chan - Fluttery
+(60, 'Platino', 'No Aplica', 1),  -- Wallace Chan - Stardust
+(61, 'Oro', '22K', 1);             -- Wallace Chan - The Wallace Cut
+
+
+-- ------------------------------------------
+-- SUBTIPO: CERÁMICA (Obras de Género 5)
+-- ------------------------------------------
+-- Columnas: id_Obra, Tecnica_Acabado, Tipo_Arcilla_Base, Temperatura_Coccion_Promedio_Celsius
+INSERT INTO `Ceramica` (`id_Obra`, `Tecnica_Acabado`, `Tipo_Arcilla_Base`, `Temperatura_Coccion_Promedio_Celsius`) VALUES
+(5, 'Esmaltado', 'Barro común', 900),    -- Ai Weiwei - He Xie
+(7, 'Vidriado', 'Porcelana', 1300),      -- Ai Weiwei - Sunflowers Seeds
+(27, 'Bizcocho', 'Porcelana', 1250),     -- Edmund de Waal - Atmosphere
+(28, 'Bruñido', 'Porcelana', 1200),      -- Edmund de Waal - Irrereglere
+(29, 'Vidriado', 'Porcelana', 1300),     -- Edmund de Waal - Library Of Exile
+(30, 'Esmaltado', 'Porcelana', 1200),    -- Edmund de Waal - The Hare With Amber Eyes
+(34, 'Esmaltado', 'Gres', 1100),         -- Grayson Perry - Difficult Background
+(35, 'Vidriado', 'Gres', 1150),          -- Grayson Perry - The Injustice Line
+(54, 'Terracota', 'Refractario', 1000);  -- Theaster Gates - Black Vessel
 
 INSERT INTO Estado (id_estado, nombre, iso_3166_2) VALUES
 (1, 'Amazonas', 'VE-X'),
@@ -127,14 +721,6 @@ INSERT INTO Estado (id_estado, nombre, iso_3166_2) VALUES
 (23, 'Zulia', 'VE-V'),
 (24, 'Distrito Capital', 'VE-A'),
 (25, 'Dependencias Federales', 'VE-Z');
-
-
-CREATE TABLE Municipio (
-    id_municipio INT PRIMARY KEY AUTO_INCREMENT,
-    nombre VARCHAR(100) NOT NULL,
-    id_estado INT,
-    FOREIGN KEY (id_estado) REFERENCES Estado(id_estado)
-);
 
 INSERT INTO Municipio (id_municipio, id_estado, nombre) VALUES
 (1, 1, 'Alto Orinoco'),
@@ -472,14 +1058,6 @@ INSERT INTO Municipio (id_municipio, id_estado, nombre) VALUES
 (460, 23, 'Sucre'),
 (461, 23, 'Valmore Rodríguez'),
 (462, 24, 'Libertador');
-
-
-CREATE TABLE Parroquia (
-    id_parroquia INT PRIMARY KEY AUTO_INCREMENT,
-    nombre VARCHAR(100) NOT NULL,
-    id_municipio INT,
-    FOREIGN KEY (id_municipio) REFERENCES Municipio(id_municipio)
-);
 
 INSERT INTO Parroquia (id_parroquia, id_municipio, nombre) VALUES
 (1, 1, 'Alto Orinoco'),
@@ -1620,104 +2198,3 @@ INSERT INTO Parroquia (id_parroquia, id_municipio, nombre) VALUES
 (1136, 462, 'Santa Teresa'),
 (1137, 462, 'Sucre (Catia)'),
 (1138, 462, '23 de enero');
-
--- Tabla Padre: Ahora centraliza la identidad
-CREATE TABLE Usuario (
-    id_usuario INT PRIMARY KEY AUTO_INCREMENT, 
-    Email VARCHAR(45) NOT NULL UNIQUE,
-    Contraseña VARCHAR(45) NOT NULL,
-    Nombre VARCHAR(45),    -- Mover aquí
-    Apellido VARCHAR(45),  -- Mover aquí
-    Estatus TINYINT,
-    Rol ENUM('administrador', 'comprador') NOT NULL
-);
-
--- Tabla Subtipo: Comprador (Se eliminan Nombre/Apellido de aquí)
-CREATE TABLE Comprador (
-    id_usuario INT PRIMARY KEY, 
-    Cedula INT UNIQUE NOT NULL,
-    Telefono VARCHAR(15),
-    CodigoVerificacion INT,
-    id_parroquia INT,
-    Calle VARCHAR(100),
-    FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario) ON DELETE CASCADE,
-    FOREIGN KEY (id_parroquia) REFERENCES Parroquia(id_parroquia)
-);
-
--- Tabla Subtipo: Administrador (Solo marca el rol)
-CREATE TABLE Administrador (
-    id_usuario INT PRIMARY KEY,
-    FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario) ON DELETE CASCADE
-);
-
---  tabla Membresia
-CREATE TABLE Membresia (
-    idMembresia INT PRIMARY KEY AUTO_INCREMENT,
-    FechaPago DATE,
-    MontoPagado DECIMAL(10,2),
-    id_usuario INT,
-    FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario) ON DELETE CASCADE
-);
-
---  tabla Codigo de seguridad
-CREATE TABLE CodigoSeguridad (
-    idCodigoSeguridad INT PRIMARY KEY AUTO_INCREMENT,
-    Pregunta VARCHAR(45),
-    Respuesta VARCHAR(45),
-    id_usuario INT,
-    FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario) ON DELETE CASCADE
-);
-
---  tabla Solicitud de pago
-CREATE TABLE SolicitudPago (
-    id_solicitud INT AUTO_INCREMENT PRIMARY KEY,
-    id_usuario INT,
-    FechaSolicitud DATETIME DEFAULT CURRENT_TIMESTAMP,
-    Monto DECIMAL(10,2) DEFAULT 10.00,
-    Estatus VARCHAR(20) DEFAULT 'Pendiente', -- 'Pendiente', 'Aprobado'
-    FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario)
-);
--- -----------------------------------------------------
--- AREA DE FINANZAS
--- -----------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS Factura (
-    id_factura INT AUTO_INCREMENT PRIMARY KEY,
-    Fecha_Venta TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    Monto_Neto DECIMAL(15, 2) NOT NULL,
-    IVA DECIMAL(15, 2) NOT NULL,
-    Total_Pagado DECIMAL(15, 2) NOT NULL,
-    Ganancia_Museo_USD DECIMAL(15, 2) NOT NULL,
-    Porcentaje_Comision DECIMAL(5, 2) NOT NULL, -- El % que agregamos (5-10%)
-    id_obra INT NOT NULL,
-    id_comprador INT NOT NULL,
-    id_admin INT NOT NULL,
-    FOREIGN KEY (id_obra) REFERENCES Obra(id_Obra),
-    FOREIGN KEY (id_comprador) REFERENCES Usuario(id_usuario),
-    FOREIGN KEY (id_admin) REFERENCES Usuario(id_usuario)
-);
-
-CREATE TABLE IF NOT EXISTS Reserva (
-    id_reserva INT PRIMARY KEY AUTO_INCREMENT,
-    id_obra INT NOT NULL,
-    id_usuario INT NOT NULL,   -- comprador
-    Fecha_Reserva TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_obra) REFERENCES Obra(id_Obra),
-    FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario)
-);
--- -----------------------------------------------------
--- AREA DE LOGISTICA
--- -----------------------------------------------------
-
-CREATE TABLE MuseoDB.Envio (
-    id_Envio INT PRIMARY KEY AUTO_INCREMENT,
-    Monto_total VARCHAR(45),
-    Estado_entrega ENUM('En proceso', 'Enviado', 'Entregado'),
-    Municipio VARCHAR(45),
-    Parroquia VARCHAR(45),
-    Calle VARCHAR(45),
-    Factura_id_Factura INT,
-    FOREIGN KEY (Factura_id_Factura) REFERENCES MuseoDB.Factura(id_Factura),
-    FOREIGN KEY (Repartidor_Cedula) REFERENCES MuseoDB.Repartidor(Cedula)
-);
-

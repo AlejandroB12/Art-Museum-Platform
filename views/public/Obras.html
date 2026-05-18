@@ -298,116 +298,172 @@
     </div>
 
     <script>
-        const gallery = document.getElementById('gallery');
-        const modal = document.getElementById('obra-modal');
+    const gallery = document.getElementById('gallery');
+    const modal = document.getElementById('obra-modal');
 
-        function abrirModal(img, titulo, artista, detalles) {
-            document.getElementById('modal-imagen').src = img;
-            document.getElementById('modal-titulo').innerText = titulo;
-            document.getElementById('modal-artista').innerText = `Por ${artista}`;
-            document.getElementById('modal-detalles-tecnicos').innerHTML = detalles;
+    function abrirModal(img, titulo, artista, detalles) {
+        document.getElementById('modal-imagen').src = img;
+        document.getElementById('modal-titulo').innerText = titulo;
+        document.getElementById('modal-artista').innerText = `Por ${artista}`;
+        document.getElementById('modal-detalles-tecnicos').innerHTML = detalles;
+        
+        modal.style.display = 'flex';
+        document.body.classList.add('modal-active');
+    }
+
+    function cerrarModal() {
+        modal.style.display = 'none';
+        document.body.classList.remove('modal-active');
+    }
+
+    window.onclick = function(event) {
+        if (event.target == modal) cerrarModal();
+    }
+
+    // Función para construir detalles técnicos según el género
+    function construirDetallesTecnicos(obra) {
+        let detalles = `
+            <p><strong>GÉNERO:</strong> ${obra.GeneroNombre}</p>
+            <p><strong>PRECIO:</strong> ${obra.Precio} USD</p>
+            <p><strong>FECHA CREACIÓN:</strong> ${obra.Fecha_creacion || 'No especificada'}</p>
+        `;
+
+        // Detalles específicos por género
+        if (obra.Tecnica_Principal) {
+            detalles += `
+                <p><strong>TÉCNICA PRINCIPAL:</strong> ${obra.Tecnica_Principal}</p>
+                <p><strong>SOPORTE:</strong> ${obra.Soporte_Base}</p>
+                <p><strong>REQUIERE ENMARCADO:</strong> ${obra.Requiere_Enmarcado ? 'Sí' : 'No'}</p>
+            `;
+        }
+        
+        if (obra.Material_Predominante) {
+            detalles += `
+                <p><strong>MATERIAL PREDOMINANTE:</strong> ${obra.Material_Predominante}</p>
+                <p><strong>REQUIERE PEDESTAL:</strong> ${obra.Requiere_Pedestal ? 'Sí' : 'No'}</p>
+                <p><strong>CLASIFICACIÓN ESPACIO:</strong> ${obra.Clasificacion_Espacio}</p>
+            `;
+        }
+        
+        if (obra.Formato_Origen) {
+            detalles += `
+                <p><strong>FORMATO ORIGEN:</strong> ${obra.Formato_Origen}</p>
+                <p><strong>TIPO IMPRESIÓN:</strong> ${obra.Tipo_Impresion_Estandar}</p>
+                <p><strong>REQUIERE REVELADO QUÍMICO:</strong> ${obra.Requiere_Revelado_Quimico ? 'Sí' : 'No'}</p>
+            `;
+        }
+        
+        if (obra.Metal_Base_Dominante) {
+            detalles += `
+                <p><strong>METAL BASE:</strong> ${obra.Metal_Base_Dominante}</p>
+                <p><strong>KILATAJE:</strong> ${obra.Kilataje_Estandar}</p>
+                <p><strong>CERTIFICADO AUTENTICIDAD:</strong> ${obra.Requeres_Certificado_Autenticidad ? 'Incluido' : 'No incluye'}</p>
+            `;
+        }
+        
+        if (obra.Tecnica_Acabado) {
+            detalles += `
+                <p><strong>TÉCNICA ACABADO:</strong> ${obra.Tecnica_Acabado}</p>
+                <p><strong>TIPO ARCILLA:</strong> ${obra.Tipo_Arcilla_Base}</p>
+                <p><strong>TEMPERATURA COCCIÓN:</strong> ${obra.Temperatura_Coccion_Promedio_Celsius}°C</p>
+            `;
+        }
+
+        return detalles;
+    }
+
+    async function cargarFiltros() {
+        try {
+            const resp = await fetch('/api/autores');
+            const autores = await resp.json();
+            const select = document.getElementById('filterAuthor');
+            autores.forEach(a => {
+                const opt = document.createElement('option');
+                opt.value = a.id_Autor;
+                opt.textContent = `${a.Nombre} ${a.Apellido}`;
+                select.appendChild(opt);
+            });
+        } catch (error) { 
+            console.error("Error cargando filtros:", error); 
+        }
+    }
+
+    async function renderGallery() {
+        const genero = document.getElementById('filterGenre').value;
+        const artista = document.getElementById('filterAuthor').value;
+        const orden = document.getElementById('sortPrice').value;
+
+        try {
+            const resp = await fetch(`/api/obras-filtradas?genero=${genero}&artista=${artista}&orden=${orden}`);
+            const obras = await resp.json();
+            gallery.innerHTML = '';
             
-            modal.style.display = 'flex';
-            document.body.classList.add('modal-active');
-        }
+            console.log('Obras recibidas:', obras); // Para depuración
+            
+            if (obras.length === 0) {
+                gallery.innerHTML = '<p style="text-align:center; width:100%; color:#444;">No hay piezas disponibles.</p>';
+                return;
+            }
 
-        function cerrarModal() {
-            modal.style.display = 'none';
-            document.body.classList.remove('modal-active');
-        }
-
-        window.onclick = function(event) {
-            if (event.target == modal) cerrarModal();
-        }
-
-        async function cargarFiltros() {
-            try {
-                const resp = await fetch('/api/autores');
-                const autores = await resp.json();
-                const select = document.getElementById('filterAuthor');
-                autores.forEach(a => {
-                    const opt = document.createElement('option');
-                    opt.value = a.id_Autor;
-                    opt.textContent = `${a.Nombre} ${a.Apellido}`;
-                    select.appendChild(opt);
-                });
-            } catch (error) { console.error("Error cargando filtros:", error); }
-        }
-
-        async function renderGallery() {
-            const genero = document.getElementById('filterGenre').value;
-            const artista = document.getElementById('filterAuthor').value;
-            const orden = document.getElementById('sortPrice').value;
-
-            try {
-                const resp = await fetch(`/api/obras-filtradas?genero=${genero}&artista=${artista}&orden=${orden}`);
-                const obras = await resp.json();
-                gallery.innerHTML = '';
+            obras.forEach(obra => {
+                // CORREGIDO: Usar la URL directamente, no base64
+                const imgSource = obra.imagen_url || '/assets/images/placeholder.jpg';
                 
-                if (obras.length === 0) {
-                    gallery.innerHTML = '<p style="text-align:center; width:100%; color:#444;">No hay piezas disponibles.</p>';
-                    return;
-                }
+                // Construir detalles técnicos usando la función
+                const detallesHTML = construirDetallesTecnicos(obra);
+                
+                const autorNombreCompleto = `${obra.AutorNombre} ${obra.AutorApellido}`;
 
-                obras.forEach(obra => {
-                    const base64Img = obra.imagen ? obra.imagen.replace(/\s/g, '') : null;
-                    const imgSource = base64Img ? `data:image/jpeg;base64,${base64Img}` : 'placeholder.jpg';
-
-                    let detallesHTML = `
-                        <p><strong>GÉNERO:</strong> ${obra.GeneroNombre}</p>
-                        ${obra.Tecnica ? `<p><strong>TÉCNICA:</strong> ${obra.Tecnica}</p>` : ''}
-                        ${obra.dimensiones_cm ? `<p><strong>DIMENSIONES:</strong> ${obra.dimensiones_cm}</p>` : ''}
-                        ${obra.Material ? `<p><strong>MATERIAL:</strong> ${obra.Material}</p>` : ''}
-                        ${obra.Metal_Base ? `<p><strong>METAL:</strong> ${obra.Metal_Base}</p>` : ''}
-                        ${obra.Piedras_Preciosas ? `<p><strong>PIEDRAS:</strong> ${obra.Piedras_Preciosas}</p>` : ''}
-                        ${obra.Formato ? `<p><strong>FORMATO:</strong> ${obra.Formato}</p>` : ''}
-                    `;
-
-                    const autorNombreCompleto = `${obra.AutorNombre} ${obra.AutorApellido}`;
-
-                    const card = document.createElement('div');
-                    card.className = 'art-card';
-                    card.innerHTML = `
-                        <div class="art-img" style="background-image: url('${imgSource}')" 
-                             onclick="abrirModal('${imgSource}', '${obra.Nombre}', '${autorNombreCompleto}', \`${detallesHTML}\`)">
+                const card = document.createElement('div');
+                card.className = 'art-card';
+                card.innerHTML = `
+                    <div class="art-img" style="background-image: url('${imgSource}'); background-size: cover; background-position: center;" 
+                         onclick="abrirModal('${imgSource}', '${obra.Nombre.replace(/'/g, "\\'")}', '${autorNombreCompleto.replace(/'/g, "\\'")}', \`${detallesHTML}\`)">
+                    </div>
+                    <div class="art-info">
+                        <a href="Autor.html?id=${obra.id_Autor}" class="author-link">
+                            ${autorNombreCompleto}
+                        </a>
+                        <h3 class="art-title" style="margin: 10px 0;">${obra.Nombre}</h3>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span class="price">${obra.Precio} USD</span>
+                            <button class="btn-buy" onclick="adquirirObra('${obra.id_Obra}', '${obra.Nombre.replace(/'/g, "\\'")}', '${autorNombreCompleto.replace(/'/g, "\\'")}', '${obra.Precio}', '${imgSource}')">Adquirir</button>
                         </div>
-                        <div class="art-info">
-                            <a href="Autor.html?id=${obra.id_Autor}" class="author-link">
-                                ${autorNombreCompleto}
-                            </a>
-                            <h3 class="art-title" style="margin: 10px 0;">${obra.Nombre}</h3>
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <span class="price">${obra.Precio}$</span>
-                                <button class="btn-buy" onclick="adquirirObra('${obra.id_obra}', '${obra.Nombre}', '${autorNombreCompleto}', '${obra.Precio}', '${imgSource}')">Adquirir</button>
-                            </div>
-                        </div>
-                    `;
-                    gallery.appendChild(card);
-                });
-            } catch (error) { console.error("Error cargando galería:", error); }
+                    </div>
+                `;
+                gallery.appendChild(card);
+            });
+        } catch (error) { 
+            console.error("Error cargando galería:", error); 
         }
+    }
 
-        // --- FUNCIONALIDAD DE REDIRECCIÓN A PAGO ---
-// Ejemplo de la función que guarda la obra al hacer clic
-        function adquirirObra(id, nombre, autor, precio, imagen) {
-            const obra = {
-                id_Obra: id,    // Ahora sí recibimos el ID numérico
-                nombre: nombre,
-                autor: autor,
-                precio: precio,
-                imagen: imagen
-            };
-            localStorage.setItem('obraSeleccionada', JSON.stringify(obra));
-            window.location.href = "pago.html";
-        }
+    // FUNCIÓN CORREGIDA
+    function adquirirObra(id, nombre, autor, precio, imagen) {
+        const obra = {
+            id_Obra: id,    // CORREGIDO: Ahora usa id_Obra (con O mayúscula)
+            nombre: nombre,
+            autor: autor,
+            precio: precio,
+            imagen: imagen
+        };
+        localStorage.setItem('obraSeleccionada', JSON.stringify(obra));
+        window.location.href = "/user/pago.html";
+    }
 
-        document.getElementById('sortPrice').addEventListener('change', renderGallery);
-        document.getElementById('filterGenre').addEventListener('change', renderGallery);
-        document.getElementById('filterAuthor').addEventListener('change', renderGallery);
+    // Event Listeners
+    document.getElementById('sortPrice').addEventListener('change', renderGallery);
+    document.getElementById('filterGenre').addEventListener('change', renderGallery);
+    document.getElementById('filterAuthor').addEventListener('change', renderGallery);
 
-        window.onload = () => { cargarFiltros(); renderGallery(); };
+    // Inicialización
+    window.onload = () => { 
+        cargarFiltros(); 
+        renderGallery(); 
+    };
 
-          document.addEventListener('DOMContentLoaded', () => {
+    // Estado de usuario (mantenido igual)
+    document.addEventListener('DOMContentLoaded', () => {
         fetch('/api/estado-usuario')
         .then(response => response.json())
         .then(data => {
@@ -422,19 +478,16 @@
                     .then(user => {
                         const userDiv = document.createElement('div');
                         userDiv.className = 'user-profile';
-                        // Añadimos el estilo al botón de Panel para que se vea profesional
                         userDiv.innerHTML = `
-                    <span style="margin-right: 15px; color: #eee; font-size: 0.75rem;">HOLA, ${user.nombre}</span>
-                    <a href="/user/Panel-usuario.html" class="btn-panel">Panel de control</a>
-                    <a href="/logout" class="btn-logout" text-decoration: none; font-size: 0.7rem; margin-left: 10px;">Cerrar sesión</a>
-                `;
+                            <span style="margin-right: 15px; color: #eee; font-size: 0.75rem;">HOLA, ${user.nombre}</span>
+                            <a href="/user/Panel-usuario.html" class="btn-panel">Panel de control</a>
+                            <a href="/logout" class="btn-logout">Cerrar sesión</a>
+                        `;
                         navContainer.appendChild(userDiv);
                     });
-                }
-            });
-        });
-
-
-    </script>
+            }
+        }).catch(error => console.error('Error al cargar usuario:', error));
+    });
+</script>
 </body>
 </html>

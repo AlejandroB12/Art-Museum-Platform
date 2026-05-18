@@ -8,6 +8,7 @@ const app = express();
     app.use(express.urlencoded({ extended: true }));
     app.use(express.static(path.join(__dirname, '..', 'views'))); 
     app.use(express.static(path.join(__dirname, '..','assets'))); 
+    app.use('/images', express.static(path.join(__dirname, 'assets/images')));
 
 // --- CONFIGURACIÓN DE SESIÓN ---
     app.use(session({
