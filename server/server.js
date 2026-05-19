@@ -2,6 +2,8 @@ const express = require('express');
 const path = require('path');
 const session = require('express-session'); 
 const app = express();
+require('dotenv').config(); // Carga las variables de entorno.
+
 
 // --- MIDDLEWARES ---
     app.use(express.json()); 
@@ -12,10 +14,10 @@ const app = express();
 
 // --- CONFIGURACIÓN DE SESIÓN ---
     app.use(session({
-        secret: 'clave-secreta-museo-2026',
+        secret: process.env.SESSION_SECRET,
         resave: false,
         saveUninitialized: false,
-        cookie: { secure: false } 
+        cookie: { secure: true, maxAge: 60 * 60 * 1000 } // 1 hora
     }));
 
 // --- REDIRECCIÓN INICIAL ---
@@ -36,7 +38,7 @@ const app = express();
     app.use('/', adminRoutes);  
 
 // --- INICIO DEL SERVIDOR ---
-const PORT = 3000;
+const PORT = process.env.PORT;
 
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);

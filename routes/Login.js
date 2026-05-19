@@ -3,6 +3,8 @@ const router = express.Router();
 const nodemailer = require('nodemailer');
 const path = require('path');
 
+require('dotenv').config(); // Carga las variables de entorno.
+
 // --- IMPORTACIÓN DE BASE DE DATOS ---
 const db = require('../config/database'); 
 
@@ -10,8 +12,8 @@ const db = require('../config/database');
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: 'fg57179@gmail.com',
-        pass: 'yryx bqbc hptv dawc'
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
     }
 });
 

@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
-const fs = require('fs');  // ← AGREGAR ESTO AL INICIO
-const path = require('path');  // ← AGREGAR ESTO AL INICIO
+const fs = require('fs');
+const path = require('path');
 
 // 1. Obtener autores para los filtros del catálogo
 router.get('/autores', (req, res) => {
@@ -75,6 +75,7 @@ router.get('/obras-filtradas', (req, res) => {
         res.json(results);
     });
 });
+
 
 // 3. Detalle de Autor (Perfil individual con obras detalladas)
 router.get('/autor-detalle/:id', (req, res) => {
