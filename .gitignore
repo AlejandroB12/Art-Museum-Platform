@@ -1,0 +1,51 @@
+# === Node.js ===
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# === Environment Variables ===
+.env
+.env.local
+.env.*.local
+
+# === OS Files ===
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.lnk
+
+# === IDE / Editor ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.settings/
+
+# === Logs ===
+logs/
+*.log
+
+# === Database Config ===
+# Database credentials should use environment variables, not hardcoded values
+config/database.js
+
+# === Uploads ===
+uploads/
+public/uploads/
+
+# === Dependencies ===
+vendor/
+bower_components/
+jspm_packages/
