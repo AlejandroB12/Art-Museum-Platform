@@ -1,45 +1,40 @@
 const express = require('express');
 const path = require('path');
-const session = require('express-session'); 
+const session = require('express-session');
 const app = express();
-require('dotenv').config(); // Carga las variables de entorno.
+require('dotenv').config();
 
+const connectMongoDB = require('../config/mongodb');
 
-// --- MIDDLEWARES ---
-    app.use(express.json()); 
-    app.use(express.urlencoded({ extended: true }));
-    app.use(express.static(path.join(__dirname, '..', 'views'))); 
-    app.use(express.static(path.join(__dirname, '..','assets'))); 
-    app.use('/images', express.static(path.join(__dirname, 'assets/images')));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, '..', 'views')));
+app.use(express.static(path.join(__dirname, '..', 'assets')));
+app.use('/images', express.static(path.join(__dirname, 'assets/images')));
 
-// --- CONFIGURACIÓN DE SESIÓN ---
-    app.use(session({
-        secret: process.env.SESSION_SECRET,
-        resave: false,
-        saveUninitialized: false,
-        cookie: { secure: false}
-    }));
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false }
+}));
 
-// --- REDIRECCIÓN INICIAL ---
+app.get('/', (req, res) => {
+    res.redirect('/public/Inicio.html');
+});
 
-    // Al entrar a http://localhost:3000 te enviará al Inicio directamente
-    app.get('/', (req, res) => {
-        res.redirect('/public/Inicio.html');
-    });
+const loginRoutes = require('../routes/Login');
+const catalogoRoutes = require('../routes/Catalogo');
+const adminRoutes = require('../routes/Admin');
 
-// --- IMPORTAR RUTAS ---
-    const loginRoutes = require('../routes/Login');
-    const catalogoRoutes = require('../routes/Catalogo');
-    const adminRoutes = require('../routes/Admin'); 
+app.use('/', loginRoutes);
+app.use('/api', catalogoRoutes);
+app.use('/', adminRoutes);
 
-// --- USAR RUTAS ---
-    app.use('/', loginRoutes);
-    app.use('/api', catalogoRoutes);
-    app.use('/', adminRoutes);  
-
-// --- INICIO DEL SERVIDOR ---
 const PORT = process.env.PORT;
 
-app.listen(PORT, () => {
-    console.log(`Servidor corriendo en http://localhost:${PORT}`);
+connectMongoDB().then(() => {
+    app.listen(PORT, () => {
+        console.log(`Servidor corriendo en http://localhost:${PORT}`);
+    });
 });

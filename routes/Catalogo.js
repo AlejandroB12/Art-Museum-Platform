@@ -1,189 +1,167 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
 const fs = require('fs');
 const path = require('path');
+const Autor = require('../models/Autor');
+const Obra = require('../models/Obra');
 
-// 1. Obtener autores para los filtros del catálogo
-router.get('/autores', (req, res) => {
-    db.query('SELECT id_Autor, Nombre, Apellido FROM Autor', (err, results) => {
-        if (err) return res.status(500).json(err);
-        res.json(results);
-    });
+const GENRE_MAP = {
+    'Pintura': 'Pintura',
+    'Escultura': 'Escultura',
+    'Fotografia': 'Fotografía',
+    'Orfebreria': 'Orfebreria',
+    'Ceramica': 'Ceramica'
+};
+
+function formatPrice(price) {
+    if (price == null) return null;
+    return Number(price).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USD';
+}
+
+function mapObraToFrontend(obra) {
+    const detalles = obra.genero && obra.genero.detalles ? obra.genero.detalles : {};
+    const autor = obra.autores && obra.autores[0] ? obra.autores[0] : null;
+    return {
+        id_Obra: obra._id,
+        Nombre: obra.nombre,
+        Fecha_creacion: obra.fecha_creacion ? obra.fecha_creacion.toISOString().split('T')[0] : null,
+        Precio: obra.precio,
+        PrecioFormateado: formatPrice(obra.precio),
+        Estado_obra: obra.estado_obra,
+        imagen_url: obra.fotografia,
+        AutorNombre: autor ? autor.nombre : null,
+        AutorApellido: autor ? autor.apellido : null,
+        GeneroNombre: obra.genero ? obra.genero.nombre : null,
+        id_Autor: autor ? autor._id : null,
+        autor_foto_url: autor ? autor.fotografia : null,
+        ...detalles
+    };
+}
+
+function mapObraDetailToFrontend(obra) {
+    const detalles = obra.genero && obra.genero.detalles ? obra.genero.detalles : {};
+    return {
+        id_Obra: obra._id,
+        Nombre: obra.nombre,
+        Fecha_creacion: obra.fecha_creacion ? obra.fecha_creacion.toISOString().split('T')[0] : null,
+        Precio: obra.precio,
+        PrecioFormateado: formatPrice(obra.precio),
+        Estado_obra: obra.estado_obra,
+        imagen: null,
+        GeneroNombre: obra.genero ? obra.genero.nombre : null,
+        ...detalles
+    };
+}
+
+router.get('/autores', async (req, res) => {
+    try {
+        const autores = await Autor.find().select('_id nombre apellido').lean();
+        res.json(autores.map(a => ({
+            id_Autor: a._id,
+            Nombre: a.nombre,
+            Apellido: a.apellido
+        })));
+    } catch (err) {
+        res.status(500).json(err);
+    }
 });
 
-// 2. Obtener obras filtradas para el catálogo principal
-router.get('/obras-filtradas', (req, res) => {
-    const { genero, artista, orden } = req.query;
-    
-    let sql = `
-        SELECT
-            o.id_Obra,
-            o.Nombre,
-            o.Fecha_creacion,
-            o.Precio,
-            o.Estado_obra,
-            o.Fotografia as imagen_url,
-            a.Nombre as AutorNombre, 
-            a.Apellido as AutorApellido, 
-            g.Nombre as GeneroNombre, 
-            a.id_Autor,
-            a.Fotografia as autor_foto_url,
-            -- Pintura
-            p.Tecnica_Principal,
-            p.Soporte_Base,
-            p.Requiere_Enmarcado,
-            -- Escultura
-            e.Material_Predominante,
-            e.Requiere_Pedestal,
-            e.Clasificacion_Espacio,
-            -- Fotografia
-            f.Formato_Origen,
-            f.Tipo_Impresion_Estandar,
-            f.Requiere_Revelado_Quimico,
-            -- Orfebreria
-            oo.Metal_Base_Dominante,
-            oo.Kilataje_Estandar,
-            oo.Requeres_Certificado_Autenticidad,
-            -- Ceramica
-            c.Tecnica_Acabado,
-            c.Tipo_Arcilla_Base,
-            c.Temperatura_Coccion_Promedio_Celsius
-        FROM Obra o
-        INNER JOIN Obra_autor oa ON o.id_Obra = oa.id_Obra
-        INNER JOIN Autor a ON oa.id_Autor = a.id_Autor
-        INNER JOIN Genero g ON o.id_Genero = g.id_Genero
-        LEFT JOIN Pintura p ON o.id_Obra = p.id_Obra
-        LEFT JOIN Escultura e ON o.id_Obra = e.id_Obra
-        LEFT JOIN Fotografia f ON o.id_Obra = f.id_Obra
-        LEFT JOIN Orfebreria oo ON o.id_Obra = oo.id_Obra
-        LEFT JOIN Ceramica c ON o.id_Obra = c.id_Obra
-        WHERE o.Estado_obra = 'Disponible'
-    `;
+router.get('/obras-filtradas', async (req, res) => {
+    try {
+        const { genero, artista, orden } = req.query;
+        let filter = { estado_obra: 'Disponible' };
 
-    if (genero && genero !== 'all') sql += ` AND g.Nombre = ${db.escape(genero)}`;
-    if (artista && artista !== 'all') sql += ` AND a.id_Autor = ${db.escape(artista)}`;
-    
-    sql += (orden === 'desc') ? " ORDER BY o.Precio DESC" : " ORDER BY o.Precio ASC";
-
-    db.query(sql, (err, results) => {
-        if (err) {
-            console.error("Error en consulta de catálogo:", err);
-            return res.status(500).json({ error: "Error en la base de datos", detalles: err });
+        if (genero && genero !== 'all') {
+            filter['genero.nombre'] = GENRE_MAP[genero] || genero;
+        }
+        if (artista && artista !== 'all') {
+            filter.autores = parseInt(artista);
         }
 
-        res.json(results);
-    });
+        let query = Obra.find(filter)
+            .populate('autores', '_id nombre apellido fotografia')
+            .sort({ precio: orden === 'desc' ? -1 : 1 })
+            .lean();
+
+        const obras = await query;
+        res.json(obras.map(mapObraToFrontend));
+    } catch (err) {
+        console.error("Error en obras-filtradas:", err);
+        res.status(500).json({ error: "Error en la base de datos", detalles: err });
+    }
 });
 
-
-// 3. Detalle de Autor (Perfil individual con obras detalladas)
-router.get('/autor-detalle/:id', (req, res) => {
-    const id = req.params.id;
-    const { ordenDate } = req.query;
-
-       const sqlAutor = `
-        SELECT a.*, n.Descripcion as NacionalidadDesc 
-        FROM Autor a
-        LEFT JOIN Nacionalidad n ON a.id_Nacionalidad = n.id_Nacionalidad
-        WHERE a.id_Autor = ?
-    `;
-
-    let sqlObras = `
-        SELECT 
-            o.id_Obra,
-            o.Nombre,
-            o.Fecha_creacion,
-            o.Precio,
-            o.Estado_obra,
-            o.Fotografia as imagen,
-            g.Nombre as GeneroNombre,
-            p.Tecnica_Principal,
-            p.Soporte_Base,
-            e.Material_Predominante,
-            e.Requiere_Pedestal,
-            f.Formato_Origen,
-            oo.Metal_Base_Dominante,
-            oo.Kilataje_Estandar,
-            c.Tecnica_Acabado,
-            c.Tipo_Arcilla_Base
-        FROM Obra o 
-        INNER JOIN Obra_autor oa ON o.id_Obra = oa.id_Obra 
-        INNER JOIN Genero g ON o.id_Genero = g.id_Genero
-        LEFT JOIN Pintura p ON o.id_Obra = p.id_Obra
-        LEFT JOIN Escultura e ON o.id_Obra = e.id_Obra
-        LEFT JOIN Fotografia f ON o.id_Obra = f.id_Obra
-        LEFT JOIN Orfebreria oo ON o.id_Obra = oo.id_Obra
-        LEFT JOIN Ceramica c ON o.id_Obra = c.id_Obra
-        WHERE oa.id_Autor = ? AND o.Estado_obra = 'Disponible'
-    `;
-
-    sqlObras += (ordenDate === 'asc') ? " ORDER BY o.Fecha_creacion ASC" : " ORDER BY o.Fecha_creacion DESC";
-
-    db.query(sqlAutor, [id], (err, autorRes) => {
-        if (err) {
-            console.error("Error al obtener autor:", err);
-            return res.status(500).json({ error: "Error en la base de datos", detalles: err });
-        }
-        
-        if (autorRes.length === 0) {
+router.get('/autor-detalle/:id', async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const autor = await Autor.findById(id).lean();
+        if (!autor) {
             return res.status(404).json({ error: "Autor no encontrado" });
         }
-        
-        const autor = autorRes[0];
-        
-        // Cargar imagen del autor desde assets/images/authors/
+
         let autorImagenBase64 = null;
-        if (autor.Fotografia && autor.Fotografia !== 'NULL' && autor.Fotografia !== '') {
-            const rutaImagen = path.join(__dirname, '..', 'assets', 'images', 'authors', path.basename(autor.Fotografia));
-            console.log(`Buscando imagen del autor en: ${rutaImagen}`);
-            
+        if (autor.fotografia && autor.fotografia !== 'NULL' && autor.fotografia !== '') {
+            const rutaImagen = path.join(__dirname, '..', 'assets', 'images', 'authors', path.basename(autor.fotografia));
             if (fs.existsSync(rutaImagen)) {
                 try {
                     const imageBuffer = fs.readFileSync(rutaImagen);
                     autorImagenBase64 = imageBuffer.toString('base64');
-                    console.log(`✅ Imagen del autor cargada: ${autor.Nombre} ${autor.Apellido}`);
                 } catch (err) {
                     console.error("Error leyendo imagen del autor:", err);
                 }
-            } else {
-                console.log(`❌ No se encontró la imagen del autor: ${rutaImagen}`);
             }
         }
-        autor.Fotografia = autorImagenBase64;
-        
-        db.query(sqlObras, [id], (err, obrasRes) => {
-            if (err) {
-                console.error("Error al obtener obras:", err);
-                return res.status(500).json({ error: "Error en la base de datos", detalles: err });
-            }
-            
-            // Convertir imágenes de las obras a base64 desde assets/images/art_previews/
-            obrasRes.forEach(obra => {
-                if (obra.imagen && obra.imagen !== 'NULL' && obra.imagen !== '') {
-                    const rutaImagen = path.join(__dirname, '..', 'assets', 'images', 'art_previews', path.basename(obra.imagen));
-                    if (fs.existsSync(rutaImagen)) {
-                        try {
-                            const imageBuffer = fs.readFileSync(rutaImagen);
-                            obra.imagen = imageBuffer.toString('base64');
-                        } catch (err) {
-                            console.error("Error leyendo imagen de obra:", err);
-                            obra.imagen = null;
-                        }
-                    } else {
-                        obra.imagen = null;
-                    }
-                } else {
-                    obra.imagen = null;
-                }
-            });
 
-            res.json({ autor: autor, obras: obrasRes });
+        const { ordenDate } = req.query;
+        let obrasQuery = Obra.find({ autores: id, estado_obra: 'Disponible' })
+            .populate('autores', '_id nombre apellido fotografia')
+            .lean();
+
+        if (ordenDate === 'asc') {
+            obrasQuery = obrasQuery.sort({ fecha_creacion: 1 });
+        } else {
+            obrasQuery = obrasQuery.sort({ fecha_creacion: -1 });
+        }
+
+        const obras = await obrasQuery;
+
+        const obrasMapped = obras.map(obra => {
+            const mapped = mapObraDetailToFrontend(obra);
+
+            if (obra.fotografia && obra.fotografia !== 'NULL' && obra.fotografia !== '') {
+                const rutaImagen = path.join(__dirname, '..', 'assets', 'images', 'art_previews', path.basename(obra.fotografia));
+                if (fs.existsSync(rutaImagen)) {
+                    try {
+                        const imageBuffer = fs.readFileSync(rutaImagen);
+                        mapped.imagen = imageBuffer.toString('base64');
+                    } catch (err) {
+                        console.error("Error leyendo imagen de obra:", err);
+                    }
+                }
+            }
+
+            return mapped;
         });
-    });
+
+        res.json({
+            autor: {
+                id_Autor: autor._id,
+                Nombre: autor.nombre,
+                Apellido: autor.apellido,
+                Fecha_nacimiento: autor.fecha_nacimiento,
+                Fotografia: autorImagenBase64,
+                Biografia: autor.biografia,
+                Nacionalidad: autor.nacionalidad,
+                NacionalidadDesc: autor.nacionalidad
+            },
+            obras: obrasMapped
+        });
+    } catch (err) {
+        console.error("Error en autor-detalle:", err);
+        res.status(500).json({ error: "Error en la base de datos", detalles: err });
+    }
 });
 
-// 4. Agregar rutas de autenticación
 router.get('/estado-usuario', (req, res) => {
     res.json({ autenticado: !!req.session.usuario });
 });
@@ -196,85 +174,85 @@ router.get('/usuario-actual', (req, res) => {
     }
 });
 
-
-// 5. Catálogo general de artistas
-router.get('/artistas-catalogo', (req, res) => {
-    console.log("=== SOLICITUD A /artistas-catalogo ===");
-    
-    const query = `
-        SELECT 
-            a.id_Autor, 
-            a.Nombre, 
-            a.Apellido, 
-            a.Fecha_nacimiento, 
-            a.Fotografia as foto_url,
-            a.Biografia,
-            n.Descripcion as Nacionalidad,
-            GROUP_CONCAT(DISTINCT g.Nombre SEPARATOR ', ') AS Especialidades
-        FROM Autor a
-        LEFT JOIN Nacionalidad n ON a.id_Nacionalidad = n.id_Nacionalidad
-        LEFT JOIN Obra_autor oa ON a.id_Autor = oa.id_Autor
-        LEFT JOIN Obra o ON oa.id_Obra = o.id_Obra
-        LEFT JOIN Genero g ON o.id_Genero = g.id_Genero
-        GROUP BY a.id_Autor, n.Descripcion
-    `;
-
-    db.query(query, (err, results) => {
-        if (err) {
-            console.error("Error en query:", err);
-            return res.status(500).json({ error: "Error en la base de datos", detalles: err });
-        }
-
-        console.log(`Se encontraron ${results.length} artistas en la BD`);
-
-        const processedResults = results.map(artista => {
-            let imagenBase64 = null;
-            
-            // RUTAS CORREGIDAS - verifica dónde están realmente tus imágenes
-            if (artista.foto_url && artista.foto_url !== 'NULL' && artista.foto_url !== '') {
-                try {
-                    // Opción 1: Si la foto_url es solo el nombre del archivo
-                    let rutasPosibles = [
-                        path.join(__dirname, '..', 'public', 'Estilos', 'Imagenes', path.basename(artista.foto_url)),
-                        path.join(__dirname, '..', 'assets', 'images', 'authors', path.basename(artista.foto_url)),
-                        path.join(__dirname, '..', 'uploads', 'autores', path.basename(artista.foto_url)),
-                        artista.foto_url // Si es ruta absoluta
-                    ];
-                    
-                    let imagenEncontrada = false;
-                    for (let rutaImagen of rutasPosibles) {
-                        if (fs.existsSync(rutaImagen)) {
-                            console.log(`✅ Imagen encontrada en: ${rutaImagen}`);
-                            const imageBuffer = fs.readFileSync(rutaImagen);
-                            imagenBase64 = imageBuffer.toString('base64');
-                            imagenEncontrada = true;
-                            break;
+router.get('/artistas-catalogo', async (req, res) => {
+    try {
+        const pipeline = [
+            {
+                $lookup: {
+                    from: 'obras',
+                    let: { autorId: '$_id' },
+                    pipeline: [
+                        { $match: { $expr: { $in: ['$$autorId', '$autores'] } } },
+                        { $group: { _id: '$genero.nombre' } }
+                    ],
+                    as: 'obras_info'
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    nombre: 1,
+                    apellido: 1,
+                    fecha_nacimiento: 1,
+                    fotografia: 1,
+                    biografia: 1,
+                    nacionalidad: 1,
+                    especialidades: {
+                        $reduce: {
+                            input: '$obras_info._id',
+                            initialValue: [],
+                            in: { $concatArrays: ['$$value', ['$$this']] }
                         }
                     }
-                    
-                    if (!imagenEncontrada) {
-                        console.log(`❌ Imagen no encontrada para: ${artista.Nombre} ${artista.Apellido}`);
-                        console.log(`Rutas buscadas:`, rutasPosibles);
+                }
+            },
+            { $sort: { apellido: 1 } }
+        ];
+
+        const artistas = await Autor.aggregate(pipeline);
+
+        const processedResults = artistas.map(artista => {
+            let imagenBase64 = null;
+
+            if (artista.fotografia && artista.fotografia !== 'NULL' && artista.fotografia !== '') {
+                const rutasPosibles = [
+                    path.join(__dirname, '..', 'public', 'Estilos', 'Imagenes', path.basename(artista.fotografia)),
+                    path.join(__dirname, '..', 'assets', 'images', 'authors', path.basename(artista.fotografia)),
+                    path.join(__dirname, '..', 'uploads', 'autores', path.basename(artista.fotografia))
+                ];
+
+                for (const ruta of rutasPosibles) {
+                    if (fs.existsSync(ruta)) {
+                        try {
+                            const imageBuffer = fs.readFileSync(ruta);
+                            imagenBase64 = imageBuffer.toString('base64');
+                            break;
+                        } catch (err) {
+                            console.error("Error leyendo imagen:", err.message);
+                        }
                     }
-                } catch (err) {
-                    console.error(`Error leyendo imagen:`, err.message);
                 }
             }
-            
+
             return {
-                id_Autor: artista.id_Autor,
-                Nombre: artista.Nombre,
-                Apellido: artista.Apellido,
-                Fecha_nacimiento: artista.Fecha_nacimiento,
+                id_Autor: artista._id,
+                Nombre: artista.nombre,
+                Apellido: artista.apellido,
+                Fecha_nacimiento: artista.fecha_nacimiento,
                 Fotografia: imagenBase64,
-                Especialidades: artista.Especialidades || 'Sin especialidades',
-                Nacionalidad: artista.Nacionalidad || 'Nacionalidad no especificada',
-                Biografia: artista.Biografia || ''
+                Especialidades: (artista.especialidades && artista.especialidades.length > 0)
+                    ? artista.especialidades.join(', ')
+                    : 'Sin especialidades',
+                Nacionalidad: artista.nacionalidad || 'Nacionalidad no especificada',
+                Biografia: artista.biografia || ''
             };
         });
-        
+
         res.json(processedResults);
-    });
+    } catch (err) {
+        console.error("Error en artistas-catalogo:", err);
+        res.status(500).json({ error: "Error en la base de datos", detalles: err });
+    }
 });
 
 module.exports = router;
