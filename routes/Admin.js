@@ -804,7 +804,6 @@ router.get('/api/especializaciones', async (req, res) => {
         res.json(esp.map(e => ({
             id: e._id,
             nombre: e.nombre,
-            descripcion: e.descripcion || '',
             atributos: e.atributos || []
         })));
     } catch (err) {
@@ -815,9 +814,14 @@ router.get('/api/especializaciones', async (req, res) => {
 
 router.post('/api/especializaciones', async (req, res) => {
     try {
-        const { nombre, descripcion, atributos } = req.body;
+        const { nombre, atributos } = req.body;
         if (!nombre || !nombre.trim()) {
-            return res.status(400).json({ success: false, message: 'El nombre es requerido' });
+            return res.status(400).json({ success: false, message: 'Debe seleccionar un género' });
+        }
+
+        const existe = await Especializacion.findOne({ nombre: nombre.trim() }).lean();
+        if (existe) {
+            return res.status(400).json({ success: false, message: 'Ya existe una especialización para este género' });
         }
 
         const maxId = await Especializacion.findOne().sort({ _id: -1 }).select('_id').lean();
@@ -826,7 +830,6 @@ router.post('/api/especializaciones', async (req, res) => {
         const esp = new Especializacion({
             _id: newId,
             nombre: nombre.trim(),
-            descripcion: descripcion ? descripcion.trim() : '',
             atributos: Array.isArray(atributos) ? atributos : []
         });
 
@@ -835,6 +838,26 @@ router.post('/api/especializaciones', async (req, res) => {
     } catch (err) {
         console.error('Error creando especialización:', err);
         res.status(500).json({ success: false, message: 'Error al crear especialización' });
+    }
+});
+
+router.put('/api/especializaciones/:id', async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { atributos } = req.body;
+
+        if (!Array.isArray(atributos) || atributos.length === 0) {
+            return res.status(400).json({ success: false, message: 'Debe proporcionar al menos un atributo' });
+        }
+
+        const result = await Especializacion.findByIdAndUpdate(id, { atributos }, { new: true });
+        if (!result) {
+            return res.status(404).json({ success: false, message: 'Especialización no encontrada' });
+        }
+        res.json({ success: true, message: 'Especialización actualizada correctamente' });
+    } catch (err) {
+        console.error('Error actualizando especialización:', err);
+        res.status(500).json({ success: false, message: 'Error al actualizar especialización' });
     }
 });
 
@@ -849,6 +872,104 @@ router.delete('/api/especializaciones/:id', async (req, res) => {
     } catch (err) {
         console.error('Error eliminando especialización:', err);
         res.status(500).json({ success: false, message: 'Error al eliminar especialización' });
+    }
+});
+
+router.get('/api/especializaciones/:id/obras', async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const esp = await Especializacion.findById(id).lean();
+        if (!esp) {
+            return res.status(404).json({ success: false, message: 'Especialización no encontrada' });
+        }
+
+        const soloSinDetalles = req.query.solo_sin_detalles === 'true';
+        let filter = { 'genero.nombre': esp.nombre };
+
+        if (soloSinDetalles) {
+            filter['genero.detalles'] = { $exists: false };
+        }
+
+        const obras = await Obra.find(filter)
+            .select('_id nombre genero.detalles')
+            .sort({ _id: 1 })
+            .lean();
+
+        const sinDetallesFilter = soloSinDetalles
+            ? obras
+            : await Obra.find({ 'genero.nombre': esp.nombre, 'genero.detalles': { $exists: false } })
+                .select('_id')
+                .lean();
+
+        const idsSinDetalles = new Set(sinDetallesFilter.map(o => o._id));
+
+        res.json({
+            obras: obras.map(o => ({
+                id: o._id,
+                nombre: o.nombre,
+                detalles: o.genero?.detalles || {}
+            })),
+            totalObras: await Obra.countDocuments({ 'genero.nombre': esp.nombre }),
+            obrasSinDetalles: idsSinDetalles.size,
+            idsSinDetalles: Array.from(idsSinDetalles)
+        });
+    } catch (err) {
+        console.error('Error obteniendo obras por especialización:', err);
+        res.status(500).json({ success: false, message: 'Error al obtener obras' });
+    }
+});
+
+router.put('/api/obras-admin/:id/detalles', async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { detalles } = req.body;
+
+        if (!detalles || typeof detalles !== 'object') {
+            return res.status(400).json({ success: false, message: 'Debe proporcionar un objeto de detalles válido' });
+        }
+
+        const obra = await Obra.findById(id);
+        if (!obra) {
+            return res.status(404).json({ success: false, message: 'Obra no encontrada' });
+        }
+
+        obra.genero.detalles = detalles;
+        await obra.save();
+
+        res.json({ success: true, message: 'Detalles de obra actualizados correctamente' });
+    } catch (err) {
+        console.error('Error actualizando detalles de obra:', err);
+        res.status(500).json({ success: false, message: 'Error al actualizar detalles de obra' });
+    }
+});
+
+router.put('/api/especializaciones/:id/obras/batch-detalles', async (req, res) => {
+    try {
+        const espId = parseInt(req.params.id);
+        const { detalles } = req.body;
+
+        if (!detalles || typeof detalles !== 'object') {
+            return res.status(400).json({ success: false, message: 'Debe proporcionar un objeto de detalles válido' });
+        }
+
+        const esp = await Especializacion.findById(espId).lean();
+        if (!esp) {
+            return res.status(404).json({ success: false, message: 'Especialización no encontrada' });
+        }
+
+        const result = await Obra.updateMany(
+            { 'genero.nombre': esp.nombre, 'genero.detalles': { $exists: false } },
+            { $set: { 'genero.detalles': detalles } }
+        );
+
+        res.json({
+            success: true,
+            message: `${result.modifiedCount} obra(s) actualizada(s) correctamente`,
+            modifiedCount: result.modifiedCount
+        });
+    } catch (err) {
+        console.error('Error en actualización masiva de detalles:', err);
+        res.status(500).json({ success: false, message: 'Error al actualizar detalles masivamente' });
     }
 });
 

@@ -10,6 +10,7 @@ const Autor = require('../models/Autor');
 const Obra = require('../models/Obra');
 const Genero = require('../models/Genero');
 const Nacionalidad = require('../models/Nacionalidad');
+const Especializacion = require('../models/Especializacion');
 
 const seed = async () => {
     try {
@@ -24,6 +25,7 @@ const seed = async () => {
         await Obra.deleteMany({});
         await Genero.deleteMany({});
         await Nacionalidad.deleteMany({});
+        await Especializacion.deleteMany({});
 
         const autores = await Autor.insertMany(data.autores);
         console.log(`Insertados ${autores.length} autores`);
@@ -36,6 +38,9 @@ const seed = async () => {
 
         const nacionalidades = await Nacionalidad.insertMany(data.nacionalidades);
         console.log(`Insertadas ${nacionalidades.length} nacionalidades`);
+
+        const especializaciones = await Especializacion.insertMany(data.especializaciones);
+        console.log(`Insertadas ${especializaciones.length} especializaciones`);
 
         console.log('Seed completado exitosamente');
         await mongoose.connection.close();

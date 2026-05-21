@@ -525,5 +525,52 @@
     { "_id": 3, "nombre": "Fotografía", "descripcion": "" },
     { "_id": 4, "nombre": "Orfebreria", "descripcion": "" },
     { "_id": 5, "nombre": "Ceramica", "descripcion": "" }
+  ],
+  "especializaciones": [
+    {
+      "_id": 1,
+      "nombre": "Pintura",
+      "atributos": [
+        { "nombre": "tecnica_principal", "tipo": "string", "requerido": true },
+        { "nombre": "soporte_base", "tipo": "string", "requerido": true },
+        { "nombre": "requiere_enmarcado", "tipo": "boolean", "requerido": false }
+      ]
+    },
+    {
+      "_id": 2,
+      "nombre": "Escultura",
+      "atributos": [
+        { "nombre": "material_predominante", "tipo": "string", "requerido": true },
+        { "nombre": "requiere_pedestal", "tipo": "boolean", "requerido": false },
+        { "nombre": "clasificacion_espacio", "tipo": "string", "requerido": false }
+      ]
+    },
+    {
+      "_id": 3,
+      "nombre": "Fotografía",
+      "atributos": [
+        { "nombre": "formato_origen", "tipo": "string", "requerido": true },
+        { "nombre": "tipo_impresion_estandar", "tipo": "string", "requerido": false },
+        { "nombre": "requiere_revelado_quimico", "tipo": "boolean", "requerido": false }
+      ]
+    },
+    {
+      "_id": 4,
+      "nombre": "Orfebreria",
+      "atributos": [
+        { "nombre": "metal_base_dominante", "tipo": "string", "requerido": true },
+        { "nombre": "kilataje_estandar", "tipo": "string", "requerido": false },
+        { "nombre": "requiere_certificado_autenticidad", "tipo": "boolean", "requerido": false }
+      ]
+    },
+    {
+      "_id": 5,
+      "nombre": "Ceramica",
+      "atributos": [
+        { "nombre": "tecnica_acabado", "tipo": "string", "requerido": false },
+        { "nombre": "tipo_arcilla_base", "tipo": "string", "requerido": true },
+        { "nombre": "temperatura_coccion_promedio_celsius", "tipo": "number", "requerido": false }
+      ]
+    }
   ]
 }

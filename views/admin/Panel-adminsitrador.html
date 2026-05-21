@@ -408,33 +408,34 @@
         <!-- Tab: Gestionar Especializaciones -->
         <div id="tab-especializaciones" class="tab-content" style="display:none">
             <div class="card">
-                <h3>🏷️ Agregar Nueva Especialización</h3>
+                <h3>🏷️ Agregar Especialización por Género</h3>
                 <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:15px;">
                     <div>
-                        <label>Nombre:</label>
-                        <input type="text" id="input-esp-nombre" class="edit-input" placeholder="Ej: Escultura" style="width:180px;">
-                    </div>
-                    <div>
-                        <label>Descripción (opcional):</label>
-                        <input type="text" id="input-esp-desc" class="edit-input" placeholder="Breve descripción" style="width:260px;">
+                        <label>Género:</label>
+                        <select id="input-esp-genero" class="edit-input" style="width:220px;" onchange="onGeneroEspChange()">
+                            <option value="">— Seleccione un género —</option>
+                        </select>
                     </div>
                 </div>
-                <div style="margin-bottom:10px;">
-                    <strong>Atributos:</strong>
-                    <button class="btn btn-blue" onclick="agregarFilaAtributo()" style="margin-left:10px;padding:4px 12px;">➕ Agregar atributo</button>
+                <div id="esp-atributos-section" style="display:none;">
+                    <div style="margin-bottom:10px;">
+                        <strong>Atributos:</strong>
+                        <button class="btn btn-blue" onclick="agregarFilaAtributo()" style="margin-left:10px;padding:4px 12px;">➕ Agregar atributo</button>
+                    </div>
+                    <table id="tabla-atributos" style="width:100%;margin-bottom:15px;">
+                        <thead>
+                            <tr>
+                                <th style="width:40%;">Nombre del atributo</th>
+                                <th style="width:25%;">Tipo</th>
+                                <th style="width:15%;">Requerido</th>
+                                <th style="width:20%;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="body-atributos"></tbody>
+                    </table>
+                    <button class="btn btn-green" onclick="agregarEspecializacion()">💾 Guardar Especialización</button>
+                    <button class="btn btn-gray" id="btn-cancelar-editar-esp" onclick="resetFormEspecializacion()" style="display:none;margin-left:8px;padding:8px 20px;">❌ Cancelar edición</button>
                 </div>
-                <table id="tabla-atributos" style="width:100%;margin-bottom:15px;">
-                    <thead>
-                        <tr>
-                            <th style="width:40%;">Nombre del atributo</th>
-                            <th style="width:25%;">Tipo</th>
-                            <th style="width:15%;">Requerido</th>
-                            <th style="width:20%;">Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody id="body-atributos"></tbody>
-                </table>
-                <button class="btn btn-green" onclick="agregarEspecializacion()">💾 Guardar Especialización</button>
             </div>
             <div class="card">
                 <h3>📋 Especializaciones Existentes</h3>
@@ -442,9 +443,9 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Descripción</th>
+                            <th>Género</th>
                             <th>Atributos</th>
+                            <th>Obras</th>
                             <th>Acción</th>
                         </tr>
                     </thead>
@@ -515,7 +516,7 @@
     if (tab === 'generos') cargarGeneros();
     if (tab === 'autores') { cargarAutores(); cargarNacionalidades(); }
     if (tab === 'obras') { cargarObrasAdmin(); cargarGenerosSelect(); cargarAutoresSelect(); }
-    if (tab === 'especializaciones') cargarEspecializaciones();
+    if (tab === 'especializaciones') { cargarEspecializaciones(); cargarGenerosSelectEsp(); }
     if (tab === 'rep-obras') {
         // Establecer fechas por defecto (últimos 30 días)
         const hoy = new Date();
@@ -1582,6 +1583,90 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
         // --- CRUD ESPECIALIZACIONES (MongoDB) ---
         let contadorAtributos = 0;
 
+        const PRECARGAS_ATRIBUTOS = {
+            'Pintura': [
+                { nombre: 'tecnica_principal', tipo: 'string', requerido: true },
+                { nombre: 'soporte_base', tipo: 'string', requerido: true },
+                { nombre: 'requiere_enmarcado', tipo: 'boolean', requerido: false }
+            ],
+            'Escultura': [
+                { nombre: 'material_predominante', tipo: 'string', requerido: true },
+                { nombre: 'requiere_pedestal', tipo: 'boolean', requerido: false },
+                { nombre: 'clasificacion_espacio', tipo: 'string', requerido: false }
+            ],
+            'Fotografía': [
+                { nombre: 'formato_origen', tipo: 'string', requerido: true },
+                { nombre: 'tipo_impresion_estandar', tipo: 'string', requerido: false },
+                { nombre: 'requiere_revelado_quimico', tipo: 'boolean', requerido: false }
+            ],
+            'Orfebreria': [
+                { nombre: 'metal_base_dominante', tipo: 'string', requerido: true },
+                { nombre: 'kilataje_estandar', tipo: 'string', requerido: false },
+                { nombre: 'requiere_certificado_autenticidad', tipo: 'boolean', requerido: false }
+            ],
+            'Ceramica': [
+                { nombre: 'tecnica_acabado', tipo: 'string', requerido: false },
+                { nombre: 'tipo_arcilla_base', tipo: 'string', requerido: true },
+                { nombre: 'temperatura_coccion_promedio_celsius', tipo: 'number', requerido: false }
+            ]
+        };
+
+        async function cargarGenerosSelectEsp() {
+            try {
+                const res = await fetch('/api/generos');
+                const data = await res.json();
+                const sel = document.getElementById('input-esp-genero');
+                sel.innerHTML = '<option value="">— Seleccione un género —</option>' +
+                    data.map(g => `<option value="${g.nombre}">${g.nombre}</option>`).join('');
+            } catch (error) {
+                console.error('Error cargando géneros:', error);
+            }
+        }
+
+        function onGeneroEspChange() {
+            const sel = document.getElementById('input-esp-genero');
+            const genero = sel.value;
+            const section = document.getElementById('esp-atributos-section');
+            const tbody = document.getElementById('body-atributos');
+
+            if (!genero) {
+                section.style.display = 'none';
+                return;
+            }
+
+            // If in edit mode, skip duplicate check
+            if (espEditandoId) {
+                section.style.display = 'block';
+                return;
+            }
+
+            // Check if this género already has a specialization saved
+            const filas = document.querySelectorAll('#body-especializaciones tr');
+            let yaExiste = false;
+            filas.forEach(tr => {
+                const celdas = tr.querySelectorAll('td');
+                if (celdas.length >= 2 && celdas[1].textContent.trim() === genero) {
+                    yaExiste = true;
+                }
+            });
+
+            if (yaExiste) {
+                section.style.display = 'none';
+                alert('ℹ️ Ya existe una especialización para este género. Puede verla en la tabla de abajo.');
+                return;
+            }
+
+            // Pre-cargar atributos conocidos del género
+            tbody.innerHTML = '';
+            contadorAtributos = 0;
+            const predef = PRECARGAS_ATRIBUTOS[genero] || [];
+            predef.forEach(attr => {
+                agregarFilaAtributo(attr.nombre, attr.tipo, attr.requerido);
+            });
+
+            section.style.display = 'block';
+        }
+
         function agregarFilaAtributo(nombre, tipo, requerido) {
             contadorAtributos++;
             const idx = contadorAtributos;
@@ -1623,10 +1708,20 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
                     <tr id="esp-fila-${e.id}">
                         <td>${e.id}</td>
                         <td>${e.nombre}</td>
-                        <td>${e.descripcion || '—'}</td>
                         <td>${e.atributos.map(a => `<span style="display:inline-block;background:#e2e8f0;padding:2px 8px;border-radius:10px;margin:2px;font-size:0.8rem;">${a.nombre} (${a.tipo}${a.requerido ? ', req' : ''})</span>`).join(' ') || '—'}</td>
                         <td>
-                            <button class="btn btn-red" onclick="eliminarEspecializacion(${e.id}, this)">🗑️ Eliminar</button>
+                            <button class="btn btn-blue" onclick="toggleObrasEspecializacion(${e.id}, true)" style="padding:4px 10px;font-size:0.75rem;">📂 Ver Obras</button>
+                        </td>
+                        <td style="display:flex;gap:5px;">
+                            <button class="btn btn-green" onclick="editarEspecializacion(${e.id})" style="padding:4px 10px;font-size:0.75rem;">✏️ Editar</button>
+                            <button class="btn btn-red" onclick="eliminarEspecializacion(${e.id}, this)" style="padding:4px 10px;font-size:0.75rem;">🗑️</button>
+                        </td>
+                    </tr>
+                    <tr id="esp-obras-${e.id}" style="display:none;">
+                        <td colspan="5" style="padding:0;background:#f8fafc;">
+                            <div id="esp-obras-content-${e.id}" style="padding:15px;">
+                                <p style="text-align:center;color:#888;">Cargando obras...</p>
+                            </div>
                         </td>
                     </tr>
                 `).join('');
@@ -1635,12 +1730,512 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
             }
         }
 
+        let espObrasFilterSinDetalles = {};
+
+        async function toggleObrasEspecializacion(espId, soloSinDetalles) {
+            const fila = document.getElementById(`esp-obras-${espId}`);
+            const content = document.getElementById(`esp-obras-content-${espId}`);
+            if (fila.style.display !== 'none' && soloSinDetalles === undefined) {
+                fila.style.display = 'none';
+                return;
+            }
+            fila.style.display = 'table-row';
+            content.innerHTML = '<p style="text-align:center;color:#888;">Cargando obras...</p>';
+
+            try {
+                const [espRes, data] = await Promise.all([
+                    fetch('/api/especializaciones'),
+                    fetch(`/api/especializaciones/${espId}/obras?solo_sin_detalles=${soloSinDetalles === true}`).then(r => r.json())
+                ]);
+                const espList = await espRes.json();
+                const esp = espList.find(e => e.id === espId);
+                const obras = data.obras || [];
+                const totalObras = data.totalObras || 0;
+                const obrasSinDetalles = data.obrasSinDetalles || 0;
+                const idsSinDetalles = data.idsSinDetalles || [];
+
+                espObrasFilterSinDetalles[espId] = soloSinDetalles === true;
+
+                // Get the attribute definitions from the existing table row
+                const espRow = document.getElementById(`esp-fila-${espId}`);
+                const attrBadges = espRow.querySelectorAll('td:nth-child(3) span');
+                const attrDefs = Array.from(attrBadges).map(b => {
+                    const text = b.textContent;
+                    const name = text.split(' (')[0];
+                    const req = text.includes(', req');
+                    return { nombre: name, requerido: req };
+                });
+                const attrNames = attrDefs.map(a => a.nombre);
+
+                let html = '';
+
+                // Summary bar
+                html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+                    <div style="font-size:0.85rem;color:#475569;">
+                        <strong>Total:</strong> ${totalObras} obras |
+                        <strong style="color:${obrasSinDetalles > 0 ? '#dc2626' : '#16a34a'};">${obrasSinDetalles} sin atributos</strong>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                        <label style="font-size:0.85rem;cursor:pointer;display:flex;align-items:center;gap:4px;">
+                            <input type="checkbox" id="filtro-sin-detalles-${espId}" ${soloSinDetalles ? 'checked' : ''} onchange="toggleObrasEspecializacion(${espId}, this.checked)">
+                            Solo obras sin atributos
+                        </label>
+                        ${obrasSinDetalles > 0 && attrNames.length > 0 ? `
+                        <button class="btn btn-blue" onclick="abrirFormAsignacionMasiva(${espId})" style="padding:4px 12px;font-size:0.8rem;">
+                            📝 Asignar a ${obrasSinDetalles} obra(s) sin atributos
+                        </button>
+                        ` : ''}
+                    </div>
+                </div>`;
+
+                if (!obras.length) {
+                    if (soloSinDetalles) {
+                        html += '<p style="text-align:center;color:#16a34a;padding:20px;font-weight:bold;">✅ Todas las obras tienen atributos asignados</p>';
+                    } else {
+                        html += '<p style="text-align:center;color:#999;padding:20px;">No hay obras con este género</p>';
+                    }
+                    content.innerHTML = html;
+                    return;
+                }
+
+                html += `<table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+                    <thead>
+                        <tr style="background:#e2e8f0;">
+                            <th style="padding:6px 8px;border:1px solid #cbd5e1;text-align:left;">ID</th>
+                            <th style="padding:6px 8px;border:1px solid #cbd5e1;text-align:left;">Obra</th>
+                            ${attrDefs.map(ad => `<th style="padding:6px 8px;border:1px solid #cbd5e1;text-align:left;">${ad.nombre}${ad.requerido ? ' <span style="color:#dc2626;">*</span>' : ''}</th>`).join('')}
+                            <th style="padding:6px 8px;border:1px solid #cbd5e1;text-align:center;">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+                obras.forEach(o => {
+                    const sinDetalles = idsSinDetalles.includes(o.id);
+                    html += `<tr id="obra-detalle-fila-${o.id}" style="${sinDetalles ? 'background:#fff7ed;' : ''}">
+                        <td style="padding:6px 8px;border:1px solid #e2e8f0;">${o.id}</td>
+                        <td style="padding:6px 8px;border:1px solid #e2e8f0;">
+                            ${o.nombre}
+                            ${sinDetalles ? '<span style="display:inline-block;background:#f97316;color:white;font-size:0.7rem;padding:1px 6px;border-radius:8px;margin-left:4px;">Sin atributos</span>' : ''}
+                        </td>`;
+                    attrDefs.forEach(ad => {
+                        const a = ad.nombre;
+                        const val = o.detalles?.[a] !== undefined ? o.detalles[a] : '';
+                        const attrDef = esp?.atributos?.find(at => at.nombre === a);
+                        const tipo = attrDef?.tipo || 'string';
+                        const isReq = ad.requerido;
+                        const isEmpty = val === '' || val === undefined || val === null;
+                        const tdStyle = 'padding:6px 8px;border:1px solid #e2e8f0;';
+                        const inputStyle = isReq && isEmpty ? 'border:2px solid #dc2626;background:#fef2f2;' : '';
+                        if (tipo === 'boolean') {
+                            html += `<td style="${tdStyle}text-align:center;">
+                                <select id="det-${o.id}-${a}" class="edit-input" style="width:100px;${inputStyle}" onchange="marcarCampoCompleto(this)">
+                                    <option value="" ${val === '' || val === undefined ? 'selected' : ''}>—</option>
+                                    <option value="true" ${val === true || val === 'true' ? 'selected' : ''}>Sí</option>
+                                    <option value="false" ${val === false || val === 'false' ? 'selected' : ''}>No</option>
+                                </select>
+                            </td>`;
+                        } else if (tipo === 'number') {
+                            html += `<td style="${tdStyle}">
+                                <input type="number" step="any" id="det-${o.id}-${a}" class="edit-input" value="${val !== '' ? val : ''}" style="width:90%;${inputStyle}" oninput="marcarCampoCompleto(this)">
+                            </td>`;
+                        } else {
+                            html += `<td style="${tdStyle}">
+                                <input type="text" id="det-${o.id}-${a}" class="edit-input" value="${escHtml(String(val))}" style="width:90%;${inputStyle}" oninput="marcarCampoCompleto(this)">
+                            </td>`;
+                        }
+                    });
+                    html += `<td style="padding:6px 8px;border:1px solid #e2e8f0;text-align:center;">
+                        <button class="btn btn-green" onclick="guardarDetallesObra(${o.id}, ${espId})" style="padding:4px 10px;font-size:0.75rem;">💾</button>
+                    </td></tr>`;
+                });
+                html += '</tbody></table>';
+                content.innerHTML = html;
+            } catch (error) {
+                console.error('Error cargando obras de especialización:', error);
+                content.innerHTML = '<p style="text-align:center;color:red;padding:20px;">Error al cargar obras</p>';
+            }
+        }
+
+        function abrirFormAsignacionMasiva(espId) {
+            const content = document.getElementById(`esp-obras-content-${espId}`);
+            // Get attribute definitions from the table header
+            const espRow = document.getElementById(`esp-fila-${espId}`);
+            const attrBadges = espRow.querySelectorAll('td:nth-child(3) span');
+            const attrNames = Array.from(attrBadges).map(b => b.textContent.split(' (')[0]);
+
+            const espList = document.querySelectorAll('#body-especializaciones tr[id^="esp-fila-"]');
+            let espData = null;
+            fetch('/api/especializaciones')
+                .then(r => r.json())
+                .then(list => {
+                    espData = list.find(e => e.id === espId);
+                    if (!espData) return;
+
+                    let html = `<div style="background:#fef9c3;border:2px solid #eab308;border-radius:8px;padding:15px;margin-bottom:15px;">
+                        <h4 style="margin:0 0 10px 0;color:#854d0e;">📝 Asignación Masiva - ${espData.nombre}</h4>
+                        <p style="margin:0 0 10px 0;font-size:0.85rem;color:#854d0e;">
+                            Asigna valores a todas las obras de este género que aún no tienen atributos.
+                        </p>`;
+                    attrNames.forEach(a => {
+                        const attrDef = espData.atributos?.find(at => at.nombre === a);
+                        const tipo = attrDef?.tipo || 'string';
+                        const req = attrDef?.requerido ? ' <span style="color:#dc2626;">*</span>' : '';
+                        html += `<div style="margin-bottom:8px;">
+                            <label style="font-size:0.85rem;font-weight:bold;display:block;margin-bottom:2px;">${a}${req}</label>`;
+                        if (tipo === 'boolean') {
+                            html += `<select id="batch-val-${a}" class="edit-input" style="width:200px;">
+                                <option value="">—</option>
+                                <option value="true">Sí</option>
+                                <option value="false">No</option>
+                            </select>`;
+                        } else if (tipo === 'number') {
+                            html += `<input type="number" step="any" id="batch-val-${a}" class="edit-input" placeholder="Valor numérico" style="width:200px;">`;
+                        } else {
+                            html += `<input type="text" id="batch-val-${a}" class="edit-input" placeholder="Valor" style="width:200px;">`;
+                        }
+                        html += `</div>`;
+                    });
+                    html += `
+                        <div style="margin-top:12px;display:flex;gap:8px;">
+                            <button class="btn btn-green" onclick="ejecutarAsignacionMasiva(${espId})" style="padding:8px 20px;">✅ Asignar a todas</button>
+                            <button class="btn btn-gray" onclick="cerrarFormAsignacionMasiva(${espId})" style="padding:8px 20px;">❌ Cancelar</button>
+                        </div>
+                    </div>`;
+
+                    // Insert at top of content
+                    const existingForm = content.querySelector('.asignacion-masiva-form');
+                    if (existingForm) existingForm.remove();
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'asignacion-masiva-form';
+                    wrapper.innerHTML = html;
+                    content.insertBefore(wrapper, content.firstChild);
+                })
+                .catch(err => console.error('Error cargando especialización:', err));
+        }
+
+        function cerrarFormAsignacionMasiva(espId) {
+            const content = document.getElementById(`esp-obras-content-${espId}`);
+            const form = content.querySelector('.asignacion-masiva-form');
+            if (form) form.remove();
+        }
+
+        async function ejecutarAsignacionMasiva(espId) {
+            const btn = document.querySelector('.asignacion-masiva-form .btn-green');
+            if (!btn) return;
+
+            // Get attribute names and defs from the table header
+            const content = document.getElementById(`esp-obras-content-${espId}`);
+            const headers = content.querySelectorAll('thead th');
+            const attrDefs = [];
+            for (let i = 2; i < headers.length - 1; i++) {
+                const text = headers[i].textContent.trim();
+                const name = text.replace(/\s*\*$/, '');
+                const req = text.includes('*');
+                attrDefs.push({ nombre: name, requerido: req });
+            }
+
+            // Validate required fields in batch form
+            const faltantes = [];
+            attrDefs.forEach(ad => {
+                if (ad.requerido) {
+                    const el = document.getElementById(`batch-val-${ad.nombre}`);
+                    if (el) {
+                        const val = el.type === 'number' ? el.value : (el.tagName === 'SELECT' ? el.value : el.value.trim());
+                        if (val === '' || val === undefined || val === null) {
+                            faltantes.push(ad.nombre);
+                            el.style.border = '2px solid #dc2626';
+                            el.style.background = '#fef2f2';
+                        }
+                    }
+                }
+            });
+
+            if (faltantes.length > 0) {
+                alert(`⚠️ Los siguientes campos requeridos están vacíos:\n\n  • ${faltantes.join('\n  • ')}\n\nCompleta todos los campos requeridos antes de asignar.`);
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Asignando...';
+
+            const detalles = {};
+            attrDefs.forEach(ad => {
+                const a = ad.nombre;
+                const el = document.getElementById(`batch-val-${a}`);
+                if (el) {
+                    if (el.type === 'number') {
+                        detalles[a] = el.value !== '' ? parseFloat(el.value) : '';
+                    } else if (el.tagName === 'SELECT') {
+                        if (el.value === 'true') detalles[a] = true;
+                        else if (el.value === 'false') detalles[a] = false;
+                        else detalles[a] = '';
+                    } else {
+                        detalles[a] = el.value;
+                    }
+                }
+            });
+
+            try {
+                const res = await fetch(`/api/especializaciones/${espId}/obras/batch-detalles`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ detalles })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert(`✅ ${result.message}`);
+                    cerrarFormAsignacionMasiva(espId);
+                    toggleObrasEspecializacion(espId, espObrasFilterSinDetalles[espId] || false);
+                } else {
+                    alert('❌ ' + (result.message || 'Error en la asignación masiva'));
+                    btn.disabled = false;
+                    btn.textContent = '✅ Asignar a todas';
+                }
+            } catch (error) {
+                console.error('Error en asignación masiva:', error);
+                alert('❌ Error en la asignación masiva');
+                btn.disabled = false;
+                btn.textContent = '✅ Asignar a todas';
+            }
+        }
+
+        function marcarCampoCompleto(el) {
+            const val = el.type === 'checkbox' ? el.checked : el.value;
+            if (val !== '' && val !== undefined && val !== null) {
+                el.style.border = '';
+                el.style.background = '';
+            }
+        }
+
+        function validarRequeridos(obraId, espId) {
+            const obrasRow = document.getElementById(`esp-obras-${espId}`);
+            const headers = obrasRow.querySelectorAll('thead th');
+            const attrDefs = [];
+            for (let i = 2; i < headers.length - 1; i++) {
+                const text = headers[i].textContent.trim();
+                const name = text.replace(/\s*\*$/, '');
+                const req = text.includes('*');
+                attrDefs.push({ nombre: name, requerido: req });
+            }
+
+            const faltantes = [];
+            attrDefs.forEach(ad => {
+                if (ad.requerido) {
+                    const el = document.getElementById(`det-${obraId}-${ad.nombre}`);
+                    if (el) {
+                        const val = el.type === 'number' ? el.value : (el.tagName === 'SELECT' ? el.value : el.value.trim());
+                        if (val === '' || val === undefined || val === null) {
+                            faltantes.push(ad.nombre);
+                            el.style.border = '2px solid #dc2626';
+                            el.style.background = '#fef2f2';
+                        } else {
+                            el.style.border = '';
+                            el.style.background = '';
+                        }
+                    }
+                }
+            });
+
+            return faltantes;
+        }
+
+        function escHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        async function guardarDetallesObra(obraId, espId) {
+            const btn = document.querySelector(`#obra-detalle-fila-${obraId} .btn-green`);
+            if (!btn) return;
+
+            // Validate required fields first
+            const faltantes = validarRequeridos(obraId, espId);
+            if (faltantes.length > 0) {
+                alert(`⚠️ Los siguientes campos requeridos están vacíos:\n\n  • ${faltantes.join('\n  • ')}\n\nCompleta todos los campos requeridos antes de guardar.`);
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '⏳';
+
+            // Get attribute names from the obras table header
+            const obrasRow = document.getElementById(`esp-obras-${espId}`);
+            const headers = obrasRow.querySelectorAll('thead th');
+            const attrNames = [];
+            for (let i = 2; i < headers.length - 1; i++) {
+                const text = headers[i].textContent.trim();
+                attrNames.push(text.replace(/\s*\*$/, ''));
+            }
+
+            const detalles = {};
+            attrNames.forEach(a => {
+                const el = document.getElementById(`det-${obraId}-${a}`);
+                if (el) {
+                    if (el.type === 'number') {
+                        detalles[a] = el.value !== '' ? parseFloat(el.value) : '';
+                    } else if (el.tagName === 'SELECT') {
+                        if (el.value === 'true') detalles[a] = true;
+                        else if (el.value === 'false') detalles[a] = false;
+                        else detalles[a] = '';
+                    } else {
+                        detalles[a] = el.value;
+                    }
+                }
+            });
+
+            try {
+                const res = await fetch(`/api/obras-admin/${obraId}/detalles`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ detalles })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    btn.textContent = '✅';
+                    const fila = document.getElementById(`obra-detalle-fila-${obraId}`);
+                    if (espObrasFilterSinDetalles[espId] && fila) {
+                        // If filter is active, remove the row with animation
+                        fila.style.transition = 'all 0.3s ease';
+                        fila.style.opacity = '0';
+                        fila.style.transform = 'translateX(-20px)';
+                        setTimeout(() => {
+                            fila.remove();
+                            // Check if any rows remain
+                            const tbody = obrasRow.querySelector('tbody');
+                            if (tbody && tbody.children.length === 0) {
+                                const content = document.getElementById(`esp-obras-content-${espId}`);
+                                if (content) {
+                                    const summary = content.querySelector('div:first-child');
+                                    content.innerHTML = summary ? summary.outerHTML + '<p style="text-align:center;color:#16a34a;padding:20px;font-weight:bold;">✅ Todas las obras tienen atributos asignados</p>' : '';
+                                }
+                            }
+                        }, 300);
+                    } else {
+                        setTimeout(() => { btn.textContent = '💾'; btn.disabled = false; }, 1500);
+                    }
+                } else {
+                    alert('❌ ' + (result.message || 'Error al guardar'));
+                    btn.textContent = '💾';
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error guardando detalles:', error);
+                alert('❌ Error al guardar detalles');
+                btn.textContent = '💾';
+                btn.disabled = false;
+            }
+        }
+
+        let espEditandoId = null;
+
+        function editarEspecializacion(id) {
+            // Switch to the add form tab visually
+            const tab = document.getElementById('tab-especializaciones');
+            const cardAdd = tab.querySelector('.card:first-child');
+            cardAdd.scrollIntoView({ behavior: 'smooth' });
+
+            fetch('/api/especializaciones')
+                .then(r => r.json())
+                .then(data => {
+                    const esp = data.find(e => e.id === id);
+                    if (!esp) return;
+
+                    espEditandoId = id;
+
+                    // Set the genre select
+                    const sel = document.getElementById('input-esp-genero');
+                    sel.value = esp.nombre;
+
+                    // Fill the attributes table
+                    const tbody = document.getElementById('body-atributos');
+                    tbody.innerHTML = '';
+                    contadorAtributos = 0;
+                    esp.atributos.forEach(attr => {
+                        agregarFilaAtributo(attr.nombre, attr.tipo, attr.requerido);
+                    });
+
+                    document.getElementById('esp-atributos-section').style.display = 'block';
+
+                    // Change button text and behavior
+                    const btnGuardar = document.querySelector('#tab-especializaciones .card:first-child .btn-green');
+                    btnGuardar.textContent = '✏️ Actualizar Especialización';
+                    btnGuardar.onclick = actualizarEspecializacion;
+                    document.getElementById('btn-cancelar-editar-esp').style.display = 'inline-block';
+                })
+                .catch(err => console.error('Error cargando especialización para editar:', err));
+        }
+
+        async function actualizarEspecializacion() {
+            if (!espEditandoId) return;
+
+            const filas = document.querySelectorAll('#body-atributos tr');
+            const atributos = [];
+            filas.forEach(fila => {
+                const input = fila.querySelector('input[id^="attr-nombre-"]');
+                const select = fila.querySelector('select[id^="attr-tipo-"]');
+                const checkbox = fila.querySelector('input[id^="attr-req-"]');
+                if (input && select) {
+                    const val = input.value.trim();
+                    if (val) {
+                        atributos.push({
+                            nombre: val,
+                            tipo: select.value,
+                            requerido: checkbox ? checkbox.checked : false
+                        });
+                    }
+                }
+            });
+
+            if (atributos.length === 0) {
+                alert('Debe agregar al menos un atributo');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/especializaciones/${espEditandoId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ atributos })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('✅ Especialización actualizada correctamente');
+                    const updatedId = espEditandoId;
+                    resetFormEspecializacion();
+                    await cargarEspecializaciones();
+                    // Auto-expand obras for this specialization
+                    if (updatedId) {
+                        setTimeout(() => {
+                            toggleObrasEspecializacion(updatedId, true);
+                        }, 300);
+                    }
+                } else {
+                    alert('❌ ' + (result.message || 'Error al actualizar'));
+                }
+            } catch (error) {
+                console.error('Error actualizando especialización:', error);
+                alert('❌ Error al actualizar especialización');
+            }
+        }
+
+        function resetFormEspecializacion() {
+            espEditandoId = null;
+            document.getElementById('input-esp-genero').value = '';
+            document.getElementById('body-atributos').innerHTML = '';
+            document.getElementById('esp-atributos-section').style.display = 'none';
+            contadorAtributos = 0;
+            const btnGuardar = document.querySelector('#tab-especializaciones .card:first-child .btn-green');
+            btnGuardar.textContent = '💾 Guardar Especialización';
+            btnGuardar.onclick = agregarEspecializacion;
+            document.getElementById('btn-cancelar-editar-esp').style.display = 'none';
+        }
+
         async function agregarEspecializacion() {
-            const nombre = document.getElementById('input-esp-nombre').value.trim();
-            const descripcion = document.getElementById('input-esp-desc').value.trim();
+            const sel = document.getElementById('input-esp-genero');
+            const nombre = sel.value;
 
             if (!nombre) {
-                alert('Por favor ingrese el nombre de la especialización');
+                alert('Por favor seleccione un género');
                 return;
             }
 
@@ -1662,20 +2257,32 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
                 }
             });
 
+            if (atributos.length === 0) {
+                alert('Debe agregar al menos un atributo');
+                return;
+            }
+
             try {
                 const res = await fetch('/api/especializaciones', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nombre, descripcion, atributos })
+                    body: JSON.stringify({ nombre, atributos })
                 });
                 const result = await res.json();
                 if (result.success) {
                     alert('✅ Especialización agregada correctamente');
-                    document.getElementById('input-esp-nombre').value = '';
-                    document.getElementById('input-esp-desc').value = '';
+                    sel.value = '';
                     document.getElementById('body-atributos').innerHTML = '';
+                    document.getElementById('esp-atributos-section').style.display = 'none';
                     contadorAtributos = 0;
-                    cargarEspecializaciones();
+                    const espId = result.id;
+                    await cargarEspecializaciones();
+                    // Auto-expand obras for this specialization with filter active
+                    if (espId) {
+                        setTimeout(() => {
+                            toggleObrasEspecializacion(espId, true);
+                        }, 300);
+                    }
                 } else {
                     alert('❌ ' + (result.message || 'Error al agregar especialización'));
                 }
@@ -1720,6 +2327,7 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
         window.onload = () => { 
             console.log('Panel administrativo cargado');
             mostrarTab('gestion');
+            cargarGenerosSelectEsp();
         };
     </script>
 </body>

@@ -21,7 +21,7 @@ const detallesSchema = new mongoose.Schema({
     tecnica_acabado: String,
     tipo_arcilla_base: String,
     temperatura_coccion_promedio_celsius: Number
-}, { _id: false });
+}, { _id: false, strict: false });
 
 const obraSchema = new mongoose.Schema({
     _id: Number,

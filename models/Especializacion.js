@@ -8,8 +8,7 @@ const atributoSchema = new mongoose.Schema({
 
 const especializacionSchema = new mongoose.Schema({
     _id: Number,
-    nombre: { type: String, required: true },
-    descripcion: String,
+    nombre: { type: String, required: true, unique: true },
     atributos: [atributoSchema]
 });
 
