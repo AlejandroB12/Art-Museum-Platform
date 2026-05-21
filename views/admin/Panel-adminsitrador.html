@@ -125,6 +125,10 @@
             <div class="nav-item" id="btn-facturacion" onclick="mostrarTab('facturacion')">🧾 Facturar Reservas</div>
             <div class="nav-item" id="btn-usuarios-pagos" onclick="mostrarTab('usuarios-pagos')">💳 Validar Pagos Membresía</div>
             <div class="nav-item" id="btn-validar-usuarios" onclick="mostrarTab('validar-usuarios')">👤 Validar Registro Usuarios</div>
+            <div class="nav-item" id="btn-generos" onclick="mostrarTab('generos')">🎭 Gestionar Géneros</div>
+            <div class="nav-item" id="btn-autores" onclick="mostrarTab('autores')">✍️ Gestionar Autores</div>
+            <div class="nav-item" id="btn-obras" onclick="mostrarTab('obras')">🖼️ Gestionar Obras</div>
+            <div class="nav-item" id="btn-especializaciones" onclick="mostrarTab('especializaciones')">🏷️ Especializaciones</div>
         </div>
 
         <div class="nav-group">
@@ -264,6 +268,186 @@
             </div>
         </div>
 
+        <!-- Tab: Gestionar Géneros -->
+        <div id="tab-generos" class="tab-content" style="display:none">
+            <div class="card">
+                <h3>🎭 Agregar Nuevo Género</h3>
+                <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+                    <div>
+                        <label>Nombre del género:</label>
+                        <input type="text" id="input-genero-nombre" class="edit-input" placeholder="Ej: Acuarela" style="width:200px;">
+                    </div>
+                    <button class="btn btn-green" onclick="agregarGenero()">➕ Agregar Género</button>
+                </div>
+            </div>
+            <div class="card">
+                <h3>📋 Géneros Existentes</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="body-generos"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab: Gestionar Autores -->
+        <div id="tab-autores" class="tab-content" style="display:none">
+            <div class="card">
+                <h3>✍️ Agregar Nuevo Autor</h3>
+                <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+                    <div>
+                        <label>Nombre:</label>
+                        <input type="text" id="input-autor-nombre" class="edit-input" placeholder="Nombre" style="width:180px;">
+                    </div>
+                    <div>
+                        <label>Apellido:</label>
+                        <input type="text" id="input-autor-apellido" class="edit-input" placeholder="Apellido" style="width:180px;">
+                    </div>
+                    <div>
+                        <label>Nacionalidad (opcional):</label>
+                        <select id="input-autor-nacionalidad" class="edit-input" style="width:180px;">
+                            <option value="">— Seleccione —</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Biografía (opcional):</label>
+                        <input type="text" id="input-autor-biografia" class="edit-input" placeholder="Breve biografía" style="width:260px;">
+                    </div>
+                    <button class="btn btn-green" onclick="agregarAutor()">➕ Agregar Autor</button>
+                </div>
+            </div>
+            <div class="card">
+                <h3>📋 Autores Existentes</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Apellido</th>
+                            <th>Nacionalidad</th>
+                            <th>Biografía</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="body-autores"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab: Gestionar Obras -->
+        <div id="tab-obras" class="tab-content" style="display:none">
+            <div class="card">
+                <h3>🖼️ Agregar Nueva Obra</h3>
+                <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+                    <div>
+                        <label>Nombre:</label>
+                        <input type="text" id="input-obra-nombre" class="edit-input" placeholder="Nombre de la obra" style="width:200px;">
+                    </div>
+                    <div>
+                        <label>Fecha creación:</label>
+                        <input type="date" id="input-obra-fecha" class="edit-input" style="width:150px;">
+                    </div>
+                    <div>
+                        <label>Precio ($):</label>
+                        <input type="number" id="input-obra-precio" class="edit-input" placeholder="0.00" step="0.01" style="width:120px;">
+                    </div>
+                    <div>
+                        <label>Estado:</label>
+                        <select id="input-obra-estado" class="edit-input" style="width:140px;">
+                            <option value="Disponible">Disponible</option>
+                            <option value="Reservado">Reservado</option>
+                            <option value="Vendida">Vendida</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Género:</label>
+                        <select id="input-obra-genero" class="edit-input" style="width:160px;">
+                            <option value="">— Seleccione —</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Autor(es):</label>
+                        <select id="input-obra-autores" class="edit-input" multiple style="width:200px;height:80px;">
+                        </select>
+                    </div>
+                    <div>
+                        <label>Foto (ruta):</label>
+                        <input type="text" id="input-obra-foto" class="edit-input" placeholder="/images/art_previews/..." style="width:220px;">
+                    </div>
+                    <button class="btn btn-green" onclick="agregarObra()">➕ Agregar Obra</button>
+                </div>
+            </div>
+            <div class="card">
+                <h3>📋 Obras Registradas</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Precio</th>
+                            <th>Estado</th>
+                            <th>Género</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="body-obras"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab: Gestionar Especializaciones -->
+        <div id="tab-especializaciones" class="tab-content" style="display:none">
+            <div class="card">
+                <h3>🏷️ Agregar Nueva Especialización</h3>
+                <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:15px;">
+                    <div>
+                        <label>Nombre:</label>
+                        <input type="text" id="input-esp-nombre" class="edit-input" placeholder="Ej: Escultura" style="width:180px;">
+                    </div>
+                    <div>
+                        <label>Descripción (opcional):</label>
+                        <input type="text" id="input-esp-desc" class="edit-input" placeholder="Breve descripción" style="width:260px;">
+                    </div>
+                </div>
+                <div style="margin-bottom:10px;">
+                    <strong>Atributos:</strong>
+                    <button class="btn btn-blue" onclick="agregarFilaAtributo()" style="margin-left:10px;padding:4px 12px;">➕ Agregar atributo</button>
+                </div>
+                <table id="tabla-atributos" style="width:100%;margin-bottom:15px;">
+                    <thead>
+                        <tr>
+                            <th style="width:40%;">Nombre del atributo</th>
+                            <th style="width:25%;">Tipo</th>
+                            <th style="width:15%;">Requerido</th>
+                            <th style="width:20%;">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="body-atributos"></tbody>
+                </table>
+                <button class="btn btn-green" onclick="agregarEspecializacion()">💾 Guardar Especialización</button>
+            </div>
+            <div class="card">
+                <h3>📋 Especializaciones Existentes</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Atributos</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="body-especializaciones"></tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Tab: Reporte Membresías -->
         <div id="tab-rep-membresias" class="tab-content" style="display:none">
             <div class="card">
@@ -305,6 +489,10 @@
         'facturacion': 'Facturación de Reservas',
         'usuarios-pagos': 'Validar Pagos de Membresía',
         'validar-usuarios': 'Validar Registro de Usuarios',
+        'generos': 'Gestión de Géneros',
+        'autores': 'Gestión de Autores',
+        'obras': 'Gestión de Obras',
+        'especializaciones': 'Gestión de Especializaciones',
         'rep-obras': 'Reporte de Obras Vendidas',
         'rep-facturas': 'Resumen de Facturación',
         'rep-membresias': 'Reporte de Membresías Pagadas'
@@ -319,6 +507,10 @@
     if (tab === 'usuarios-pagos') cargarPagos();
     if (tab === 'validar-usuarios') cargarUsuariosPendientes();
     if (tab === 'facturacion') cargarReservadas();
+    if (tab === 'generos') cargarGeneros();
+    if (tab === 'autores') { cargarAutores(); cargarNacionalidades(); }
+    if (tab === 'obras') { cargarObrasAdmin(); cargarGenerosSelect(); cargarAutoresSelect(); }
+    if (tab === 'especializaciones') cargarEspecializaciones();
     if (tab === 'rep-obras') {
         // Establecer fechas por defecto (últimos 30 días)
         const hoy = new Date();
@@ -1042,6 +1234,440 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
         notificacion.style.transform = 'translateX(50px)';
     }, 3000);
 }
+
+        // --- CRUD GÉNEROS (MongoDB) ---
+        async function cargarGeneros() {
+            try {
+                const res = await fetch('/api/generos');
+                const data = await res.json();
+                const tbody = document.getElementById('body-generos');
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:30px;">No hay géneros registrados</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = data.map(g => `
+                    <tr id="genero-fila-${g.id}">
+                        <td>${g.id}</td>
+                        <td>${g.nombre}</td>
+                        <td>
+                            <button class="btn btn-red" onclick="eliminarGenero(${g.id}, this)">🗑️ Eliminar</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error cargando géneros:', error);
+            }
+        }
+
+        async function agregarGenero() {
+            const nombre = document.getElementById('input-genero-nombre').value.trim();
+
+            if (!nombre) {
+                alert('Por favor ingrese un nombre para el género');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/generos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('✅ Género agregado correctamente');
+                    document.getElementById('input-genero-nombre').value = '';
+                    cargarGeneros();
+                } else {
+                    alert('❌ ' + (result.message || 'Error al agregar género'));
+                }
+            } catch (error) {
+                console.error('Error agregando género:', error);
+                alert('❌ Error al agregar género');
+            }
+        }
+
+        async function eliminarGenero(id, btn) {
+            if (!confirm('¿Eliminar este género?')) return;
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`/api/generos/${id}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (result.success) {
+                    const fila = document.getElementById(`genero-fila-${id}`);
+                    if (fila) {
+                        fila.style.transition = 'all 0.4s ease';
+                        fila.style.opacity = '0';
+                        fila.style.transform = 'translateX(-20px)';
+                        setTimeout(() => fila.remove(), 400);
+                    }
+                } else {
+                    alert('❌ ' + (result.message || 'Error al eliminar'));
+                }
+            } catch (error) {
+                console.error('Error eliminando género:', error);
+                alert('❌ Error al eliminar género');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // --- CRUD AUTORES (MongoDB) ---
+        async function cargarAutores() {
+            try {
+                const res = await fetch('/api/autores-admin');
+                const data = await res.json();
+                const tbody = document.getElementById('body-autores');
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;">No hay autores registrados</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = data.map(a => `
+                    <tr id="autor-fila-${a.id}">
+                        <td>${a.id}</td>
+                        <td>${a.nombre}</td>
+                        <td>${a.apellido}</td>
+                        <td>${a.nacionalidad || '—'}</td>
+                        <td>${a.biografia || '—'}</td>
+                        <td>
+                            <button class="btn btn-red" onclick="eliminarAutor(${a.id}, this)">🗑️ Eliminar</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error cargando autores:', error);
+            }
+        }
+
+        async function agregarAutor() {
+            const nombre = document.getElementById('input-autor-nombre').value.trim();
+            const apellido = document.getElementById('input-autor-apellido').value.trim();
+            const nacionalidad = document.getElementById('input-autor-nacionalidad').value.trim();
+            const biografia = document.getElementById('input-autor-biografia').value.trim();
+
+            if (!nombre || !apellido) {
+                alert('Por favor ingrese nombre y apellido del autor');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/autores-admin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, apellido, nacionalidad, biografia })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('✅ Autor agregado correctamente');
+                    document.getElementById('input-autor-nombre').value = '';
+                    document.getElementById('input-autor-apellido').value = '';
+                    document.getElementById('input-autor-nacionalidad').value = '';
+                    document.getElementById('input-autor-biografia').value = '';
+                    cargarAutores();
+                } else {
+                    alert('❌ ' + (result.message || 'Error al agregar autor'));
+                }
+            } catch (error) {
+                console.error('Error agregando autor:', error);
+                alert('❌ Error al agregar autor');
+            }
+        }
+
+        async function eliminarAutor(id, btn) {
+            if (!confirm('¿Eliminar este autor? Las obras vinculadas podrían verse afectadas.')) return;
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`/api/autores-admin/${id}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (result.success) {
+                    const fila = document.getElementById(`autor-fila-${id}`);
+                    if (fila) {
+                        fila.style.transition = 'all 0.4s ease';
+                        fila.style.opacity = '0';
+                        fila.style.transform = 'translateX(-20px)';
+                        setTimeout(() => fila.remove(), 400);
+                    }
+                } else {
+                    alert('❌ ' + (result.message || 'Error al eliminar'));
+                }
+            } catch (error) {
+                console.error('Error eliminando autor:', error);
+                alert('❌ Error al eliminar autor');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // --- CARGAR NACIONALIDADES (MySQL) ---
+        async function cargarNacionalidades() {
+            try {
+                const res = await fetch('/api/nacionalidades');
+                const data = await res.json();
+                const sel = document.getElementById('input-autor-nacionalidad');
+                sel.innerHTML = '<option value="">— Seleccione —</option>' +
+                    data.map(n => `<option value="${n.descripcion}">${n.descripcion}</option>`).join('');
+            } catch (error) {
+                console.error('Error cargando nacionalidades:', error);
+            }
+        }
+
+        // --- CARGAR SELECTS PARA OBRAS ---
+        async function cargarGenerosSelect() {
+            try {
+                const res = await fetch('/api/generos');
+                const data = await res.json();
+                const sel = document.getElementById('input-obra-genero');
+                sel.innerHTML = '<option value="">— Seleccione —</option>' +
+                    data.map(g => `<option value="${g.nombre}">${g.nombre}</option>`).join('');
+            } catch (error) {
+                console.error('Error cargando géneros:', error);
+            }
+        }
+
+        async function cargarAutoresSelect() {
+            try {
+                const res = await fetch('/api/autores-admin');
+                const data = await res.json();
+                const sel = document.getElementById('input-obra-autores');
+                sel.innerHTML = data.map(a =>
+                    `<option value="${a.id}">${a.nombre} ${a.apellido}</option>`
+                ).join('');
+            } catch (error) {
+                console.error('Error cargando autores:', error);
+            }
+        }
+
+        // --- CRUD OBRAS (MongoDB) ---
+        async function cargarObrasAdmin() {
+            try {
+                const res = await fetch('/api/obras-admin');
+                const data = await res.json();
+                const tbody = document.getElementById('body-obras');
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;">No hay obras registradas</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = data.map(o => `
+                    <tr id="obra-fila-${o.id}">
+                        <td>${o.id}</td>
+                        <td>${o.nombre}</td>
+                        <td>$${o.precio?.toLocaleString() || '0'}</td>
+                        <td>${o.estado_obra}</td>
+                        <td>${o.genero_nombre || '—'}</td>
+                        <td>
+                            <button class="btn btn-red" onclick="eliminarObra(${o.id}, this)">🗑️ Eliminar</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error cargando obras:', error);
+            }
+        }
+
+        async function agregarObra() {
+            const nombre = document.getElementById('input-obra-nombre').value.trim();
+            const fecha_creacion = document.getElementById('input-obra-fecha').value;
+            const precio = document.getElementById('input-obra-precio').value;
+            const estado_obra = document.getElementById('input-obra-estado').value;
+            const genero_nombre = document.getElementById('input-obra-genero').value;
+            const fotografia = document.getElementById('input-obra-foto').value.trim();
+            const autoresSelect = document.getElementById('input-obra-autores');
+            const autores_ids = Array.from(autoresSelect.selectedOptions).map(o => parseInt(o.value));
+
+            if (!nombre) {
+                alert('Por favor ingrese el nombre de la obra');
+                return;
+            }
+            if (!precio || isNaN(precio)) {
+                alert('Por favor ingrese un precio válido');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/obras-admin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, fecha_creacion, precio, estado_obra, genero_nombre, fotografia, autores_ids })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('✅ Obra agregada correctamente');
+                    document.getElementById('input-obra-nombre').value = '';
+                    document.getElementById('input-obra-fecha').value = '';
+                    document.getElementById('input-obra-precio').value = '';
+                    document.getElementById('input-obra-foto').value = '';
+                    document.getElementById('input-obra-estado').value = 'Disponible';
+                    document.getElementById('input-obra-genero').value = '';
+                    Array.from(document.getElementById('input-obra-autores').options).forEach(o => o.selected = false);
+                    cargarObrasAdmin();
+                } else {
+                    alert('❌ ' + (result.message || 'Error al agregar obra'));
+                }
+            } catch (error) {
+                console.error('Error agregando obra:', error);
+                alert('❌ Error al agregar obra');
+            }
+        }
+
+        async function eliminarObra(id, btn) {
+            if (!confirm('¿Eliminar esta obra?')) return;
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`/api/obras-admin/${id}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (result.success) {
+                    const fila = document.getElementById(`obra-fila-${id}`);
+                    if (fila) {
+                        fila.style.transition = 'all 0.4s ease';
+                        fila.style.opacity = '0';
+                        fila.style.transform = 'translateX(-20px)';
+                        setTimeout(() => fila.remove(), 400);
+                    }
+                } else {
+                    alert('❌ ' + (result.message || 'Error al eliminar'));
+                }
+            } catch (error) {
+                console.error('Error eliminando obra:', error);
+                alert('❌ Error al eliminar obra');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // --- CRUD ESPECIALIZACIONES (MongoDB) ---
+        let contadorAtributos = 0;
+
+        function agregarFilaAtributo(nombre, tipo, requerido) {
+            contadorAtributos++;
+            const idx = contadorAtributos;
+            const tbody = document.getElementById('body-atributos');
+            const tr = document.createElement('tr');
+            tr.id = `fila-atributo-${idx}`;
+            tr.innerHTML = `
+                <td><input type="text" id="attr-nombre-${idx}" class="edit-input" value="${nombre || ''}" placeholder="Ej: material_predominante" style="width:90%;"></td>
+                <td>
+                    <select id="attr-tipo-${idx}" class="edit-input" style="width:90%;">
+                        <option value="string" ${tipo === 'string' ? 'selected' : ''}>Texto (string)</option>
+                        <option value="number" ${tipo === 'number' ? 'selected' : ''}>Número (number)</option>
+                        <option value="boolean" ${tipo === 'boolean' ? 'selected' : ''}>Sí/No (boolean)</option>
+                    </select>
+                </td>
+                <td style="text-align:center;">
+                    <input type="checkbox" id="attr-req-${idx}" ${requerido ? 'checked' : ''} style="width:20px;height:20px;">
+                </td>
+                <td><button class="btn btn-red" onclick="eliminarFilaAtributo(${idx})" style="padding:4px 10px;">❌</button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        function eliminarFilaAtributo(idx) {
+            const fila = document.getElementById(`fila-atributo-${idx}`);
+            if (fila) fila.remove();
+        }
+
+        async function cargarEspecializaciones() {
+            try {
+                const res = await fetch('/api/especializaciones');
+                const data = await res.json();
+                const tbody = document.getElementById('body-especializaciones');
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;">No hay especializaciones registradas</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = data.map(e => `
+                    <tr id="esp-fila-${e.id}">
+                        <td>${e.id}</td>
+                        <td>${e.nombre}</td>
+                        <td>${e.descripcion || '—'}</td>
+                        <td>${e.atributos.map(a => `<span style="display:inline-block;background:#e2e8f0;padding:2px 8px;border-radius:10px;margin:2px;font-size:0.8rem;">${a.nombre} (${a.tipo}${a.requerido ? ', req' : ''})</span>`).join(' ') || '—'}</td>
+                        <td>
+                            <button class="btn btn-red" onclick="eliminarEspecializacion(${e.id}, this)">🗑️ Eliminar</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error cargando especializaciones:', error);
+            }
+        }
+
+        async function agregarEspecializacion() {
+            const nombre = document.getElementById('input-esp-nombre').value.trim();
+            const descripcion = document.getElementById('input-esp-desc').value.trim();
+
+            if (!nombre) {
+                alert('Por favor ingrese el nombre de la especialización');
+                return;
+            }
+
+            const filas = document.querySelectorAll('#body-atributos tr');
+            const atributos = [];
+            filas.forEach(fila => {
+                const input = fila.querySelector('input[id^="attr-nombre-"]');
+                const select = fila.querySelector('select[id^="attr-tipo-"]');
+                const checkbox = fila.querySelector('input[id^="attr-req-"]');
+                if (input && select) {
+                    const val = input.value.trim();
+                    if (val) {
+                        atributos.push({
+                            nombre: val,
+                            tipo: select.value,
+                            requerido: checkbox ? checkbox.checked : false
+                        });
+                    }
+                }
+            });
+
+            try {
+                const res = await fetch('/api/especializaciones', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, descripcion, atributos })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('✅ Especialización agregada correctamente');
+                    document.getElementById('input-esp-nombre').value = '';
+                    document.getElementById('input-esp-desc').value = '';
+                    document.getElementById('body-atributos').innerHTML = '';
+                    contadorAtributos = 0;
+                    cargarEspecializaciones();
+                } else {
+                    alert('❌ ' + (result.message || 'Error al agregar especialización'));
+                }
+            } catch (error) {
+                console.error('Error agregando especialización:', error);
+                alert('❌ Error al agregar especialización');
+            }
+        }
+
+        async function eliminarEspecializacion(id, btn) {
+            if (!confirm('¿Eliminar esta especialización?')) return;
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`/api/especializaciones/${id}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (result.success) {
+                    const fila = document.getElementById(`esp-fila-${id}`);
+                    if (fila) {
+                        fila.style.transition = 'all 0.4s ease';
+                        fila.style.opacity = '0';
+                        fila.style.transform = 'translateX(-20px)';
+                        setTimeout(() => fila.remove(), 400);
+                    }
+                } else {
+                    alert('❌ ' + (result.message || 'Error al eliminar'));
+                }
+            } catch (error) {
+                console.error('Error eliminando especialización:', error);
+                alert('❌ Error al eliminar especialización');
+            } finally {
+                btn.disabled = false;
+            }
+        }
 
         function cerrarSesion() {
             if (confirm("¿Cerrar sesión?")) {

@@ -38,7 +38,6 @@ const obraSchema = new mongoose.Schema({
     genero: {
         nombre: {
             type: String,
-            enum: ['Pintura', 'Escultura', 'Fotografía', 'Orfebreria', 'Ceramica'],
             required: true
         },
         detalles: detallesSchema

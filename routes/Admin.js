@@ -6,6 +6,11 @@ const path = require('path');
 
 require('dotenv').config();
 
+const Genero = require('../models/Genero');
+const Autor = require('../models/Autor');
+const Obra = require('../models/Obra');
+const Especializacion = require('../models/Especializacion');
+
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -702,5 +707,267 @@ router.post('/api/registrar-envio', (req, res) => {
         );
     });
 
+
+// ==========================================
+// 8.5 GESTIÓN DE OBRAS (MongoDB)
+// ==========================================
+
+router.get('/api/obras-admin', async (req, res) => {
+    try {
+        const obras = await Obra.find().sort({ _id: 1 }).lean();
+        res.json(obras.map(o => ({
+            id: o._id,
+            nombre: o.nombre,
+            fecha_creacion: o.fecha_creacion ? o.fecha_creacion.toISOString().split('T')[0] : '',
+            precio: o.precio,
+            estado_obra: o.estado_obra,
+            fotografia: o.fotografia || '',
+            genero_nombre: o.genero?.nombre || '',
+            autores_ids: o.autores || []
+        })));
+    } catch (err) {
+        console.error('Error obteniendo obras:', err);
+        res.status(500).json({ success: false, message: 'Error al obtener obras' });
+    }
+});
+
+router.post('/api/obras-admin', async (req, res) => {
+    try {
+        const { nombre, fecha_creacion, precio, estado_obra, fotografia, genero_nombre, autores_ids } = req.body;
+        if (!nombre || !nombre.trim()) {
+            return res.status(400).json({ success: false, message: 'El nombre de la obra es requerido' });
+        }
+        if (!precio || isNaN(precio)) {
+            return res.status(400).json({ success: false, message: 'El precio es requerido' });
+        }
+
+        const maxId = await Obra.findOne().sort({ _id: -1 }).select('_id').lean();
+        const newId = (maxId ? maxId._id : 0) + 1;
+
+        const obra = new Obra({
+            _id: newId,
+            nombre: nombre.trim(),
+            fecha_creacion: fecha_creacion || undefined,
+            precio: parseFloat(precio),
+            estado_obra: estado_obra || 'Disponible',
+            fotografia: fotografia || '',
+            genero: {
+                nombre: genero_nombre || 'General'
+            },
+            autores: autores_ids || []
+        });
+
+        await obra.save();
+        res.json({ success: true, message: 'Obra agregada correctamente', id: newId });
+    } catch (err) {
+        console.error('Error creando obra:', err);
+        res.status(500).json({ success: false, message: 'Error al crear obra' });
+    }
+});
+
+router.delete('/api/obras-admin/:id', async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const result = await Obra.findByIdAndDelete(id);
+        if (!result) {
+            return res.status(404).json({ success: false, message: 'Obra no encontrada' });
+        }
+        res.json({ success: true, message: 'Obra eliminada correctamente' });
+    } catch (err) {
+        console.error('Error eliminando obra:', err);
+        res.status(500).json({ success: false, message: 'Error al eliminar obra' });
+    }
+});
+
+// ==========================================
+// 8.7 GESTIÓN DE ESPECIALIZACIONES (MongoDB)
+// ==========================================
+
+router.get('/api/especializaciones', async (req, res) => {
+    try {
+        const esp = await Especializacion.find().sort({ _id: 1 }).lean();
+        res.json(esp.map(e => ({
+            id: e._id,
+            nombre: e.nombre,
+            descripcion: e.descripcion || '',
+            atributos: e.atributos || []
+        })));
+    } catch (err) {
+        console.error('Error obteniendo especializaciones:', err);
+        res.status(500).json({ success: false, message: 'Error al obtener especializaciones' });
+    }
+});
+
+router.post('/api/especializaciones', async (req, res) => {
+    try {
+        const { nombre, descripcion, atributos } = req.body;
+        if (!nombre || !nombre.trim()) {
+            return res.status(400).json({ success: false, message: 'El nombre es requerido' });
+        }
+
+        const maxId = await Especializacion.findOne().sort({ _id: -1 }).select('_id').lean();
+        const newId = (maxId ? maxId._id : 0) + 1;
+
+        const esp = new Especializacion({
+            _id: newId,
+            nombre: nombre.trim(),
+            descripcion: descripcion ? descripcion.trim() : '',
+            atributos: Array.isArray(atributos) ? atributos : []
+        });
+
+        await esp.save();
+        res.json({ success: true, message: 'Especialización agregada correctamente', id: newId });
+    } catch (err) {
+        console.error('Error creando especialización:', err);
+        res.status(500).json({ success: false, message: 'Error al crear especialización' });
+    }
+});
+
+router.delete('/api/especializaciones/:id', async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const result = await Especializacion.findByIdAndDelete(id);
+        if (!result) {
+            return res.status(404).json({ success: false, message: 'Especialización no encontrada' });
+        }
+        res.json({ success: true, message: 'Especialización eliminada correctamente' });
+    } catch (err) {
+        console.error('Error eliminando especialización:', err);
+        res.status(500).json({ success: false, message: 'Error al eliminar especialización' });
+    }
+});
+
+// ==========================================
+// 8.8 NACIONALIDADES (MySQL)
+// ==========================================
+
+router.get('/api/nacionalidades', (req, res) => {
+    db.query('SELECT id_Nacionalidad, Descripcion FROM Nacionalidad ORDER BY Descripcion', (err, results) => {
+        if (err) {
+            console.error('Error obteniendo nacionalidades:', err);
+            return res.status(500).json({ success: false, message: 'Error al obtener nacionalidades' });
+        }
+        res.json(results.map(n => ({ id: n.id_Nacionalidad, descripcion: n.Descripcion })));
+    });
+});
+
+// ==========================================
+// 9. GESTIÓN DE GÉNEROS (MongoDB)
+// ==========================================
+
+router.get('/api/generos', async (req, res) => {
+    try {
+        const generos = await Genero.find().sort({ _id: 1 }).lean();
+        res.json(generos.map(g => ({
+            id: g._id,
+            nombre: g.nombre
+        })));
+    } catch (err) {
+        console.error('Error obteniendo géneros:', err);
+        res.status(500).json({ success: false, message: 'Error al obtener géneros' });
+    }
+});
+
+router.post('/api/generos', async (req, res) => {
+    try {
+        const { nombre } = req.body;
+        if (!nombre || !nombre.trim()) {
+            return res.status(400).json({ success: false, message: 'El nombre del género es requerido' });
+        }
+
+        const existente = await Genero.findOne({ nombre: nombre.trim() });
+        if (existente) {
+            return res.status(400).json({ success: false, message: 'El género ya existe' });
+        }
+
+        const maxId = await Genero.findOne().sort({ _id: -1 }).select('_id').lean();
+        const newId = (maxId ? maxId._id : 0) + 1;
+
+        const genero = new Genero({
+            _id: newId,
+            nombre: nombre.trim()
+        });
+
+        await genero.save();
+        res.json({ success: true, message: 'Género agregado correctamente', id: newId });
+    } catch (err) {
+        console.error('Error creando género:', err);
+        res.status(500).json({ success: false, message: 'Error al crear género' });
+    }
+});
+
+router.delete('/api/generos/:id', async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const result = await Genero.findByIdAndDelete(id);
+        if (!result) {
+            return res.status(404).json({ success: false, message: 'Género no encontrado' });
+        }
+        res.json({ success: true, message: 'Género eliminado correctamente' });
+    } catch (err) {
+        console.error('Error eliminando género:', err);
+        res.status(500).json({ success: false, message: 'Error al eliminar género' });
+    }
+});
+
+// ==========================================
+// 10. GESTIÓN DE AUTORES (MongoDB)
+// ==========================================
+
+router.get('/api/autores-admin', async (req, res) => {
+    try {
+        const autores = await Autor.find().sort({ _id: 1 }).lean();
+        res.json(autores.map(a => ({
+            id: a._id,
+            nombre: a.nombre,
+            apellido: a.apellido,
+            nacionalidad: a.nacionalidad || '',
+            biografia: a.biografia || ''
+        })));
+    } catch (err) {
+        console.error('Error obteniendo autores:', err);
+        res.status(500).json({ success: false, message: 'Error al obtener autores' });
+    }
+});
+
+router.post('/api/autores-admin', async (req, res) => {
+    try {
+        const { nombre, apellido, nacionalidad, biografia } = req.body;
+        if (!nombre || !nombre.trim() || !apellido || !apellido.trim()) {
+            return res.status(400).json({ success: false, message: 'Nombre y apellido son requeridos' });
+        }
+
+        const maxId = await Autor.findOne().sort({ _id: -1 }).select('_id').lean();
+        const newId = (maxId ? maxId._id : 0) + 1;
+
+        const autor = new Autor({
+            _id: newId,
+            nombre: nombre.trim(),
+            apellido: apellido.trim(),
+            nacionalidad: nacionalidad ? nacionalidad.trim() : '',
+            biografia: biografia ? biografia.trim() : ''
+        });
+
+        await autor.save();
+        res.json({ success: true, message: 'Autor agregado correctamente', id: newId });
+    } catch (err) {
+        console.error('Error creando autor:', err);
+        res.status(500).json({ success: false, message: 'Error al crear autor' });
+    }
+});
+
+router.delete('/api/autores-admin/:id', async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const result = await Autor.findByIdAndDelete(id);
+        if (!result) {
+            return res.status(404).json({ success: false, message: 'Autor no encontrado' });
+        }
+        res.json({ success: true, message: 'Autor eliminado correctamente' });
+    } catch (err) {
+        console.error('Error eliminando autor:', err);
+        res.status(500).json({ success: false, message: 'Error al eliminar autor' });
+    }
+});
 
 module.exports = router;
