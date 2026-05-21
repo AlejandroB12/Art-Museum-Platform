@@ -318,6 +318,10 @@
                         <label>Biografía (opcional):</label>
                         <textarea id="input-autor-biografia" class="edit-input" placeholder="Breve biografía" style="width:300px; height:80px; resize:vertical;"></textarea>
                     </div>
+                    <div>
+                        <label>Foto (opcional):</label>
+                        <input type="file" id="input-autor-foto" accept="image/*" style="width:220px;">
+                    </div>
                     <button class="btn btn-green" onclick="agregarAutor()">➕ Agregar Autor</button>
                 </div>
             </div>
@@ -327,6 +331,7 @@
                     <thead>
                         <tr>
                             <th>ID</th>
+                            <th>Foto</th>
                             <th>Nombre</th>
                             <th>Apellido</th>
                             <th>Nacionalidad</th>
@@ -1320,12 +1325,13 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
                 const data = await res.json();
                 const tbody = document.getElementById('body-autores');
                 if (data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;">No hay autores registrados</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;">No hay autores registrados</td></tr>';
                     return;
                 }
                 tbody.innerHTML = data.map(a => `
                     <tr id="autor-fila-${a.id}">
                         <td>${a.id}</td>
+                        <td>${a.fotografia ? `<img src="${a.fotografia}" alt="Foto" style="width:50px;height:50px;object-fit:cover;border-radius:4px;">` : '—'}</td>
                         <td>${a.nombre}</td>
                         <td>${a.apellido}</td>
                         <td>${a.nacionalidad || '—'}</td>
@@ -1345,17 +1351,35 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
             const apellido = document.getElementById('input-autor-apellido').value.trim();
             const nacionalidad = document.getElementById('input-autor-nacionalidad').value.trim();
             const biografia = document.getElementById('input-autor-biografia').value.trim();
+            const fotoInput = document.getElementById('input-autor-foto');
 
             if (!nombre || !apellido) {
                 alert('Por favor ingrese nombre y apellido del autor');
                 return;
             }
 
+            const body = { nombre, apellido, nacionalidad, biografia };
+
+            if (fotoInput.files && fotoInput.files[0]) {
+                const file = fotoInput.files[0];
+                const reader = new FileReader();
+                reader.onload = async function (e) {
+                    body.fotografia_base64 = e.target.result;
+                    body.fotografia_nombre = file.name;
+                    await enviarAutor(body);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                await enviarAutor(body);
+            }
+        }
+
+        async function enviarAutor(body) {
             try {
                 const res = await fetch('/api/autores-admin', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nombre, apellido, nacionalidad, biografia })
+                    body: JSON.stringify(body)
                 });
                 const result = await res.json();
                 if (result.success) {
@@ -1364,6 +1388,7 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
                     document.getElementById('input-autor-apellido').value = '';
                     document.getElementById('input-autor-nacionalidad').value = '';
                     document.getElementById('input-autor-biografia').value = '';
+                    document.getElementById('input-autor-foto').value = '';
                     cargarAutores();
                 } else {
                     alert('❌ ' + (result.message || 'Error al agregar autor'));

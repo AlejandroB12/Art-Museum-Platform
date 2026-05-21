@@ -937,7 +937,8 @@ router.get('/api/autores-admin', async (req, res) => {
             nombre: a.nombre,
             apellido: a.apellido,
             nacionalidad: a.nacionalidad || '',
-            biografia: a.biografia || ''
+            biografia: a.biografia || '',
+            fotografia: a.fotografia || ''
         })));
     } catch (err) {
         console.error('Error obteniendo autores:', err);
@@ -947,9 +948,23 @@ router.get('/api/autores-admin', async (req, res) => {
 
 router.post('/api/autores-admin', async (req, res) => {
     try {
-        const { nombre, apellido, nacionalidad, biografia } = req.body;
+        const { nombre, apellido, nacionalidad, biografia, fotografia_base64, fotografia_nombre } = req.body;
         if (!nombre || !nombre.trim() || !apellido || !apellido.trim()) {
             return res.status(400).json({ success: false, message: 'Nombre y apellido son requeridos' });
+        }
+
+        let rutaFoto = '';
+
+        if (fotografia_base64) {
+            const matches = fotografia_base64.match(/^data:image\/(\w+);base64,(.+)$/);
+            if (matches) {
+                const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
+                const buffer = Buffer.from(matches[2], 'base64');
+                const fileName = `${Date.now()}-${fotografia_nombre || `imagen.${ext}`}`;
+                const filePath = path.join(__dirname, '..', 'assets', 'images', 'authors', fileName);
+                require('fs').writeFileSync(filePath, buffer);
+                rutaFoto = `/images/authors/${fileName}`;
+            }
         }
 
         const maxId = await Autor.findOne().sort({ _id: -1 }).select('_id').lean();
@@ -960,7 +975,8 @@ router.post('/api/autores-admin', async (req, res) => {
             nombre: nombre.trim(),
             apellido: apellido.trim(),
             nacionalidad: nacionalidad ? nacionalidad.trim() : '',
-            biografia: biografia ? biografia.trim() : ''
+            biografia: biografia ? biografia.trim() : '',
+            fotografia: rutaFoto
         });
 
         await autor.save();
