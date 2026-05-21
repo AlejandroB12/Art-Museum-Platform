@@ -324,7 +324,7 @@
     function construirDetallesTecnicos(obra) {
         let detalles = `
             <p><strong>GÉNERO:</strong> ${obra.GeneroNombre}</p>
-            <p><strong>PRECIO:</strong> ${obra.Precio} USD</p>
+            <p><strong>PRECIO:</strong> ${obra.PrecioFormateado}</p>
             <p><strong>FECHA CREACIÓN:</strong> ${obra.Fecha_creacion || 'No especificada'}</p>
         `;
 
@@ -426,7 +426,7 @@
                         </a>
                         <h3 class="art-title" style="margin: 10px 0;">${obra.Nombre}</h3>
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span class="price">${obra.Precio} USD</span>
+                            <span class="price">${obra.PrecioFormateado}</span>
                             <button class="btn-buy" onclick="adquirirObra('${obra.id_Obra}', '${obra.Nombre.replace(/'/g, "\\'")}', '${autorNombreCompleto.replace(/'/g, "\\'")}', '${obra.Precio}', '${imgSource}')">Adquirir</button>
                         </div>
                     </div>

@@ -495,7 +495,7 @@
                         
                         // Preparar ficha técnica para la modal
                         const año = obra.Fecha_creacion ? new Date(obra.Fecha_creacion).getFullYear() : 'N/A';
-                        const precio = obra.Precio ? `$${obra.Precio}` : 'Precio no disponible';
+                        const precio = obra.PrecioFormateado || 'Precio no disponible';
                         
                         // Recopilar detalles técnicos según el tipo de obra
                         let detallesTecnicos = '';
