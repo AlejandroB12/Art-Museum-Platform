@@ -10,6 +10,7 @@ const Genero = require('../models/Genero');
 const Autor = require('../models/Autor');
 const Obra = require('../models/Obra');
 const Especializacion = require('../models/Especializacion');
+const Nacionalidad = require('../models/Nacionalidad');
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -733,12 +734,26 @@ router.get('/api/obras-admin', async (req, res) => {
 
 router.post('/api/obras-admin', async (req, res) => {
     try {
-        const { nombre, fecha_creacion, precio, estado_obra, fotografia, genero_nombre, autores_ids } = req.body;
+        const { nombre, fecha_creacion, precio, estado_obra, fotografia, genero_nombre, autores_ids, fotografia_base64, fotografia_nombre } = req.body;
         if (!nombre || !nombre.trim()) {
             return res.status(400).json({ success: false, message: 'El nombre de la obra es requerido' });
         }
         if (!precio || isNaN(precio)) {
             return res.status(400).json({ success: false, message: 'El precio es requerido' });
+        }
+
+        let rutaFoto = fotografia || '';
+
+        if (fotografia_base64) {
+            const matches = fotografia_base64.match(/^data:image\/(\w+);base64,(.+)$/);
+            if (matches) {
+                const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
+                const buffer = Buffer.from(matches[2], 'base64');
+                const fileName = `${Date.now()}-${fotografia_nombre || `imagen.${ext}`}`;
+                const filePath = path.join(__dirname, '..', 'assets', 'images', 'art_previews', fileName);
+                require('fs').writeFileSync(filePath, buffer);
+                rutaFoto = `/images/art_previews/${fileName}`;
+            }
         }
 
         const maxId = await Obra.findOne().sort({ _id: -1 }).select('_id').lean();
@@ -750,7 +765,7 @@ router.post('/api/obras-admin', async (req, res) => {
             fecha_creacion: fecha_creacion || undefined,
             precio: parseFloat(precio),
             estado_obra: estado_obra || 'Disponible',
-            fotografia: fotografia || '',
+            fotografia: rutaFoto,
             genero: {
                 nombre: genero_nombre || 'General'
             },
@@ -838,17 +853,17 @@ router.delete('/api/especializaciones/:id', async (req, res) => {
 });
 
 // ==========================================
-// 8.8 NACIONALIDADES (MySQL)
+// 8.8 NACIONALIDADES (MongoDB)
 // ==========================================
 
-router.get('/api/nacionalidades', (req, res) => {
-    db.query('SELECT id_Nacionalidad, Descripcion FROM Nacionalidad ORDER BY Descripcion', (err, results) => {
-        if (err) {
-            console.error('Error obteniendo nacionalidades:', err);
-            return res.status(500).json({ success: false, message: 'Error al obtener nacionalidades' });
-        }
-        res.json(results.map(n => ({ id: n.id_Nacionalidad, descripcion: n.Descripcion })));
-    });
+router.get('/api/nacionalidades', async (req, res) => {
+    try {
+        const nacionalidades = await Nacionalidad.find().sort({ _id: 1 }).lean();
+        res.json(nacionalidades.map(n => ({ id: n._id, descripcion: n.nombre })));
+    } catch (err) {
+        console.error('Error obteniendo nacionalidades:', err);
+        res.status(500).json({ success: false, message: 'Error al obtener nacionalidades' });
+    }
 });
 
 // ==========================================

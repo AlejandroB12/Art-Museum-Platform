@@ -316,7 +316,7 @@
                     </div>
                     <div>
                         <label>Biografía (opcional):</label>
-                        <input type="text" id="input-autor-biografia" class="edit-input" placeholder="Breve biografía" style="width:260px;">
+                        <textarea id="input-autor-biografia" class="edit-input" placeholder="Breve biografía" style="width:300px; height:80px; resize:vertical;"></textarea>
                     </div>
                     <button class="btn btn-green" onclick="agregarAutor()">➕ Agregar Autor</button>
                 </div>
@@ -376,8 +376,8 @@
                         </select>
                     </div>
                     <div>
-                        <label>Foto (ruta):</label>
-                        <input type="text" id="input-obra-foto" class="edit-input" placeholder="/images/art_previews/..." style="width:220px;">
+                        <label>Foto:</label>
+                        <input type="file" id="input-obra-foto" accept="image/*" style="width:220px;">
                     </div>
                     <button class="btn btn-green" onclick="agregarObra()">➕ Agregar Obra</button>
                 </div>
@@ -1472,7 +1472,7 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
             const precio = document.getElementById('input-obra-precio').value;
             const estado_obra = document.getElementById('input-obra-estado').value;
             const genero_nombre = document.getElementById('input-obra-genero').value;
-            const fotografia = document.getElementById('input-obra-foto').value.trim();
+            const fotoInput = document.getElementById('input-obra-foto');
             const autoresSelect = document.getElementById('input-obra-autores');
             const autores_ids = Array.from(autoresSelect.selectedOptions).map(o => parseInt(o.value));
 
@@ -1485,11 +1485,28 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
                 return;
             }
 
+            const body = { nombre, fecha_creacion, precio, estado_obra, genero_nombre, autores_ids };
+
+            if (fotoInput.files && fotoInput.files[0]) {
+                const file = fotoInput.files[0];
+                const reader = new FileReader();
+                reader.onload = async function (e) {
+                    body.fotografia_base64 = e.target.result;
+                    body.fotografia_nombre = file.name;
+                    await enviarObra(body);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                await enviarObra(body);
+            }
+        }
+
+        async function enviarObra(body) {
             try {
                 const res = await fetch('/api/obras-admin', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nombre, fecha_creacion, precio, estado_obra, genero_nombre, fotografia, autores_ids })
+                    body: JSON.stringify(body)
                 });
                 const result = await res.json();
                 if (result.success) {
