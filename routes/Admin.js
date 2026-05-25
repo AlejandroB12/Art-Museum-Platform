@@ -160,9 +160,13 @@ router.patch('/aprobar-usuario/:id', (req, res) => {
                 `
             };
 
-            transporter.sendMail(mailOptions, (error) => {
-                if (error) console.error("Error al enviar correo de aprobación:", error);
-            });
+            transporter.sendMail(mailOptions)
+                .then(() => {
+                    console.log("Correo de aprobación enviado correctamente");
+                })
+                .catch((error) => {
+                    console.error("Error al enviar correo de aprobación:", error);
+                });
 
             res.send("<h2>Usuario aprobado y activo. Correo enviado.</h2>");
         });

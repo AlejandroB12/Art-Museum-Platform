@@ -80,10 +80,13 @@ router.post('/recuperar-pw', (req, res) => {
                 subject: 'Restablecer tu contraseña',
                 html: `<div style="text-align: center;"><h2>Recuperación</h2><a href="${enlaceRecuperacion}">Click aquí para cambiar contraseña</a></div>`
             };
-            transporter.sendMail(mailOptions, (error) => {
-                if (error) return res.status(500).send("Error al enviar el correo.");
-                res.redirect('/recovery/Confirmacion-envio.html');
-            });
+            transporter.sendMail(mailOptions)
+                .then(() => {
+                    res.redirect('/recovery/Confirmacion-envio.html');
+                })
+                .catch((error) => {
+                    return res.status(500).send("Error al enviar el correo.");
+                });
         } else {
             res.status(404).send("<h2>Correo no encontrado</h2>");
         }
