@@ -1,7 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const fs = require('fs');
-const path = require('path');
 const Autor = require('../models/Autor');
 const Obra = require('../models/Obra');
 
@@ -47,7 +45,7 @@ function mapObraDetailToFrontend(obra) {
         Precio: obra.precio,
         PrecioFormateado: formatPrice(obra.precio),
         Estado_obra: obra.estado_obra,
-        imagen: null,
+        imagen_url: obra.fotografia || null,
         GeneroNombre: obra.genero ? obra.genero.nombre : null,
         ...detalles
     };
@@ -99,19 +97,6 @@ router.get('/autor-detalle/:id', async (req, res) => {
             return res.status(404).json({ error: "Autor no encontrado" });
         }
 
-        let autorImagenBase64 = null;
-        if (autor.fotografia && autor.fotografia !== 'NULL' && autor.fotografia !== '') {
-            const rutaImagen = path.join(__dirname, '..', 'assets', 'images', 'authors', path.basename(autor.fotografia));
-            if (fs.existsSync(rutaImagen)) {
-                try {
-                    const imageBuffer = fs.readFileSync(rutaImagen);
-                    autorImagenBase64 = imageBuffer.toString('base64');
-                } catch (err) {
-                    console.error("Error leyendo imagen del autor:", err);
-                }
-            }
-        }
-
         const { ordenDate } = req.query;
         let obrasQuery = Obra.find({ autores: id, estado_obra: 'Disponible' })
             .populate('autores', '_id nombre apellido fotografia')
@@ -125,23 +110,7 @@ router.get('/autor-detalle/:id', async (req, res) => {
 
         const obras = await obrasQuery;
 
-        const obrasMapped = obras.map(obra => {
-            const mapped = mapObraDetailToFrontend(obra);
-
-            if (obra.fotografia && obra.fotografia !== 'NULL' && obra.fotografia !== '') {
-                const rutaImagen = path.join(__dirname, '..', 'assets', 'images', 'art_previews', path.basename(obra.fotografia));
-                if (fs.existsSync(rutaImagen)) {
-                    try {
-                        const imageBuffer = fs.readFileSync(rutaImagen);
-                        mapped.imagen = imageBuffer.toString('base64');
-                    } catch (err) {
-                        console.error("Error leyendo imagen de obra:", err);
-                    }
-                }
-            }
-
-            return mapped;
-        });
+        const obrasMapped = obras.map(obra => mapObraDetailToFrontend(obra));
 
         res.json({
             autor: {
@@ -149,7 +118,7 @@ router.get('/autor-detalle/:id', async (req, res) => {
                 Nombre: autor.nombre,
                 Apellido: autor.apellido,
                 Fecha_nacimiento: autor.fecha_nacimiento,
-                Fotografia: autorImagenBase64,
+                Fotografia: autor.fotografia,
                 Biografia: autor.biografia,
                 Nacionalidad: autor.nacionalidad,
                 NacionalidadDesc: autor.nacionalidad
@@ -211,42 +180,18 @@ router.get('/artistas-catalogo', async (req, res) => {
 
         const artistas = await Autor.aggregate(pipeline);
 
-        const processedResults = artistas.map(artista => {
-            let imagenBase64 = null;
-
-            if (artista.fotografia && artista.fotografia !== 'NULL' && artista.fotografia !== '') {
-                const rutasPosibles = [
-                    path.join(__dirname, '..', 'public', 'Estilos', 'Imagenes', path.basename(artista.fotografia)),
-                    path.join(__dirname, '..', 'assets', 'images', 'authors', path.basename(artista.fotografia)),
-                    path.join(__dirname, '..', 'uploads', 'autores', path.basename(artista.fotografia))
-                ];
-
-                for (const ruta of rutasPosibles) {
-                    if (fs.existsSync(ruta)) {
-                        try {
-                            const imageBuffer = fs.readFileSync(ruta);
-                            imagenBase64 = imageBuffer.toString('base64');
-                            break;
-                        } catch (err) {
-                            console.error("Error leyendo imagen:", err.message);
-                        }
-                    }
-                }
-            }
-
-            return {
-                id_Autor: artista._id,
-                Nombre: artista.nombre,
-                Apellido: artista.apellido,
-                Fecha_nacimiento: artista.fecha_nacimiento,
-                Fotografia: imagenBase64,
-                Especialidades: (artista.especialidades && artista.especialidades.length > 0)
-                    ? artista.especialidades.join(', ')
-                    : 'Sin especialidades',
-                Nacionalidad: artista.nacionalidad || 'Nacionalidad no especificada',
-                Biografia: artista.biografia || ''
-            };
-        });
+        const processedResults = artistas.map(artista => ({
+            id_Autor: artista._id,
+            Nombre: artista.nombre,
+            Apellido: artista.apellido,
+            Fecha_nacimiento: artista.fecha_nacimiento,
+            Fotografia: artista.fotografia,
+            Especialidades: (artista.especialidades && artista.especialidades.length > 0)
+                ? artista.especialidades.join(', ')
+                : 'Sin especialidades',
+            Nacionalidad: artista.nacionalidad || 'Nacionalidad no especificada',
+            Biografia: artista.biografia || ''
+        }));
 
         res.json(processedResults);
     } catch (err) {
