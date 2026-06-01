@@ -466,11 +466,7 @@
                     
                     document.getElementById('authBio').textContent = data.autor.Biografia || "Sin biografía disponible.";
                     
-                    if(data.autor.Fotografia) {
-                        document.getElementById('authImg').src = `data:image/jpeg;base64,${data.autor.Fotografia}`;
-                    } else {
-                        document.getElementById('authImg').src = "https://via.placeholder.com/300x300?text=Sin+Imagen";
-                    }
+                    document.getElementById('authImg').src = data.autor.Fotografia || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Crect fill=%22%231a1a1a%22 width=%22300%22 height=%22300%22/%3E%3Ctext fill=%22%23666%22 font-size=%2214%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3ESin Imagen%3C/text%3E%3C/svg%3E';
                 }
 
                 const typesContainer = document.getElementById('authTypes');
@@ -490,8 +486,7 @@
                     gallery.innerHTML = '';
                     
                     data.obras.forEach(obra => {
-                        const base64Img = obra.imagen ? obra.imagen : null;
-                        const imgPath = base64Img ? `data:image/jpeg;base64,${base64Img}` : 'https://via.placeholder.com/350x300?text=Sin+Imagen';
+                        const imgPath = obra.imagen_url || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22350%22 height=%22300%22%3E%3Crect fill=%22%231a1a1a%22 width=%22350%22 height=%22300%22/%3E%3Ctext fill=%22%23666%22 font-size=%2214%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3ESin Imagen%3C/text%3E%3C/svg%3E';
                         
                         // Preparar ficha técnica para la modal
                         const año = obra.Fecha_creacion ? new Date(obra.Fecha_creacion).getFullYear() : 'N/A';
