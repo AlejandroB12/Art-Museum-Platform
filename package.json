@@ -9,13 +9,15 @@
     "seed": "node scripts/seed-mongodb.js"
   },
   "dependencies": {
+    "cassandra-driver": "^4.9.0",
     "dotenv": "^16.6.1",
     "express": "^4.21.0",
     "express-session": "^1.18.1",
     "mongodb": "^6.9.0",
     "mongoose": "^8.6.0",
-    "mysql2": "^3.11.0",
-    "nodemailer": "^8.0.8"
+    "mysql2": "^3.22.4",
+    "nodemailer": "^8.0.8",
+    "uuid": "^14.0.0"
   },
   "keywords": [
     "art",
