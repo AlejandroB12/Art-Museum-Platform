@@ -49,3 +49,7 @@ public/uploads/
 vendor/
 bower_components/
 jspm_packages/
+
+# === DataStax Astra Secure Connect Bundle ===
+*.scb
+secure-connect-*.zip

@@ -37,13 +37,3 @@ CREATE TABLE IF NOT EXISTS resumen_facturacion_mensual (
     obra_mas_barata decimal
 );
 
-CREATE TABLE IF NOT EXISTS facturas_por_comprador (
-    id_comprador int,
-    fecha_venta timestamp,
-    id_factura int,
-    id_obra int,
-    nombre_obra text,
-    total_pagado decimal,
-    estado_entrega text,
-    PRIMARY KEY (id_comprador, fecha_venta, id_factura)
-) WITH CLUSTERING ORDER BY (fecha_venta DESC, id_factura ASC);

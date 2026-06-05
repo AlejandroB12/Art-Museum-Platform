@@ -7,15 +7,16 @@ require('dotenv').config(); // Carga las variables de entorno.
 
 // --- IMPORTACIÓN DE BASE DE DATOS ---
 const db = require('../config/database');
-const { executeQuery } = require('../config/cassandra');
+const { client } = require('../config/cassandra');
 
 // --- HELPER: Registrar evento en bitácora de seguridad ---
 const registrarEventoSeguridad = async (id_usuario, tipo_evento, descripcion, req) => {
     try {
-        await executeQuery(
+        await client.execute(
             `INSERT INTO bitacora_seguridad (id_usuario, fecha_evento, tipo_evento, descripcion, ip_origen, dispositivo)
              VALUES (?, toTimestamp(now()), ?, ?, ?, ?)`,
-            [id_usuario, tipo_evento, descripcion, req?.ip || '', req?.headers['user-agent'] || '']
+            [id_usuario, tipo_evento, descripcion, req?.ip || '', req?.headers['user-agent'] || ''],
+            { prepare: true }
         );
     } catch (err) {
         console.error('Error registrando evento seguridad:', err.message);
@@ -352,11 +353,12 @@ router.post('/confirmar-reserva', (req, res) => {
                     }
                     registrarEventoSeguridad(id_usuario, 'CONFIRMAR_RESERVA', `Obra ${id_obra} reservada`, req);
                     try {
-                        const { executeQuery } = require('../config/cassandra');
-                        executeQuery(
+                        const { client } = require('../config/cassandra');
+                        client.execute(
                             `INSERT INTO historial_estatus_obra (id_obra, fecha_cambio, estatus_anterior, estatus_nuevo, modificado_por, motivo)
                              VALUES (?, toTimestamp(now()), 'Disponible', 'Reservado', ?, ?)`,
-                            [parseInt(id_obra), id_usuario, 'Comprador inició proceso de compra']
+                            [parseInt(id_obra), id_usuario, 'Comprador inició proceso de compra'],
+                            { prepare: true }
                         ).catch(e => console.error('Error registrando cambio estatus:', e.message));
                     } catch (e) {
                         console.error('Error registrando en Cassandra:', e.message);

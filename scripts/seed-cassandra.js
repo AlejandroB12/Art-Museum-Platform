@@ -1,6 +1,6 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
-const { connectCassandra, executeQuery } = require('../config/cassandra');
+const { connectCassandra, client } = require('../config/cassandra');
 
 const seedData = [
     {
@@ -73,76 +73,7 @@ const seedData = [
                 VALUES (?, ?, ?, ?, ?, ?)`,
         params: [52, '2026-02-05T09:00:00Z', 'Disponible', 'Vendida', 2, 'Pago completado - Factura #3']
     },
-    {
-        query: `INSERT INTO facturas_por_comprador (id_comprador, fecha_venta, id_factura, id_obra, nombre_obra, total_pagado, estado_entrega)
-                VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        params: [3, '2026-01-15T10:30:00Z', 1, 38, 'Balloon Dog Orange', 58400000.00, 'En proceso']
-    },
-    {
-        query: `INSERT INTO facturas_por_comprador (id_comprador, fecha_venta, id_factura, id_obra, nombre_obra, total_pagado, estado_entrega)
-                VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        params: [5, '2026-01-20T14:00:00Z', 2, 64, 'Pumpkin', 4760000.00, 'Enviado']
-    },
-    {
-        query: `INSERT INTO facturas_por_comprador (id_comprador, fecha_venta, id_factura, id_obra, nombre_obra, total_pagado, estado_entrega)
-                VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        params: [3, '2026-02-05T09:15:00Z', 3, 52, '727', 4522000.00, 'En proceso']
-    },
-    {
-        query: `INSERT INTO envios_por_estado (estado_entrega, fecha_venta, id_envio, monto_total, municipio, parroquia, calle, id_factura, comprador_nombre, comprador_apellido)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        params: ['En proceso', '2026-01-15T10:30:00Z', 1, '1500.00', 'Iribarren', 'Catedral', 'Calle 42 entre 7 y 8', 1, 'María', 'González']
-    },
-    {
-        query: `INSERT INTO envios_por_estado (estado_entrega, fecha_venta, id_envio, monto_total, municipio, parroquia, calle, id_factura, comprador_nombre, comprador_apellido)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        params: ['Enviado', '2026-01-20T14:00:00Z', 2, '850.00', 'Chacao', 'Chacao', 'Av. Principal Los Palos Grandes', 2, 'Carlos', 'Mendoza']
-    },
-    {
-        query: `INSERT INTO envios_por_estado (estado_entrega, fecha_venta, id_envio, monto_total, municipio, parroquia, calle, id_factura, comprador_nombre, comprador_apellido)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        params: ['En proceso', '2026-02-05T09:15:00Z', 3, '1200.00', 'Baruta', 'El Cafetal', 'Calle Las Colinas', 3, 'María', 'González']
-    },
-    {
-        query: `INSERT INTO solicitudes_pago_por_estatus (estatus, fecha_solicitud, id_solicitud, id_usuario, monto, usuario_nombre, usuario_apellido, usuario_email)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        params: ['Pendiente', '2026-01-05T11:00:00Z', 1, 3, 10.00, 'María', 'González', 'maria@example.com']
-    },
-    {
-        query: `INSERT INTO solicitudes_pago_por_estatus (estatus, fecha_solicitud, id_solicitud, id_usuario, monto, usuario_nombre, usuario_apellido, usuario_email)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        params: ['Aprobado', '2026-01-10T09:30:00Z', 2, 5, 10.00, 'Carlos', 'Mendoza', 'carlos@example.com']
-    },
-    {
-        query: `INSERT INTO solicitudes_pago_por_estatus (estatus, fecha_solicitud, id_solicitud, id_usuario, monto, usuario_nombre, usuario_apellido, usuario_email)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        params: ['Pendiente', '2026-02-03T16:45:00Z', 3, 7, 10.00, 'Ana', 'Rivas', 'ana@example.com']
-    },
-    {
-        query: `INSERT INTO membresias_por_usuario (id_usuario, fecha_pago, id_membresia, monto_pagado)
-                VALUES (?, ?, ?, ?)`,
-        params: [3, '2025-12-01', 1, 10.00]
-    },
-    {
-        query: `INSERT INTO membresias_por_usuario (id_usuario, fecha_pago, id_membresia, monto_pagado)
-                VALUES (?, ?, ?, ?)`,
-        params: [3, '2026-01-01', 2, 10.00]
-    },
-    {
-        query: `INSERT INTO membresias_por_usuario (id_usuario, fecha_pago, id_membresia, monto_pagado)
-                VALUES (?, ?, ?, ?)`,
-        params: [5, '2025-11-15', 3, 10.00]
-    },
-    {
-        query: `INSERT INTO membresias_por_usuario (id_usuario, fecha_pago, id_membresia, monto_pagado)
-                VALUES (?, ?, ?, ?)`,
-        params: [5, '2025-12-15', 4, 10.00]
-    },
-    {
-        query: `INSERT INTO membresias_por_usuario (id_usuario, fecha_pago, id_membresia, monto_pagado)
-                VALUES (?, ?, ?, ?)`,
-        params: [5, '2026-01-15', 5, 10.00]
-    }
+
 ];
 
 const run = async () => {
@@ -156,7 +87,7 @@ const run = async () => {
 
     for (const item of seedData) {
         try {
-            await executeQuery(item.query, item.params);
+            await client.execute(item.query, item.params);
             console.log(`  OK: ${item.query.substring(0, 60)}...`);
         } catch (err) {
             console.error(`  ERROR: ${err.message}`);

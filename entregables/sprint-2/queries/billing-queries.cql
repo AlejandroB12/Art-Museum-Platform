@@ -20,6 +20,4 @@ WHERE anio_mes = '2026-01';
 SELECT * FROM resumen_facturacion_mensual
 WHERE anio_mes IN ('2026-01', '2026-02');
 
--- Q5: Historial de compras de un comprador
-SELECT * FROM facturas_por_comprador
-WHERE id_comprador = 3;
+
