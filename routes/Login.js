@@ -6,7 +6,21 @@ const path = require('path');
 require('dotenv').config(); // Carga las variables de entorno.
 
 // --- IMPORTACIÓN DE BASE DE DATOS ---
-const db = require('../config/database'); 
+const db = require('../config/database');
+const { executeQuery } = require('../config/cassandra');
+
+// --- HELPER: Registrar evento en bitácora de seguridad ---
+const registrarEventoSeguridad = async (id_usuario, tipo_evento, descripcion, req) => {
+    try {
+        await executeQuery(
+            `INSERT INTO bitacora_seguridad (id_usuario, fecha_evento, tipo_evento, descripcion, ip_origen, dispositivo)
+             VALUES (?, toTimestamp(now()), ?, ?, ?, ?)`,
+            [id_usuario, tipo_evento, descripcion, req?.ip || '', req?.headers['user-agent'] || '']
+        );
+    } catch (err) {
+        console.error('Error registrando evento seguridad:', err.message);
+    }
+};
 
 // --- CONFIGURACIÓN DE NODEMAILER ---
 const transporter = nodemailer.createTransport({
@@ -52,6 +66,8 @@ router.post('/login-auth', (req, res) => {
 
                 req.session.id_usuario = usuario.id_usuario;
 
+                registrarEventoSeguridad(usuario.id_usuario, 'INICIO_SESION', 'Inicio de sesión exitoso', req);
+
                 if (usuario.Rol === 'administrador') {
                     res.redirect('/Admin.html'); 
                 } else {
@@ -82,6 +98,7 @@ router.post('/recuperar-pw', (req, res) => {
             };
             transporter.sendMail(mailOptions, (error) => {
                 if (error) return res.status(500).send("Error al enviar el correo.");
+                registrarEventoSeguridad(userId, 'CODIGO_RECUPERACION', 'Código de recuperación enviado al email', req);
                 res.redirect('/recovery/Confirmacion-envio.html');
             });
         } else {
@@ -96,7 +113,8 @@ router.post('/update-password', (req, res) => {
     const sql = "UPDATE Usuario SET Contraseña = ? WHERE id_Usuario = ?";
     db.query(sql, [newPassword, userId], (err) => {
         if (err) return res.status(500).send("Error al actualizar");
-         res.redirect('/recovery/Actualizacion-contraseña.html');
+        registrarEventoSeguridad(userId, 'CAMBIO_CONTRASENA', 'Contraseña actualizada exitosamente', req);
+        res.redirect('/recovery/Actualizacion-contraseña.html');
     });
 });
 
@@ -143,6 +161,7 @@ router.post('/registrar', (req, res) => {
 
                     db.commit((err) => {
                         if (err) return db.rollback(() => res.status(500).send("Error en Commit"));
+                        registrarEventoSeguridad(idUsuario, 'REGISTRO_USUARIO', 'Registro de nuevo comprador', req);
                         res.redirect('/user/Mensaje-exitoso.html');
                     });
                 });
@@ -205,6 +224,7 @@ router.post('/guardar-seguridad', (req, res) => {
 
         db.query(sql, [valores], (err) => {
             if (err) return res.status(500).send("Error al guardar: " + err.message);
+            registrarEventoSeguridad(id_usuario, 'GUARDAR_SEGURIDAD', 'Preguntas de seguridad guardadas', req);
             res.send("Preguntas guardadas con éxito");
         });
     });
@@ -240,6 +260,7 @@ router.post('/solicitar-pago', (req, res) => {
     const sql = "INSERT INTO SolicitudPago (id_usuario, Estatus) VALUES (?, 'Pendiente')";
     db.query(sql, [req.session.id_usuario], (err) => {
         if (err) return res.status(500).send("Error al registrar");
+        registrarEventoSeguridad(req.session.id_usuario, 'SOLICITUD_PAGO', 'Solicitud de pago de membresía enviada', req);
         res.send("Solicitud enviada");
     });
 });
@@ -323,12 +344,22 @@ router.post('/confirmar-reserva', (req, res) => {
                     });
                 }
 
-                // Si todo salió bien, confirmar la transacción
                 db.commit((err) => {
                     if (err) {
                         return db.rollback(() => {
                             res.status(500).json({ error: "Error al confirmar transacción" });
                         });
+                    }
+                    registrarEventoSeguridad(id_usuario, 'CONFIRMAR_RESERVA', `Obra ${id_obra} reservada`, req);
+                    try {
+                        const { executeQuery } = require('../config/cassandra');
+                        executeQuery(
+                            `INSERT INTO historial_estatus_obra (id_obra, fecha_cambio, estatus_anterior, estatus_nuevo, modificado_por, motivo)
+                             VALUES (?, toTimestamp(now()), 'Disponible', 'Reservado', ?, ?)`,
+                            [parseInt(id_obra), id_usuario, 'Comprador inició proceso de compra']
+                        ).catch(e => console.error('Error registrando cambio estatus:', e.message));
+                    } catch (e) {
+                        console.error('Error registrando en Cassandra:', e.message);
                     }
                     res.json({ success: true, message: "Reserva confirmada y obra actualizada" });
                 });

@@ -6,9 +6,12 @@
   "scripts": {
     "start": "node server/server.js",
     "dev": "node --watch server/server.js",
-    "seed": "node scripts/seed-mongodb.js"
+    "seed": "node scripts/seed-mongodb.js",
+    "seed:cassandra": "node scripts/seed-cassandra.js",
+    "migrate:cassandra": "node scripts/migrate-to-cassandra.js"
   },
   "dependencies": {
+    "cassandra-driver": "^4.9.0",
     "dotenv": "^16.6.1",
     "express": "^4.21.0",
     "express-session": "^1.18.1",
