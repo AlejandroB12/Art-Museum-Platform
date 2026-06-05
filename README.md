@@ -42,6 +42,8 @@ El desarrollo de este proyecto fue realizado por:
  - Alejandro Briceño
  - Kelvys Concepcion
  - Rolanny Sanchez
+ - Yvanna Bravo
+ - Angel Laucho
 
 ## 📂 Estructura del Proyecto
 
