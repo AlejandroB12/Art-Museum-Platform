@@ -12,6 +12,8 @@ const Obra = require('../models/Obra');
 const Especializacion = require('../models/Especializacion');
 const Nacionalidad = require('../models/Nacionalidad');
 
+const { executeQuery, executeBatch } = require('../config/cassandra');
+
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -387,38 +389,72 @@ router.post('/generar-factura', (req, res) => {
                                             console.warn('La reserva no pudo ser eliminada automáticamente');
                                         }
                                         
-                                        db.commit((err) => {
-                                            if (err) {
-                                                console.error('Error al confirmar transacción:', err);
-                                                return db.rollback(() => res.status(500).json({ 
-                                                    success: false, 
-                                                    message: "Error al confirmar" 
-                                                }));
-                                            }
-                                            
-                                            res.json({ 
-                                                success: true, 
-                                                message: "Factura generada correctamente",
-                                                id_factura: idFactura,
-                                                mostrarEnvio: true,
-                                                datos: {
-                                                    id_factura: idFactura,
-                                                    id_obra: id_obra,
-                                                    nombreObra: obraDatos[0]?.Nombre || 'No disponible',
-                                                    id_comprador: id_comp,
-                                                    nombreComprador: nombreComprador,
-                                                    emailComprador: comprador.Email || 'No disponible',
-                                                    cedulaComprador: comprador.Cedula || 'No disponible',
-                                                    precio_neto: parseFloat(precio_neto),
-                                                    iva: iva,
-                                                    ganancia_museo: gananciaMuseo,
-                                                    porcentaje_comision: parseFloat(porcentaje_comision),
-                                                    total: total,
-                                                    fecha: new Date().toLocaleDateString(),
-                                                    hora: new Date().toLocaleTimeString()
+                                            db.commit(async (err) => {
+                                                if (err) {
+                                                    console.error('Error al confirmar transacción:', err);
+                                                    return db.rollback(() => res.status(500).json({ 
+                                                        success: false, 
+                                                        message: "Error al confirmar" 
+                                                    }));
                                                 }
+
+                                                try {
+                                                    const fecha = new Date();
+                                                    const anioMes = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
+
+                                                    await executeBatch([
+                                                        {
+                                                            query: `INSERT INTO obras_vendidas_por_periodo
+                                                                    (anio_mes, fecha_venta, id_factura, id_obra, nombre_obra, precio_venta, iva,
+                                                                     total_pagado, ganancia_museo_usd, porcentaje_comision, id_comprador,
+                                                                     comprador_nombre, comprador_apellido, comprador_email, comprador_cedula,
+                                                                     id_admin, admin_nombre)
+                                                                    VALUES (?, toTimestamp(now()), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                                                            params: [anioMes, idFactura, id_obra, obraDatos[0]?.Nombre || '', precio_neto, iva, total,
+                                                                     gananciaMuseo, porcentaje_comision, id_comp, comprador.Nombre || '',
+                                                                     comprador.Apellido || '', comprador.Email || '', comprador.Cedula || null,
+                                                                     id_admin, 'Admin']
+                                                        },
+                                                        {
+                                                            query: `INSERT INTO facturas_por_comprador
+                                                                    (id_comprador, fecha_venta, id_factura, id_obra, nombre_obra, total_pagado, estado_entrega)
+                                                                    VALUES (?, toTimestamp(now()), ?, ?, ?, ?, ?)`,
+                                                            params: [id_comp, idFactura, id_obra, obraDatos[0]?.Nombre || '', total, 'En proceso']
+                                                        },
+                                                        {
+                                                            query: `INSERT INTO historial_estatus_obra
+                                                                    (id_obra, fecha_cambio, estatus_anterior, estatus_nuevo, modificado_por, motivo)
+                                                                    VALUES (?, toTimestamp(now()), ?, ?, ?, ?)`,
+                                                            params: [id_obra, 'Reservado', 'Vendida', id_admin, `Pago completado - Factura #${idFactura}`]
+                                                        }
+                                                    ]);
+                                                } catch (cassErr) {
+                                                    console.error('Error insertando en Cassandra:', cassErr.message);
+                                                }
+                                                
+                                                res.json({ 
+                                                    success: true, 
+                                                    message: "Factura generada correctamente",
+                                                    id_factura: idFactura,
+                                                    mostrarEnvio: true,
+                                                    datos: {
+                                                        id_factura: idFactura,
+                                                        id_obra: id_obra,
+                                                        nombreObra: obraDatos[0]?.Nombre || 'No disponible',
+                                                        id_comprador: id_comp,
+                                                        nombreComprador: nombreComprador,
+                                                        emailComprador: comprador.Email || 'No disponible',
+                                                        cedulaComprador: comprador.Cedula || 'No disponible',
+                                                        precio_neto: parseFloat(precio_neto),
+                                                        iva: iva,
+                                                        ganancia_museo: gananciaMuseo,
+                                                        porcentaje_comision: parseFloat(porcentaje_comision),
+                                                        total: total,
+                                                        fecha: new Date().toLocaleDateString(),
+                                                        hora: new Date().toLocaleTimeString()
+                                                    }
+                                                });
                                             });
-                                        });
                                     });
                                 });
                             });
@@ -498,6 +534,15 @@ router.post('/aprobar-pago', (req, res) => {
                 
                 db.commit((err) => {
                     if (err) return db.rollback(() => res.status(500).send("Error"));
+                    try {
+                        executeQuery(
+                            `INSERT INTO bitacora_seguridad (id_usuario, fecha_evento, tipo_evento, descripcion, ip_origen, dispositivo)
+                             VALUES (?, toTimestamp(now()), ?, ?, ?, ?)`,
+                            [id_usuario, 'APROBACION_PAGO', 'Solicitud de pago aprobada por administrador', req.ip || '', req.headers['user-agent'] || '']
+                        ).catch(e => console.error('Error audit log:', e.message));
+                    } catch (e) {
+                        console.error('Error Cassandra:', e.message);
+                    }
                     res.send("Membresía activada y días sumados");
                 });
             });
@@ -1119,6 +1164,274 @@ router.delete('/api/autores-admin/:id', async (req, res) => {
     } catch (err) {
         console.error('Error eliminando autor:', err);
         res.status(500).json({ success: false, message: 'Error al eliminar autor' });
+    }
+});
+
+// ==========================================
+// 11. CONSULTAS CASSANDRA (Sprint 2)
+// ==========================================
+
+// Q1: Obras vendidas en un período
+router.get('/cassandra/obras-vendidas', async (req, res) => {
+    try {
+        const { anio_mes } = req.query;
+        if (!anio_mes) {
+            return res.status(400).json({ success: false, message: 'anio_mes requerido (ej: 2026-01)' });
+        }
+        const result = await executeQuery(
+            'SELECT * FROM obras_vendidas_por_periodo WHERE anio_mes = ?',
+            [anio_mes]
+        );
+        res.json({ success: true, data: result.rows });
+    } catch (err) {
+        console.error('Error consultando obras vendidas (Cassandra):', err.message);
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// Q1b: Obras vendidas en múltiples meses
+router.get('/cassandra/obras-vendidas-rango', async (req, res) => {
+    try {
+        const meses = req.query.meses;
+        if (!meses) {
+            return res.status(400).json({ success: false, message: 'meses requerido (ej: 2026-01,2026-02)' });
+        }
+        const listaMeses = meses.split(',');
+        const results = [];
+        for (const mes of listaMeses) {
+            const result = await executeQuery(
+                'SELECT * FROM obras_vendidas_por_periodo WHERE anio_mes = ?',
+                [mes.trim()]
+            );
+            results.push(...result.rows);
+        }
+        results.sort((a, b) => new Date(b.fecha_venta) - new Date(a.fecha_venta));
+        res.json({ success: true, data: results });
+    } catch (err) {
+        console.error('Error consultando rango obras vendidas (Cassandra):', err.message);
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// Q2: Resumen de facturación mensual
+router.get('/cassandra/resumen-facturacion', async (req, res) => {
+    try {
+        const { anio_mes } = req.query;
+        if (!anio_mes) {
+            const result = await executeQuery('SELECT * FROM resumen_facturacion_mensual');
+            return res.json({ success: true, data: result.rows });
+        }
+        const result = await executeQuery(
+            'SELECT * FROM resumen_facturacion_mensual WHERE anio_mes = ?',
+            [anio_mes]
+        );
+        res.json({ success: true, data: result.rows });
+    } catch (err) {
+        console.error('Error consultando resumen facturación (Cassandra):', err.message);
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// Q3: Bitácora de seguridad por usuario
+router.get('/cassandra/bitacora-seguridad', async (req, res) => {
+    try {
+        const { id_usuario, tipo_evento } = req.query;
+        if (id_usuario && tipo_evento) {
+            const result = await executeQuery(
+                'SELECT * FROM bitacora_seguridad WHERE id_usuario = ? AND tipo_evento = ? ALLOW FILTERING',
+                [parseInt(id_usuario), tipo_evento]
+            );
+            return res.json({ success: true, data: result.rows });
+        }
+        if (id_usuario) {
+            const result = await executeQuery(
+                'SELECT * FROM bitacora_seguridad WHERE id_usuario = ?',
+                [parseInt(id_usuario)]
+            );
+            return res.json({ success: true, data: result.rows });
+        }
+        res.status(400).json({ success: false, message: 'id_usuario requerido' });
+    } catch (err) {
+        console.error('Error consultando bitácora (Cassandra):', err.message);
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// Q4: Historial de estatus de una obra
+router.get('/cassandra/historial-estatus-obra', async (req, res) => {
+    try {
+        const { id_obra } = req.query;
+        if (!id_obra) {
+            return res.status(400).json({ success: false, message: 'id_obra requerido' });
+        }
+        const result = await executeQuery(
+            'SELECT * FROM historial_estatus_obra WHERE id_obra = ?',
+            [parseInt(id_obra)]
+        );
+        res.json({ success: true, data: result.rows });
+    } catch (err) {
+        console.error('Error consultando historial estatus (Cassandra):', err.message);
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// Q5: Facturas por comprador
+router.get('/cassandra/facturas-comprador', async (req, res) => {
+    try {
+        const { id_comprador } = req.query;
+        if (!id_comprador) {
+            return res.status(400).json({ success: false, message: 'id_comprador requerido' });
+        }
+        const result = await executeQuery(
+            'SELECT * FROM facturas_por_comprador WHERE id_comprador = ?',
+            [parseInt(id_comprador)]
+        );
+        res.json({ success: true, data: result.rows });
+    } catch (err) {
+        console.error('Error consultando facturas comprador (Cassandra):', err.message);
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// Q6: Envíos por estado de entrega
+router.get('/cassandra/envios-por-estado', async (req, res) => {
+    try {
+        const { estado_entrega } = req.query;
+        if (!estado_entrega) {
+            return res.status(400).json({ success: false, message: 'estado_entrega requerido' });
+        }
+        const result = await executeQuery(
+            'SELECT * FROM envios_por_estado WHERE estado_entrega = ?',
+            [estado_entrega]
+        );
+        res.json({ success: true, data: result.rows });
+    } catch (err) {
+        console.error('Error consultando envíos (Cassandra):', err.message);
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// Q7: Solicitudes de pago por estatus
+router.get('/cassandra/solicitudes-pago', async (req, res) => {
+    try {
+        const { estatus } = req.query;
+        if (!estatus) {
+            return res.status(400).json({ success: false, message: 'estatus requerido' });
+        }
+        const result = await executeQuery(
+            'SELECT * FROM solicitudes_pago_por_estatus WHERE estatus = ?',
+            [estatus]
+        );
+        res.json({ success: true, data: result.rows });
+    } catch (err) {
+        console.error('Error consultando solicitudes pago (Cassandra):', err.message);
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// Q8: Membresías por usuario
+router.get('/cassandra/membresias-usuario', async (req, res) => {
+    try {
+        const { id_usuario } = req.query;
+        if (!id_usuario) {
+            return res.status(400).json({ success: false, message: 'id_usuario requerido' });
+        }
+        const result = await executeQuery(
+            'SELECT * FROM membresias_por_usuario WHERE id_usuario = ?',
+            [parseInt(id_usuario)]
+        );
+        res.json({ success: true, data: result.rows });
+    } catch (err) {
+        console.error('Error consultando membresías (Cassandra):', err.message);
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// ==========================================
+// 12. ESCRITURA EN CASSANDRA (Sprint 2)
+// ==========================================
+
+// Registrar evento en bitácora de seguridad
+router.post('/cassandra/registrar-evento-seguridad', async (req, res) => {
+    try {
+        const { id_usuario, tipo_evento, descripcion, ip_origen, dispositivo } = req.body;
+        if (!id_usuario || !tipo_evento) {
+            return res.status(400).json({ success: false, message: 'id_usuario y tipo_evento requeridos' });
+        }
+        await executeQuery(
+            `INSERT INTO bitacora_seguridad (id_usuario, fecha_evento, tipo_evento, descripcion, ip_origen, dispositivo)
+             VALUES (?, toTimestamp(now()), ?, ?, ?, ?)`,
+            [parseInt(id_usuario), tipo_evento, descripcion || '', ip_origen || req.ip || '', dispositivo || req.headers['user-agent'] || '']
+        );
+        res.json({ success: true, message: 'Evento registrado en bitácora' });
+    } catch (err) {
+        console.error('Error registrando evento seguridad (Cassandra):', err.message);
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// Registrar cambio de estatus de obra
+router.post('/cassandra/registrar-cambio-estatus', async (req, res) => {
+    try {
+        const { id_obra, estatus_anterior, estatus_nuevo, modificado_por, motivo } = req.body;
+        if (!id_obra || !estatus_anterior || !estatus_nuevo) {
+            return res.status(400).json({ success: false, message: 'id_obra, estatus_anterior y estatus_nuevo requeridos' });
+        }
+        await executeQuery(
+            `INSERT INTO historial_estatus_obra (id_obra, fecha_cambio, estatus_anterior, estatus_nuevo, modificado_por, motivo)
+             VALUES (?, toTimestamp(now()), ?, ?, ?, ?)`,
+            [parseInt(id_obra), estatus_anterior, estatus_nuevo, modificado_por ? parseInt(modificado_por) : null, motivo || '']
+        );
+        res.json({ success: true, message: 'Cambio de estatus registrado' });
+    } catch (err) {
+        console.error('Error registrando cambio estatus (Cassandra):', err.message);
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// ==========================================
+// 13. MIGRACIÓN: MySQL → Cassandra
+// ==========================================
+
+router.post('/cassandra/migrar-facturas', async (req, res) => {
+    try {
+        const sql = `
+            SELECT f.*, o.Nombre AS nombre_obra, u.Email AS comprador_email,
+                   c.Nombre AS comprador_nombre, c.Apellido AS comprador_apellido, c.Cedula AS comprador_cedula
+            FROM Factura f
+            JOIN Obra o ON f.id_obra = o.id_Obra
+            JOIN Usuario u ON f.id_comprador = u.id_usuario
+            JOIN Comprador c ON u.id_usuario = c.id_usuario
+        `;
+        db.query(sql, async (err, facturas) => {
+            if (err) return res.status(500).json({ success: false, message: err.message });
+
+            let insertadas = 0;
+            for (const f of facturas) {
+                const fecha = new Date(f.Fecha_Venta);
+                const anioMes = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
+
+                try {
+                    await executeQuery(
+                        `INSERT INTO obras_vendidas_por_periodo
+                         (anio_mes, fecha_venta, id_factura, id_obra, nombre_obra, precio_venta, iva, total_pagado,
+                          ganancia_museo_usd, porcentaje_comision, id_comprador, comprador_nombre, comprador_apellido,
+                          comprador_email, comprador_cedula, id_admin, admin_nombre)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                        [anioMes, f.Fecha_Venta, f.id_factura, f.id_obra, f.nombre_obra, f.Monto_Neto, f.IVA, f.Total_Pagado,
+                         f.Ganancia_Museo_USD, f.Porcentaje_Comision, f.id_comprador, f.comprador_nombre, f.comprador_apellido,
+                         f.comprador_email, f.comprador_cedula, f.id_admin, 'Admin']
+                    );
+                    insertadas++;
+                } catch (e) {
+                    console.error(`Error insertando factura ${f.id_factura}: ${e.message}`);
+                }
+            }
+            res.json({ success: true, message: `Migración completada: ${insertadas} facturas insertadas en Cassandra` });
+        });
+    } catch (err) {
+        console.error('Error en migración:', err.message);
+        res.status(500).json({ success: false, message: err.message });
     }
 });
 
