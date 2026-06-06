@@ -1,18 +1,35 @@
 const mongoose = require('mongoose');
-const dns = require('dns');
 require('dotenv').config();
 
-dns.setServers(['8.8.8.8', '1.1.1.1']);
+const BASE_OPTS = {
+    serverSelectionTimeoutMS: 8000,
+    socketTimeoutMS: 8000,
+    connectTimeoutMS: 8000,
+};
+
+const STRATEGIES = [
+    { name: 'Local', uri: process.env.MONGO_URI_LOCAL, opts: {} },
+    { name: 'SRV', uri: process.env.MONGO_URI, opts: {} },
+    { name: 'SRV + tlsInsecure', uri: process.env.MONGO_URI ? process.env.MONGO_URI + '&tlsInsecure=true' : '', opts: {} },
+    { name: 'Directo', uri: process.env.MONGO_URI_FALLBACK, opts: {} },
+    { name: 'Directo + tlsInsecure', uri: process.env.MONGO_URI_FALLBACK ? process.env.MONGO_URI_FALLBACK + '&tlsInsecure=true' : '', opts: {} },
+];
 
 const connectMongoDB = async () => {
-    try {
-        const conn = await mongoose.connect(process.env.MONGO_URI);
-        console.log(`MongoDB Atlas conectado: ${conn.connection.host}`);
-        return conn;
-    } catch (err) {
-        console.error('Error conectando a MongoDB Atlas:', err.message);
-        return null;
+    for (const s of STRATEGIES) {
+        try {
+            const uri = s.uri || '';
+            if (!uri) continue;
+            const opts = { ...BASE_OPTS, ...s.opts };
+            const conn = await mongoose.connect(uri, opts);
+            console.log(`MongoDB conectado [${s.name}]: ${conn.connection.host}`);
+            return conn;
+        } catch (err) {
+            console.log(`  MongoDB [${s.name}]: ${err.message.split('\n')[0].split('.')[0]}`);
+        }
     }
+    console.log('  MongoDB: No se pudo conectar con ninguna estrategia');
+    return null;
 };
 
 module.exports = connectMongoDB;

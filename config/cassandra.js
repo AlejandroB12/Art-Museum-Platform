@@ -1,6 +1,9 @@
+const dns = require('dns');
 const cassandra = require('cassandra-driver');
 const path = require('path');
 require('dotenv').config();
+
+dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 const client = new cassandra.Client({
     cloud: {

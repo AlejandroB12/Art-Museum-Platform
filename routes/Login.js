@@ -336,8 +336,8 @@ router.post('/confirmar-reserva', (req, res) => {
                 });
             }
 
-            // 2. Actualizar el estado de la obra a 'Reservada'
-            const sqlObra = "UPDATE Obra SET Estado_Obra = 'Reservada' WHERE id_Obra = ?";
+            // 2. Actualizar el estado de la obra a 'Reservado'
+            const sqlObra = "UPDATE Obra SET Estado_Obra = 'Reservado' WHERE id_Obra = ?";
             db.query(sqlObra, [id_obra], (err, result) => {
                 if (err) {
                     return db.rollback(() => {

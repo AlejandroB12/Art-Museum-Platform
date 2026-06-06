@@ -229,10 +229,28 @@ router.get('/api/obras', (req, res) => {
 router.put('/api/obras/:id', (req, res) => {
     const { id } = req.params;
     const { Nombre, Precio, Estado_obra } = req.body;
-    const sql = "UPDATE Obra SET Nombre = ?, Precio = ?, Estado_obra = ? WHERE id_Obra = ?";
-    db.query(sql, [Nombre, Precio, Estado_obra, id], (err) => {
+
+    db.query("SELECT Estado_obra FROM Obra WHERE id_Obra = ?", [id], (err, rows) => {
         if (err) return res.status(500).send(err.message);
-        res.send("Obra actualizada");
+        if (rows.length === 0) return res.status(404).send('Obra no encontrada');
+
+        const estadoAnterior = rows[0].Estado_obra;
+        const sql = "UPDATE Obra SET Nombre = ?, Precio = ?, Estado_obra = ? WHERE id_Obra = ?";
+        db.query(sql, [Nombre, Precio, Estado_obra, id], (err) => {
+            if (err) return res.status(500).send(err.message);
+
+            if (estadoAnterior !== Estado_obra) {
+                client.execute(
+                    `INSERT INTO historial_estatus_obra
+                     (id_obra, fecha_cambio, estatus_anterior, estatus_nuevo, modificado_por, motivo)
+                     VALUES (?, toTimestamp(now()), ?, ?, ?, ?)`,
+                    [parseInt(id), estadoAnterior, Estado_obra, null, 'Cambio manual desde panel administrador'],
+                    { prepare: true }
+                ).catch(e => console.error('Error registrando cambio estatus en Cassandra:', e.message));
+            }
+
+            res.send("Obra actualizada");
+        });
     });
 });
 
@@ -249,7 +267,7 @@ router.delete('/api/obras/:id', (req, res) => {
 // ==========================================
 
 router.get('/api/obras-reservadas', (req, res) => {
-    const sql = "SELECT id_Obra, Nombre, Precio FROM Obra WHERE Estado_obra = 'Reservada'";
+    const sql = "SELECT id_Obra, Nombre, Precio FROM Obra WHERE Estado_obra = 'Reservado'";
     
     db.query(sql, (err, results) => {
         if (err) {
@@ -295,10 +313,10 @@ router.post('/generar-factura', (req, res) => {
                 }));
             }
             
-            if (obraResults[0].Estado_obra !== 'Reservada') {
+            if (obraResults[0].Estado_obra !== 'Reservado') {
                 return db.rollback(() => res.status(400).json({ 
                     success: false, 
-                    message: "La obra no está en estado Reservada" 
+                    message: "La obra no está en estado Reservado" 
                 }));
             }
             
@@ -1252,18 +1270,70 @@ router.get('/cassandra/bitacora-seguridad', async (req, res) => {
     }
 });
 
-// Q4: Historial de estatus de una obra
+// Q4: Obras con cambios de estatus registrados en Cassandra
+router.get('/cassandra/obras-con-historial', async (req, res) => {
+    try {
+        const result = await client.execute('SELECT DISTINCT id_obra FROM historial_estatus_obra');
+        const ids = result.rows.map(r => r.id_obra);
+        if (ids.length === 0) return res.json({ success: true, data: [] });
+
+        const placeholders = ids.map(() => '?').join(',');
+        const [obraRows] = await db.promise().query(
+            `SELECT id_Obra, Nombre, Estado_obra FROM Obra WHERE id_Obra IN (${placeholders})`, ids
+        );
+        const obraMap = {};
+        obraRows.forEach(o => obraMap[o.id_Obra] = { nombre: o.Nombre, estado_actual: o.Estado_obra });
+
+        const enriched = ids.map(id => ({
+            id_obra: id,
+            nombre_obra: obraMap[id]?.nombre || `Obra #${id}`,
+            estado_actual: obraMap[id]?.estado_actual || 'Desconocido'
+        }));
+        enriched.sort((a, b) => a.id_obra - b.id_obra);
+        res.json({ success: true, data: enriched });
+    } catch (err) {
+        console.error('Error consultando obras con historial:', err.message);
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// Q4: Historial de estatus de obra(s)
 router.get('/cassandra/historial-estatus-obra', async (req, res) => {
     try {
         const { id_obra } = req.query;
-        if (!id_obra) {
-            return res.status(400).json({ success: false, message: 'id_obra requerido' });
+
+        let rows;
+        if (id_obra) {
+            const result = await client.execute(
+                'SELECT * FROM historial_estatus_obra WHERE id_obra = ?',
+                [parseInt(id_obra)]
+            );
+            rows = result.rows;
+        } else {
+            res.status(400).json({ success: false, message: 'id_obra requerido' });
+            return;
         }
-        const result = await client.execute(
-            'SELECT * FROM historial_estatus_obra WHERE id_obra = ?',
-            [parseInt(id_obra)]
-        );
-        res.json({ success: true, data: result.rows });
+
+        const enriched = await Promise.all(rows.map(async (row) => {
+            let nombreObra = `Obra #${row.id_obra}`;
+            try {
+                const [obraRows] = await db.promise().query(
+                    'SELECT Nombre FROM Obra WHERE id_Obra = ?', [row.id_obra]
+                );
+                if (obraRows.length > 0) nombreObra = obraRows[0].Nombre;
+            } catch { }
+            return {
+                id_obra: row.id_obra,
+                nombre_obra: nombreObra,
+                fecha_cambio: row.fecha_cambio,
+                estatus_anterior: row.estatus_anterior,
+                estatus_nuevo: row.estatus_nuevo,
+                modificado_por: row.modificado_por,
+                motivo: row.motivo
+            };
+        }));
+
+        res.json({ success: true, data: enriched });
     } catch (err) {
         console.error('Error consultando historial estatus (Cassandra):', err.message);
         res.status(500).json({ success: false, message: err.message });

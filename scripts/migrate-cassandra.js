@@ -11,7 +11,7 @@ const migrarFacturas = async () => {
         const sql = `
             SELECT f.*, o.Nombre AS nombre_obra,
                    u.Email AS comprador_email, u.Nombre AS usuario_nombre,
-                   c.Nombre AS comprador_nombre, c.Apellido AS comprador_apellido,
+                   u.Nombre AS comprador_nombre, u.Apellido AS comprador_apellido,
                    c.Cedula AS comprador_cedula
             FROM Factura f
             JOIN Obra o ON f.id_obra = o.id_Obra
@@ -56,7 +56,7 @@ const migrarEstatusReservas = async () => {
             SELECT r.id_obra, r.Fecha_Reserva, r.id_usuario
             FROM Reserva r
             JOIN Obra o ON r.id_Obra = o.id_Obra
-            WHERE o.Estado_obra IN ('Reservada', 'Vendida')
+            WHERE o.Estado_obra IN ('Reservado', 'Vendida')
         `;
         db.query(sql, async (err, reservas) => {
             if (err) return reject(err);

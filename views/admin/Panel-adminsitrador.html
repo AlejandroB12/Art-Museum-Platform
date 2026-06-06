@@ -113,6 +113,10 @@
             font-size: 0.75rem;
             font-weight: bold;
         }
+
+        .status-disponible { color: #2b6cb0; font-weight: bold; }
+        .status-reservado { color: #dd6b20; font-weight: bold; }
+        .status-vendida { color: #c53030; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -137,6 +141,11 @@
             <div class="nav-item" id="btn-rep-obras" onclick="mostrarTab('rep-obras')">📊 Obras Vendidas</div>
             <div class="nav-item" id="btn-rep-facturas" onclick="mostrarTab('rep-facturas')">📈 Resumen Facturación</div>
             <div class="nav-item" id="btn-rep-membresias" onclick="mostrarTab('rep-membresias')">🎫 Reporte Membresías</div>
+        </div>
+
+        <div class="nav-group">
+            <span class="nav-label">Cassandra</span>
+            <div class="nav-item" id="btn-historial-estatus" onclick="mostrarTab('historial-estatus')">📋 Historial de Estatus</div>
         </div>
 
         <div class="nav-group" style="margin-top: 50px;">
@@ -471,6 +480,39 @@
                 <button class="btn btn-pdf" onclick="generarPDF('tabla-membresias', 'Membresías Pagadas')">📄 Generar PDF</button>
             </div>
         </div>
+
+        <!-- Tab: Historial de Estatus (Cassandra) -->
+        <div id="tab-historial-estatus" class="tab-content" style="display:none">
+            <div class="card">
+                <h3>📋 Historial de Cambios de Estatus de Obras</h3>
+                <div class="report-filter">
+                    <div>
+                        <label for="he-obra-select">Seleccionar obra:</label>
+                        <select id="he-obra-select" style="min-width:300px;">
+                            <option value="">-- Seleccione una obra --</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-blue" onclick="cargarHistorialEstatus()">Ver Historial</button>
+                    <button class="btn btn-green" onclick="cargarObrasConHistorial()">Actualizar lista</button>
+                </div>
+                <table id="tabla-historial-estatus">
+                    <thead>
+                        <tr>
+                            <th>ID Obra</th>
+                            <th>Obra</th>
+                            <th>Fecha / Hora</th>
+                            <th>Estatus Anterior</th>
+                            <th>Estatus Nuevo</th>
+                            <th>Modificado Por</th>
+                            <th>Motivo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="he-sin-seleccion"><td colspan="7" style="text-align:center;color:#718096;">Seleccione una obra y haga clic en "Ver Historial"</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -502,7 +544,8 @@
         'especializaciones': 'Gestión de Especializaciones',
         'rep-obras': 'Reporte de Obras Vendidas',
         'rep-facturas': 'Resumen de Facturación',
-        'rep-membresias': 'Reporte de Membresías Pagadas'
+        'rep-membresias': 'Reporte de Membresías Pagadas',
+        'historial-estatus': 'Historial de Cambios de Estatus'
     };
     document.getElementById('titulo-seccion').textContent = titulos[tab] || 'Panel Administrativo';
     
@@ -514,6 +557,7 @@
     if (tab === 'usuarios-pagos') cargarPagos();
     if (tab === 'validar-usuarios') cargarUsuariosPendientes();
     if (tab === 'facturacion') cargarReservadas();
+    if (tab === 'historial-estatus') cargarObrasConHistorial();
     if (tab === 'generos') cargarGeneros();
     if (tab === 'autores') { cargarAutores(); cargarNacionalidades(); }
     if (tab === 'obras') { cargarObrasAdmin(); cargarGenerosSelect(); cargarAutoresSelect(); }
@@ -560,7 +604,7 @@
                         <td>
                             <select id="obra-est-${o.id_Obra}" class="edit-input">
                                 <option value="Disponible" ${o.Estado_obra === 'Disponible' ? 'selected' : ''}>Disponible</option>
-                                <option value="Reservada" ${o.Estado_obra === 'Reservada' ? 'selected' : ''}>Reservada</option>
+                                  <option value="Reservado" ${o.Estado_obra === 'Reservado' ? 'selected' : ''}>Reservado</option>
                                 <option value="Vendida" ${o.Estado_obra === 'Vendida' ? 'selected' : ''}>Vendida</option>
                             </select>
                         </td>
@@ -2317,6 +2361,64 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
             } finally {
                 btn.disabled = false;
             }
+        }
+
+        function cargarObrasConHistorial() {
+            const sel = document.getElementById('he-obra-select');
+            sel.innerHTML = '<option value="">Cargando...</option>';
+            fetch('/cassandra/obras-con-historial')
+                .then(r => r.json())
+                .then(res => {
+                    sel.innerHTML = '<option value="">-- Seleccione una obra --</option>';
+                    if (res.success && res.data.length > 0) {
+                        res.data.forEach(o => {
+                            const st = (o.estado_actual || '').toLowerCase();
+                            sel.innerHTML += `<option value="${o.id_obra}">#${o.id_obra} - ${o.nombre_obra} (${o.estado_actual})</option>`;
+                        });
+                    } else {
+                        sel.innerHTML += '<option value="">(sin registros en Cassandra)</option>';
+                    }
+                })
+                .catch(() => {
+                    sel.innerHTML = '<option value="">Error al cargar</option>';
+                });
+        }
+
+        function cargarHistorialEstatus() {
+            const idObra = document.getElementById('he-obra-select').value;
+            if (!idObra) { alert('Seleccione una obra'); return; }
+            const tbody = document.querySelector('#tabla-historial-estatus tbody');
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Cargando...</td></tr>';
+            fetch(`/cassandra/historial-estatus-obra?id_obra=${idObra}`)
+                .then(r => r.json())
+                .then(res => {
+                    if (!res.success || !res.data || res.data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#718096;">Sin registros de cambios de estatus</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = '';
+                    res.data
+                        .sort((a, b) => new Date(b.fecha_cambio) - new Date(a.fecha_cambio))
+                        .forEach(row => {
+                            const f = new Date(row.fecha_cambio);
+                            const fechaStr = f.toLocaleDateString('es-ES', { year:'numeric', month:'2-digit', day:'2-digit' }) + ' ' +
+                                             f.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
+                            const antCls = 'status-' + (row.estatus_anterior || '').toLowerCase();
+                            const nueCls = 'status-' + (row.estatus_nuevo || '').toLowerCase();
+                            tbody.innerHTML += `<tr>
+                                <td>${row.id_obra}</td>
+                                <td>${row.nombre_obra || 'Obra #' + row.id_obra}</td>
+                                <td>${fechaStr}</td>
+                                <td class="${antCls}">${row.estatus_anterior}</td>
+                                <td class="${nueCls}">${row.estatus_nuevo}</td>
+                                <td>${row.modificado_por || '-'}</td>
+                                <td>${row.motivo || '-'}</td>
+                            </tr>`;
+                        });
+                })
+                .catch(err => {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#c53030;">Error al consultar historial</td></tr>';
+                });
         }
 
         function cerrarSesion() {

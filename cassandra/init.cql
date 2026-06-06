@@ -1,11 +1,13 @@
 -- ============================================================
 -- SPRINT 2: Script maestro de inicialización Cassandra
 -- Unifica los esquemas de facturación, seguridad y estatus
--- Tarea 5 — Kelvys: Integración General
+-- Tarea 5 — Kelvys: Integración General (Corregido para Astra DB)
 -- ============================================================
 
+-- Nota: Si el keyspace ya fue creado en la interfaz web de Astra DB, 
+-- puedes comentar las siguientes dos líneas.
 CREATE KEYSPACE IF NOT EXISTS museo_db
-    WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+    WITH replication = {'class': 'NetworkTopologyStrategy', 'us-east1': 1};
 
 USE museo_db;
 
@@ -23,7 +25,7 @@ CREATE TABLE IF NOT EXISTS obras_vendidas_por_periodo (
     iva decimal,
     total_pagado decimal,
     ganancia_museo_usd decimal,
-    porcentaje_comision decimal,
+    percentage_comision decimal,
     id_comprador int,
     comprador_nombre text,
     comprador_apellido text,
@@ -39,8 +41,8 @@ CREATE TABLE IF NOT EXISTS resumen_facturacion_mensual (
     total_facturas int,
     monto_neto_total decimal,
     iva_total decimal,
-    total_pagado_total double,
-    ganancia_museo_total double,
+    total_pagado_total decimal,      -- Corregido: de double a decimal
+    ganancia_museo_total decimal,     -- Corregido: de double a decimal
     comision_promedio decimal,
     obra_mas_cara decimal,
     obra_mas_barata decimal
@@ -73,4 +75,3 @@ CREATE TABLE IF NOT EXISTS historial_estatus_obra (
     motivo text,
     PRIMARY KEY (id_obra, fecha_cambio)
 ) WITH CLUSTERING ORDER BY (fecha_cambio DESC);
-

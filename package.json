@@ -27,5 +27,8 @@
     "ecommerce",
     "marketplace"
   ],
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "docx": "^9.7.1"
+  }
 }

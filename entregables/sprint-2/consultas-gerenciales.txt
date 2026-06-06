@@ -1,0 +1,157 @@
+================================================================================
+              CONSULTAS GERENCIALES — SPRINT 2 (Cassandra)
+         Históricos, Auditoría y Reportes — Keyspace: museo_db
+================================================================================
+
+Las consultas están diseñadas bajo Query-Driven Modeling:
+cada SELECT corresponde exactamente a una tabla y responde
+una pregunta de negocio del administrador del museo.
+
+
+================================================================================
+Q1: OBRAS VENDIDAS EN UN PERIODO
+    Tabla: obras_vendidas_por_periodo
+    Partition Key: anio_mes
+================================================================================
+
+-- Obras vendidas en un mes específico
+SELECT * FROM obras_vendidas_por_periodo
+WHERE anio_mes = '2026-01';
+
+-- Obras vendidas en otro mes
+SELECT * FROM obras_vendidas_por_periodo
+WHERE anio_mes = '2026-02';
+
+-- Rango de meses (se consulta cada partition key por separado)
+SELECT * FROM obras_vendidas_por_periodo WHERE anio_mes = '2026-01';
+SELECT * FROM obras_vendidas_por_periodo WHERE anio_mes = '2026-02';
+SELECT * FROM obras_vendidas_por_periodo WHERE anio_mes = '2026-03';
+
+
+================================================================================
+Q2: RESUMEN DE FACTURACIÓN MENSUAL
+    Tabla: resumen_facturacion_mensual
+    Partition Key: anio_mes (PRIMARY KEY única)
+================================================================================
+
+-- Resumen de un mes específico
+SELECT * FROM resumen_facturacion_mensual
+WHERE anio_mes = '2026-01';
+
+-- Resumen de otro mes
+SELECT * FROM resumen_facturacion_mensual
+WHERE anio_mes = '2026-02';
+
+-- Comparativa entre meses
+SELECT * FROM resumen_facturacion_mensual
+WHERE anio_mes IN ('2026-01', '2026-02');
+
+-- Todos los resúmenes disponibles
+SELECT * FROM resumen_facturacion_mensual;
+
+
+================================================================================
+Q3: BITÁCORA DE SEGURIDAD POR USUARIO
+    Tabla: bitacora_seguridad
+    Partition Key: id_usuario
+    Clustering: fecha_evento DESC, tipo_evento ASC
+================================================================================
+
+-- Todos los eventos de seguridad de un usuario
+SELECT * FROM bitacora_seguridad
+WHERE id_usuario = 3;
+
+-- Eventos de un tipo específico en un rango de tiempo
+SELECT * FROM bitacora_seguridad
+WHERE id_usuario = 3
+  AND fecha_evento >= '2026-01-01'
+  AND fecha_evento <= '2026-12-31'
+  AND tipo_evento = 'CODIGO_RECUPERACION';
+
+-- Eventos por usuario y tipo (con ALLOW FILTERING)
+SELECT * FROM bitacora_seguridad
+WHERE id_usuario = 3 AND tipo_evento = 'CODIGO_RECUPERACION'
+ALLOW FILTERING;
+
+-- Eventos más recientes de un usuario (top 10)
+SELECT * FROM bitacora_seguridad
+WHERE id_usuario = 3
+LIMIT 10;
+
+
+================================================================================
+Q4: HISTORIAL DE CAMBIOS DE ESTATUS DE OBRA
+    Tabla: historial_estatus_obra
+    Partition Key: id_obra
+    Clustering: fecha_cambio DESC
+================================================================================
+
+-- Historial completo de cambios de una obra
+SELECT * FROM historial_estatus_obra
+WHERE id_obra = 38;
+
+-- Historial de otra obra
+SELECT * FROM historial_estatus_obra
+WHERE id_obra = 18;
+
+-- Obras que tienen cambios registrados
+SELECT DISTINCT id_obra FROM historial_estatus_obra;
+
+
+================================================================================
+CONSULTAS DE APOYO (Endpoints complementarios)
+================================================================================
+
+-- Obras vendidas en rango (ejecutado en bucle desde Node.js)
+GET /cassandra/obras-vendidas-rango?fecha_inicio=2026-01-01&fecha_fin=2026-03-31
+    → Llama a Q1 para cada mes del rango
+
+-- Resumen de facturación (todos o por mes)
+GET /cassandra/resumen-facturacion?anio_mes=2026-01
+    → SELECT * FROM resumen_facturacion_mensual WHERE anio_mes = '2026-01'
+
+-- Bitácora con filtro por usuario (y opcionalmente tipo_evento)
+GET /cassandra/bitacora-seguridad?id_usuario=3&tipo_evento=CODIGO_RECUPERACION
+    → SELECT * FROM bitacora_seguridad WHERE id_usuario = 3
+      AND tipo_evento = 'CODIGO_RECUPERACION' ALLOW FILTERING
+
+-- Historial de estatus de obra con nombre desde MySQL
+GET /cassandra/historial-estatus-obra?id_obra=38
+    → SELECT * FROM historial_estatus_obra WHERE id_obra = 38
+      + enriquece con nombre_obra desde MySQL (JOIN en Node.js)
+
+-- Obras con historial registrado (para poblar selector del panel)
+GET /cassandra/obras-con-historial
+    → SELECT DISTINCT id_obra FROM historial_estatus_obra
+      + enriquece con nombre y estado actual desde MySQL
+
+
+================================================================================
+FLUJO COMPLETO: Escritura + Lectura
+================================================================================
+
+-- 1. Usuario reserva obra (Login.js)
+INSERT INTO bitacora_seguridad (id_usuario, fecha_evento, tipo_evento, descripcion, ip_origen, dispositivo)
+VALUES (?, toTimestamp(now()), 'CONFIRMAR_RESERVA', ?, ?, ?);
+INSERT INTO historial_estatus_obra (id_obra, fecha_cambio, estatus_anterior, estatus_nuevo, modificado_por, motivo)
+VALUES (?, toTimestamp(now()), 'Disponible', 'Reservado', ?, 'Reserva confirmada por el usuario');
+
+-- 2. Admin factura obra reservada (Admin.js)
+INSERT INTO obras_vendidas_por_periodo (...) VALUES (...);
+INSERT INTO historial_estatus_obra (id_obra, fecha_cambio, estatus_anterior, estatus_nuevo, modificado_por, motivo)
+VALUES (?, toTimestamp(now()), 'Reservado', 'Vendida', ?, 'Venta completada');
+
+-- 3. Admin cambia estado manualmente (Admin.js PUT /api/obras/:id)
+INSERT INTO historial_estatus_obra (id_obra, fecha_cambio, estatus_anterior, estatus_nuevo, modificado_por, motivo)
+VALUES (?, toTimestamp(now()), ?, ?, ?, 'Cambio manual desde panel administrador');
+
+-- 4. Consultas posteriores
+SELECT * FROM historial_estatus_obra WHERE id_obra = ?;
+SELECT * FROM obras_vendidas_por_periodo WHERE anio_mes = ?;
+SELECT * FROM resumen_facturacion_mensual WHERE anio_mes = ?;
+SELECT DISTINCT id_obra FROM historial_estatus_obra;
+
+
+================================================================================
+FIN DEL ARCHIVO
+================================================================================
