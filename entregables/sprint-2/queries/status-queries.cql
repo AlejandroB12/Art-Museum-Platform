@@ -5,4 +5,4 @@
 
 -- Q4: Historial completo de cambios de estatus de una obra
 SELECT * FROM historial_estatus_obra
-WHERE id_obra = 38;
+WHERE id_obra = 34;

@@ -439,10 +439,23 @@
         }
     }
 
-    // FUNCIÓN CORREGIDA
-    function adquirirObra(id, nombre, autor, precio, imagen) {
+    // FUNCIÓN CON VERIFICACIÓN DE SESIÓN
+    async function adquirirObra(id, nombre, autor, precio, imagen) {
+        try {
+            const resp = await fetch('/api/estado-usuario');
+            const data = await resp.json();
+            if (!data.autenticado) {
+                alert("Debes iniciar sesión para adquirir una obra.");
+                window.location.href = "/user/Login.html";
+                return;
+            }
+        } catch (e) {
+            console.error("Error verificando sesión:", e);
+            window.location.href = "/user/Login.html";
+            return;
+        }
         const obra = {
-            id_Obra: id,    // CORREGIDO: Ahora usa id_Obra (con O mayúscula)
+            id_Obra: id,
             nombre: nombre,
             autor: autor,
             precio: precio,
@@ -480,7 +493,7 @@
                         const userDiv = document.createElement('div');
                         userDiv.className = 'user-profile';
                         userDiv.innerHTML = `
-                            <span style="margin-right: 15px; color: #eee; font-size: 0.75rem;">HOLA, ${user.nombre}</span>
+                            <span style="margin-right: 15px; color: #eee; font-size: 0.75rem;">HOLA, ${user.Nombre}</span>
                             <a href="/user/Panel-usuario.html" class="btn-panel">Panel de control</a>
                             <a href="/logout" class="btn-logout">Cerrar sesión</a>
                         `;

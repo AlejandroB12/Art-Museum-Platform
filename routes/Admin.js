@@ -62,10 +62,10 @@ router.post('/admin-auth', (req, res) => {
     db.query(sql, [username, password], (err, results) => {
         if (err) return res.status(500).send("Error en el servidor");
         if (results.length > 0) {
+            req.session.id_usuario = results[0].id_usuario;
             res.redirect('/admin/Panel-adminsitrador.html');
         } else {
             res.redirect('/admin/Credenciales-incorrectas-administrador.html');
-           //res.status(401).sendFile(path.join(__dirname, 'admin', 'Credenciales-incorrectas-administrador.html'));
         }
     });
 });
@@ -280,11 +280,12 @@ router.get('/api/obras-reservadas', (req, res) => {
 
 router.post('/generar-factura', (req, res) => {
     const { id_obra, id_admin, precio_neto, porcentaje_comision } = req.body;
+    const adminId = req.session?.id_usuario || id_admin;
     
-    if (!id_obra || !id_admin || !precio_neto || !porcentaje_comision) {
+    if (!id_obra || !adminId || !precio_neto || !porcentaje_comision) {
         return res.status(400).json({ 
             success: false, 
-            message: "Faltan datos requeridos" 
+            message: "Faltan datos requeridos (ID de administrador no disponible)" 
         });
     }
     
@@ -343,7 +344,7 @@ router.post('/generar-factura', (req, res) => {
                     
                     const procesarComprador = (id_comp) => {
                         const sqlDatosComprador = `
-                            SELECT u.Email, c.Nombre, c.Apellido, c.Cedula
+                            SELECT u.Email, u.Nombre, u.Apellido, c.Cedula
                             FROM Usuario u
                             LEFT JOIN Comprador c ON u.id_usuario = c.id_usuario
                             WHERE u.id_usuario = ?
@@ -380,7 +381,7 @@ router.post('/generar-factura', (req, res) => {
                                 porcentaje_comision, 
                                 id_obra, 
                                 id_comp, 
-                                id_admin
+                                adminId
                             ], (err, result) => {
                                 if (err) {
                                     console.error('Error al generar factura:', err);
@@ -431,13 +432,13 @@ router.post('/generar-factura', (req, res) => {
                                                             params: [anioMes, idFactura, id_obra, obraDatos[0]?.Nombre || '', precio_neto, iva, total,
                                                                      gananciaMuseo, porcentaje_comision, id_comp, comprador.Nombre || '',
                                                                      comprador.Apellido || '', comprador.Email || '', comprador.Cedula || null,
-                                                                     id_admin, 'Admin']
-                                                        },
-                                                        {
-                                                            query: `INSERT INTO historial_estatus_obra
-                                                                    (id_obra, fecha_cambio, estatus_anterior, estatus_nuevo, modificado_por, motivo)
-                                                                    VALUES (?, toTimestamp(now()), ?, ?, ?, ?)`,
-                                                            params: [id_obra, 'Reservado', 'Vendida', id_admin, `Pago completado - Factura #${idFactura}`]
+                                                                     adminId, 'Admin']
+                                                         },
+                                                         {
+                                                             query: `INSERT INTO historial_estatus_obra
+                                                                     (id_obra, fecha_cambio, estatus_anterior, estatus_nuevo, modificado_por, motivo)
+                                                                     VALUES (?, toTimestamp(now()), ?, ?, ?, ?)`,
+                                                             params: [id_obra, 'Reservado', 'Vendida', adminId, `Pago completado - Factura #${idFactura}`]
                                                         }
                                                     ], { prepare: true });
                                                 } catch (cassErr) {

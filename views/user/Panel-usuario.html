@@ -184,13 +184,10 @@
             fetch('/api/usuario-actual')
                 .then(res => res.json())
                 .then(data => {
-                    if (data.nombre) {
-                        // Actualizar texto de bienvenida
-                        document.getElementById('sidebar-nombre').innerText = data.nombre;
-                        document.getElementById('welcome-msg').innerText = `¡Bienvenido, ${data.nombre}!`;
-                        
-                        // Foto de perfil basada en inicial
-                        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nombre)}&background=00ff00&color=000&bold=true&size=128`;
+                    if (data.Nombre) {
+                        document.getElementById('sidebar-nombre').innerText = data.Nombre;
+                        document.getElementById('welcome-msg').innerText = `¡Bienvenido, ${data.Nombre}!`;
+                        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.Nombre)}&background=00ff00&color=000&bold=true&size=128`;
                         document.getElementById('user-avatar').src = avatarUrl;
                     }
                 })
@@ -245,7 +242,7 @@
                     tbody.innerHTML += `
                         <tr>
                             <td>${pago.Concepto}</td>
-                            <td>${new Date(pago.FechaPago).toLocaleDateString()}</td>
+                            <td>${new Date(pago.FechaInicio).toLocaleDateString()}</td>
                             <td style="color: ${pago.EstadoPago === 'Activa' ? '#00ff00' : '#ff0000'}">${pago.EstadoPago}</td>
                             <td>${pago.DiasRestantes > 0 ? pago.DiasRestantes : 0} días</td>
                         </tr>

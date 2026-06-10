@@ -127,7 +127,6 @@ router.post('/registrar', (req, res) => {
     db.beginTransaction((err) => {
         if (err) { console.error(err); return res.status(500).send("Error de inicio de transacción"); }
 
-        // CAMBIO 1: Insertar nombre y apellido en la tabla Usuario
         const sqlUser = "INSERT INTO Usuario (Email, Contraseña, Nombre, Apellido, Estatus, Rol) VALUES (?, ?, ?, ?, 0, 'comprador')";
         
         db.query(sqlUser, [correo, password, nombre, apellido], (err, result) => {
@@ -140,14 +139,12 @@ router.post('/registrar', (req, res) => {
             
             const idUsuario = result.insertId;
 
-            // CAMBIO 2: Eliminar Nombre y Apellido de esta consulta (ya se guardaron arriba)
             const sqlComprador = "INSERT INTO Comprador (id_usuario, Cedula, Telefono, CodigoVerificacion, id_parroquia, Calle) VALUES (?, ?, ?, ?, ?, ?)";
             
             if (!cedula) {
                 return db.rollback(() => res.status(400).send("Error: La cédula es obligatoria para compradores."));
             }
 
-            // Ajustamos los parámetros para que coincidan con las columnas de la tabla Comprador
             db.query(sqlComprador, [idUsuario, cedula, telefono, codigoVerificacion, parroquia || null, calle], (err) => {
                 if (err) {
                     return db.rollback(() => {
@@ -170,7 +167,6 @@ router.post('/registrar', (req, res) => {
         });
     });
 });
-
 // --- API PARA UBICACIÓN ---
 router.get('/api/estados', (req, res) => {
     db.query("SELECT id_estado, nombre FROM estado", (err, results) => {
@@ -270,17 +266,16 @@ router.get('/mis-compras', (req, res) => {
     const idUsuario = req.session.id_usuario;
     if (!idUsuario) return res.status(401).json({ error: "Sesión no válida" });
 
-    // Consulta corregida con el campo correcto 'Nombre'
     const sql = `
         SELECT 
             o.Nombre,
             o.Precio, 
             f.Fecha_Venta AS Fecha_emision,
-            g.Descripcion AS Genero
+            g.Nombre AS Genero
         FROM Factura f
         INNER JOIN Obra o ON f.id_obra = o.id_Obra
         INNER JOIN Comprador c ON f.id_comprador = c.id_usuario
-        LEFT JOIN Genero g ON o.Genero_id_Genero = g.id_Genero
+        LEFT JOIN Genero g ON o.id_Genero = g.id_Genero
         WHERE c.id_usuario = ?
         ORDER BY f.Fecha_Venta DESC`;
 
@@ -300,11 +295,10 @@ router.get('/mis-compras', (req, res) => {
 router.get('/api/datos-envio-pago', (req, res) => {
     if (!req.session.id_usuario) return res.status(401).json({ error: "No iniciado" });
     
-    // Consulta extendida incluyendo tablas de ubicación si tu base de datos lo permite
-    // Usamos un LEFT JOIN para traer los nombres de las tablas relacionadas si existen
     const sql = `
-        SELECT c.Nombre, c.Apellido, c.Calle, p.nombre AS Parroquia, m.nombre AS Municipio
+        SELECT u.Nombre, u.Apellido, c.Calle, p.nombre AS Parroquia, m.nombre AS Municipio
         FROM Comprador c
+        INNER JOIN Usuario u ON c.id_usuario = u.id_usuario
         LEFT JOIN Parroquia p ON c.id_parroquia = p.id_parroquia
         LEFT JOIN Municipio m ON p.id_municipio = m.id_municipio
         WHERE c.id_usuario = ?`;
@@ -323,47 +317,53 @@ router.post('/confirmar-reserva', (req, res) => {
     const id_usuario = req.session.id_usuario;
     const fecha = new Date();
 
-    // Usar transacción para asegurar que ambas operaciones se completen
-    db.beginTransaction((err) => {
-        if (err) return res.status(500).json({ error: "Error al iniciar transacción" });
+    const sqlVerificar = "SELECT Estado_Obra FROM Obra WHERE id_Obra = ?";
+    db.query(sqlVerificar, [id_obra], (err, obraActual) => {
+        if (err) return res.status(500).json({ error: "Error al verificar obra" });
+        if (obraActual.length === 0) return res.status(404).json({ error: "La obra no existe" });
+        if (obraActual[0].Estado_Obra !== 'Disponible') {
+            return res.status(400).json({ error: "La obra no está disponible (estado: " + obraActual[0].Estado_Obra + ")" });
+        }
 
-        // 1. Insertar la reserva
-        const sqlReserva = "INSERT INTO Reserva (id_Obra, id_Usuario, Fecha_Reserva) VALUES (?, ?, ?)";
-        db.query(sqlReserva, [id_obra, id_usuario, fecha], (err, result) => {
-            if (err) {
-                return db.rollback(() => {
-                    res.status(500).json({ error: "Error al crear reserva: " + err.message });
-                });
-            }
+        db.beginTransaction((err) => {
+            if (err) return res.status(500).json({ error: "Error al iniciar transacción" });
 
-            // 2. Actualizar el estado de la obra a 'Reservado'
-            const sqlObra = "UPDATE Obra SET Estado_Obra = 'Reservado' WHERE id_Obra = ?";
-            db.query(sqlObra, [id_obra], (err, result) => {
+            const sqlReserva = "INSERT INTO Reserva (id_Obra, id_Usuario, Fecha_Reserva) VALUES (?, ?, ?)";
+            db.query(sqlReserva, [id_obra, id_usuario, fecha], (err, result) => {
                 if (err) {
                     return db.rollback(() => {
-                        res.status(500).json({ error: "Error al actualizar obra: " + err.message });
+                        res.status(500).json({ error: "Error al crear reserva: " + err.message });
                     });
                 }
 
-                db.commit((err) => {
+                const sqlObra = "UPDATE Obra SET Estado_Obra = 'Reservado' WHERE id_Obra = ? AND Estado_Obra = 'Disponible'";
+                db.query(sqlObra, [id_obra], (err, result) => {
                     if (err) {
                         return db.rollback(() => {
-                            res.status(500).json({ error: "Error al confirmar transacción" });
+                            res.status(500).json({ error: "Error al actualizar obra: " + err.message });
                         });
                     }
-                    registrarEventoSeguridad(id_usuario, 'CONFIRMAR_RESERVA', `Obra ${id_obra} reservada`, req);
-                    try {
-                        const { client } = require('../config/cassandra');
-                        client.execute(
-                            `INSERT INTO historial_estatus_obra (id_obra, fecha_cambio, estatus_anterior, estatus_nuevo, modificado_por, motivo)
-                             VALUES (?, toTimestamp(now()), 'Disponible', 'Reservado', ?, ?)`,
-                            [parseInt(id_obra), id_usuario, 'Comprador inició proceso de compra'],
-                            { prepare: true }
-                        ).catch(e => console.error('Error registrando cambio estatus:', e.message));
-                    } catch (e) {
-                        console.error('Error registrando en Cassandra:', e.message);
-                    }
-                    res.json({ success: true, message: "Reserva confirmada y obra actualizada" });
+
+                    db.commit((err) => {
+                        if (err) {
+                            return db.rollback(() => {
+                                res.status(500).json({ error: "Error al confirmar transacción" });
+                            });
+                        }
+                        registrarEventoSeguridad(id_usuario, 'CONFIRMAR_RESERVA', `Obra ${id_obra} reservada`, req);
+                        try {
+                            const { client } = require('../config/cassandra');
+                            client.execute(
+                                `INSERT INTO historial_estatus_obra (id_obra, fecha_cambio, estatus_anterior, estatus_nuevo, modificado_por, motivo)
+                                 VALUES (?, toTimestamp(now()), 'Disponible', 'Reservado', ?, ?)`,
+                                [parseInt(id_obra), id_usuario, 'Comprador inició proceso de compra'],
+                                { prepare: true }
+                            ).catch(e => console.error('Error registrando cambio estatus:', e.message));
+                        } catch (e) {
+                            console.error('Error registrando en Cassandra:', e.message);
+                        }
+                        res.json({ success: true, message: "Reserva confirmada y obra actualizada" });
+                    });
                 });
             });
         });

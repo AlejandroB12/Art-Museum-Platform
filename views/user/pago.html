@@ -58,15 +58,15 @@
         <div style="color: #666;">Cargando tus datos...</div>
     </div>
 
-    <form id="form-pago">
+    <form id="form-pago" novalidate>
         <div class="section-label">Detalles de Pago</div><br>
-        <input type="text" placeholder="Número de Tarjeta" maxlength="16" required>
+        <input type="text" id="card-number" placeholder="Número de Tarjeta" minlength="16" maxlength="19" pattern="\d{16,19}" title="Debe contener entre 16 y 19 dígitos numéricos" required autocomplete="cc-number">
         <div style="display: flex; gap: 10px;">
-            <input type="text" placeholder="MM/AA" maxlength="5" required style="width: 50%;">
-            <input type="password" id="cvv" placeholder="CVC" maxlength="3" required style="width: 50%;">
+            <input type="text" id="expiry-date" placeholder="MM/AA" minlength="5" maxlength="5" pattern="(0[1-9]|1[0-2])\/\d{2}" title="Formato: MM/AA (ej: 12/28)" required style="width: 50%;" autocomplete="cc-exp">
+            <input type="password" id="cvv" placeholder="CVC" minlength="3" maxlength="4" pattern="\d{3,4}" title="Debe contener 3 o 4 dígitos" required style="width: 50%;" autocomplete="cc-csc">
         </div>
-        <input type="text" id="codigo-membresia" placeholder="Código de seguridad de membresía" required>
-        
+        <input type="text" id="codigo-membresia" placeholder="Código de seguridad de membresía" minlength="6" maxlength="6" pattern="\d{6}" title="Debe ser un código de 6 dígitos" required>
+        <div id="error-msg" style="color: #ff4444; font-size: 0.8rem; margin-top: 10px; display: none;"></div>
         <button type="submit" class="btn-pagar">Pagar Ahora</button>
     </form>
 
@@ -76,7 +76,22 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
+
+        // --- 0. VERIFICAR SESIÓN PRIMERO ---
+        try {
+            const sesionResp = await fetch('/api/estado-usuario');
+            const sesionData = await sesionResp.json();
+            if (!sesionData.autenticado) {
+                alert("Debes iniciar sesión para adquirir una obra.");
+                window.location.href = "/user/Login.html";
+                return;
+            }
+        } catch (e) {
+            console.error("Error verificando sesión:", e);
+            window.location.href = "/user/Login.html";
+            return;
+        }
         
         // --- 1. CARGAR DATOS DE LA OBRA DESDE LOCALSTORAGE ---
         const cargarObraSeleccionada = () => {
@@ -88,15 +103,13 @@
                 document.getElementById('autor-obra').innerText = obra.autor;
                 document.getElementById('precio-obra').innerText = `${obra.precio}$`;
             } else {
-                // Si no hay obra en memoria, regresamos al catálogo
                 alert("No se ha seleccionado ninguna obra.");
                 window.location.href = "Obras.html";
             }
         };
 
-     const cargarUsuarioSesion = async () => {
+        const cargarUsuarioSesion = async () => {
             try {
-                // Llamamos a la nueva ruta específica para el pago
                 const response = await fetch('/api/datos-envio-pago'); 
                 const datosEnvio = document.getElementById('datos-envio');
 
@@ -106,7 +119,7 @@
                         <div style="font-weight:bold; color: #fff;">${user.Nombre} ${user.Apellido}</div>
                         <div style="color: #aaa;">Dirección: ${user.Calle}</div>
                         <div style="color: #aaa;">${user.Parroquia}, ${user.Municipio}</div>
-                        <a href="/views/user/Panel-usuario.html" style="font-size: 0.7rem; color: #00ff00; text-decoration: none;">Editar dirección</a>
+                        <a href="/user/Panel-usuario.html" style="font-size: 0.7rem; color: #00ff00; text-decoration: none;">Editar dirección</a>
                     `;
                 } else {
                     datosEnvio.innerHTML = `<div style="color: #ff4444;">Error al cargar datos de envío.</div>`;
@@ -116,53 +129,116 @@
             }
         };
 
-// --- 3. PROCESAR EL FORMULARIO DE PAGO ---
-// Dentro del evento submit en pago.html
-// --- 3. PROCESAR EL FORMULARIO DE PAGO ---
-document.getElementById('form-pago').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const btnPagar = e.target.querySelector('.btn-pagar');
-    const obraData = JSON.parse(localStorage.getItem('obraSeleccionada'));
-
-    if (!obraData || !obraData.id_Obra) {
-        alert("Error: No se seleccionó ninguna obra válida.");
-        return;
-    }
-
-    // Feedback visual
-    btnPagar.innerText = "PROCESANDO...";
-    btnPagar.disabled = true;
-
-    try {
-        const response = await fetch('/confirmar-reserva', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id_obra: parseInt(obraData.id_Obra) 
-            })
+        // --- 2. FORMATEO EN VIVO DE CAMPOS (como en Registro.html) ---
+        document.getElementById('card-number').addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            e.target.value = value.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
         });
 
-        const resultado = await response.json();
-        
-        if (response.ok) {
-            alert("¡Pago procesado y reserva guardada!");
-            localStorage.removeItem('obraSeleccionada');
-            window.location.href = "/views/user/Panel-usuario.html";
-        } else {
-            alert("Error: " + (resultado.error || "No se pudo procesar el pago"));
-            btnPagar.innerText = "PAGAR AHORA";
-            btnPagar.disabled = false;
-        }
-    } catch (error) {
-        console.error("Error en la petición:", error);
-        alert("Error de conexión con el servidor.");
-        btnPagar.innerText = "PAGAR AHORA";
-        btnPagar.disabled = false;
-    }
-});
+        document.getElementById('expiry-date').addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 2) e.target.value = value.slice(0, 2) + '/' + value.slice(2, 4);
+            else e.target.value = value;
+        });
 
-        // Ejecutar cargas al iniciar
+        document.getElementById('cvv').addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, '');
+        });
+
+        document.getElementById('codigo-membresia').addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, '');
+        });
+
+        // --- 3. VALIDAR CAMPOS DEL FORMULARIO ---
+        function mostrarError(msg) {
+            const el = document.getElementById('error-msg');
+            el.innerText = msg;
+            el.style.display = 'block';
+        }
+
+        function ocultarError() {
+            document.getElementById('error-msg').style.display = 'none';
+        }
+
+        function validarFormulario() {
+            ocultarError();
+            const card = document.getElementById('card-number').value.replace(/\s/g, '');
+            const expiry = document.getElementById('expiry-date').value;
+            const cvv = document.getElementById('cvv').value;
+            const codigo = document.getElementById('codigo-membresia').value;
+
+            if (!/^\d{16,19}$/.test(card)) {
+                mostrarError("El número de tarjeta debe tener entre 16 y 19 dígitos.");
+                return false;
+            }
+            if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry)) {
+                mostrarError("La fecha de expiración debe tener formato MM/AA (ej: 12/28).");
+                return false;
+            }
+            const [mes, anio] = expiry.split('/');
+            const ahora = new Date();
+            const mesActual = ahora.getMonth() + 1;
+            const anioActual = parseInt(ahora.getFullYear().toString().slice(2));
+            if (parseInt(anio) < anioActual || (parseInt(anio) === anioActual && parseInt(mes) < mesActual)) {
+                mostrarError("La tarjeta está vencida.");
+                return false;
+            }
+            if (!/^\d{3,4}$/.test(cvv)) {
+                mostrarError("El CVC debe tener 3 o 4 dígitos.");
+                return false;
+            }
+            if (!/^\d{6}$/.test(codigo)) {
+                mostrarError("El código de seguridad de membresía debe tener 6 dígitos.");
+                return false;
+            }
+            return true;
+        }
+
+        // --- 4. PROCESAR EL FORMULARIO DE PAGO ---
+        document.getElementById('form-pago').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!validarFormulario()) return;
+
+            const btnPagar = e.target.querySelector('.btn-pagar');
+            const obraData = JSON.parse(localStorage.getItem('obraSeleccionada'));
+
+            if (!obraData || !obraData.id_Obra) {
+                alert("Error: No se seleccionó ninguna obra válida.");
+                return;
+            }
+
+            btnPagar.innerText = "PROCESANDO...";
+            btnPagar.disabled = true;
+
+            try {
+                const response = await fetch('/confirmar-reserva', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id_obra: parseInt(obraData.id_Obra) 
+                    })
+                });
+
+                const resultado = await response.json();
+                
+                if (response.ok) {
+                    alert("¡Pago procesado y reserva guardada!");
+                    localStorage.removeItem('obraSeleccionada');
+                    window.location.href = "/public/Obras.html";
+                } else {
+                    mostrarError(resultado.error || "No se pudo procesar el pago");
+                    btnPagar.innerText = "PAGAR AHORA";
+                    btnPagar.disabled = false;
+                }
+            } catch (error) {
+                console.error("Error en la petición:", error);
+                mostrarError("Error de conexión con el servidor.");
+                btnPagar.innerText = "PAGAR AHORA";
+                btnPagar.disabled = false;
+            }
+        });
+
         cargarObraSeleccionada();
         cargarUsuarioSesion();
     });
