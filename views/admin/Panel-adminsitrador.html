@@ -146,6 +146,7 @@
         <div class="nav-group">
             <span class="nav-label">Cassandra</span>
             <div class="nav-item" id="btn-historial-estatus" onclick="mostrarTab('historial-estatus')">📋 Historial de Estatus</div>
+            <div class="nav-item" id="btn-logs-seguridad" onclick="mostrarTab('logs-seguridad'); cargarLogsSeguridad();">🔒 Bitácora de Seguridad</div>
         </div>
 
         <div class="nav-group" style="margin-top: 50px;">
@@ -513,6 +514,46 @@
                 </table>
             </div>
         </div>
+
+        <!-- Tab: Bitácora de Seguridad (Cassandra) -->
+        <div id="tab-logs-seguridad" class="tab-content" style="display:none">
+            <div class="card">
+                <h3>🔒 Bitácora de Seguridad</h3>
+                <p style="color:#718096; font-size:0.85rem; margin-bottom:15px;">Eventos de seguridad registrados en Cassandra (solo-append, inmutable)</p>
+                <div style="margin-bottom:15px;">
+                    <select id="log-filtro-tipo" onchange="cargarLogsSeguridad()">
+                        <option value="">Todos los tipos</option>
+                        <option value="INICIO_SESION">Inicios de Sesión</option>
+                        <option value="CIERRE_SESION">Cierres de Sesión</option>
+                        <option value="REGISTRO_USUARIO">Registros</option>
+                        <option value="APROBACION_USUARIO">Aprobación de Usuarios</option>
+                        <option value="APROBACION_PAGO">Aprobación de Pagos</option>
+                        <option value="CONFIRMAR_RESERVA">Reservas</option>
+                        <option value="SOLICITUD_PAGO">Solicitudes de Pago</option>
+                        <option value="CAMBIO_CONTRASENA">Cambios de Contraseña</option>
+                        <option value="GUARDAR_SEGURIDAD">Seguridad</option>
+                        <option value="CODIGO_RECUPERACION">Recuperación</option>
+                    </select>
+                </div>
+                <div style="max-height:600px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha / Hora</th>
+                                <th>Usuario</th>
+                                <th>Tipo</th>
+                                <th>Descripción</th>
+                                <th>IP Origen</th>
+                                <th>Dispositivo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-logs-seguridad">
+                            <tr><td colspan="6" style="text-align:center;color:#718096;">Cargando registros...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -545,7 +586,8 @@
         'rep-obras': 'Reporte de Obras Vendidas',
         'rep-facturas': 'Resumen de Facturación',
         'rep-membresias': 'Reporte de Membresías Pagadas',
-        'historial-estatus': 'Historial de Cambios de Estatus'
+        'historial-estatus': 'Historial de Cambios de Estatus',
+        'logs-seguridad': 'Bitácora de Seguridad'
     };
     document.getElementById('titulo-seccion').textContent = titulos[tab] || 'Panel Administrativo';
     
@@ -1143,6 +1185,15 @@ async function prepararFactura(id_obra, precio, nombreObra, btn) {
     }
 }
         // --- REPORTES ---
+        function renderizarReporte(tablaId, datos, columnas) {
+            const tbody = document.querySelector(`#${tablaId} tbody`);
+            if (!datos || datos.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${columnas}" style="text-align:center;padding:30px;color:#718096;">No hay datos en el período seleccionado</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = datos;
+        }
+
         async function consultarObras() {
             const inicio = document.getElementById('obras-inicio').value;
             const fin = document.getElementById('obras-fin').value;
@@ -1150,15 +1201,19 @@ async function prepararFactura(id_obra, precio, nombreObra, btn) {
                 alert("Seleccione ambas fechas");
                 return;
             }
+            const tbody = document.querySelector('#tabla-obras-vendidas tbody');
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Consultando...</td></tr>';
             
             try {
                 const res = await fetch(`/consultas/obras-vendidas?fecha_inicio=${inicio}&fecha_fin=${fin}`);
+                if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
                 const data = await res.json();
-                document.querySelector('#tabla-obras-vendidas tbody').innerHTML = data.map(d => 
+                renderizarReporte('tabla-obras-vendidas', data.map(d => 
                     `<tr><td>${d.id_factura}</td><td>${d.Obra || ''}</td><td>$${(d.Total_Pagado || 0).toLocaleString()}</td><td>${d.Fecha || ''}</td></tr>`
-                ).join('');
+                ).join(''), 4);
             } catch (error) {
                 console.error('Error consultando obras:', error);
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:30px;color:#c53030;">Error al consultar: ${error.message}</td></tr>`;
             }
         }
 
@@ -1169,15 +1224,19 @@ async function prepararFactura(id_obra, precio, nombreObra, btn) {
                 alert("Seleccione ambas fechas");
                 return;
             }
+            const tbody = document.querySelector('#tabla-facturacion tbody');
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Consultando...</td></tr>';
             
             try {
                 const res = await fetch(`/consultas/resumen-facturacion?fecha_inicio=${inicio}&fecha_fin=${fin}`);
+                if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
                 const data = await res.json();
-                document.querySelector('#tabla-facturacion tbody').innerHTML = data.map(d => 
+                renderizarReporte('tabla-facturacion', data.map(d => 
                     `<tr><td>${d.id_factura}</td><td>${d.Obra || ''}</td><td>$${(d.Precio_Obra || 0).toLocaleString()}</td><td>${d.Porcentaje_Museo || 0}%</td><td>$${(d.Ganancia_Museo || 0).toLocaleString()}</td><td>$${(d.Total_Recaudado || 0).toLocaleString()}</td><td>${d.Fecha || ''}</td></tr>`
-                ).join('');
+                ).join(''), 7);
             } catch (error) {
                 console.error('Error consultando facturación:', error);
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:#c53030;">Error al consultar: ${error.message}</td></tr>`;
             }
         }
 
@@ -2425,6 +2484,53 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
             if (confirm("¿Cerrar sesión?")) {
                 window.location.href = 'Login-administrador.html';
             }
+        }
+
+        function cargarLogsSeguridad() {
+            const tbody = document.getElementById('tabla-logs-seguridad');
+            const filtro = document.getElementById('log-filtro-tipo').value;
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Cargando registros...</td></tr>';
+
+            fetch('/api/logs-seguridad')
+                .then(r => r.json())
+                .then(res => {
+                    if (!res.success || !res.data || res.data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#718096;">No hay registros de seguridad en Cassandra</td></tr>';
+                        return;
+                    }
+
+                    let logs = res.data;
+                    if (filtro) logs = logs.filter(l => l.tipo_evento === filtro);
+
+                    tbody.innerHTML = '';
+                    if (logs.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#718096;">Sin resultados para el filtro seleccionado</td></tr>';
+                        return;
+                    }
+
+                    logs.forEach(l => {
+                        const f = new Date(l.fecha_evento);
+                        const fechaStr = f.toLocaleDateString('es-ES', { year:'numeric', month:'2-digit', day:'2-digit' }) + ' ' +
+                                         f.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+
+                        let tipoClase = '';
+                        if (l.tipo_evento === 'INICIO_SESION' || l.tipo_evento === 'APROBACION_USUARIO' || l.tipo_evento === 'APROBACION_PAGO') tipoClase = 'color: #38a169;';
+                        else if (l.tipo_evento === 'CIERRE_SESION' || l.tipo_evento === 'CAMBIO_CONTRASENA') tipoClase = 'color: #e53e3e;';
+
+                        tbody.innerHTML += `<tr>
+                            <td style="white-space:nowrap;">${fechaStr}</td>
+                            <td><strong>${l.nombre_usuario}</strong></td>
+                            <td style="${tipoClase} font-weight:600;">${l.tipo_evento}</td>
+                            <td>${l.descripcion || '-'}</td>
+                            <td style="font-family:monospace; font-size:0.85rem;">${l.ip_origen || '-'}</td>
+                            <td style="font-size:0.8rem; color:#718096; max-width:200px; overflow:hidden; text-overflow:ellipsis;">${l.dispositivo || '-'}</td>
+                        </tr>`;
+                    });
+                })
+                .catch(err => {
+                    console.error('Error cargando logs:', err);
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#c53030;">Error al cargar registros de seguridad</td></tr>';
+                });
         }
 
         window.onload = () => { 

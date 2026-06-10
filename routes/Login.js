@@ -380,18 +380,19 @@ router.get('/api/estado-usuario', (req, res) => {
 });
 
 router.get('/logout', (req, res) => {
-    // 1. Destruye la sesión en el servidor
+    const idUsuario = req.session?.id_usuario;
+    
+    if (idUsuario) {
+        registrarEventoSeguridad(idUsuario, 'CIERRE_SESION', 'Cierre de sesión manual', req);
+    }
+
     req.session.destroy((err) => {
         if (err) {
             console.error("Error al destruir sesión:", err);
             return res.status(500).send("No se pudo cerrar la sesión");
         }
-        
-        // 2. Borra la cookie del navegador (esencial para que el cliente no mantenga sesión)
         res.clearCookie('connect.sid', { path: '/' });
-        
-        // 3. Redirige a la página pública (Ej: Inicio.html servido por la raíz)
-        res.redirect('/'); 
+        res.redirect('/');
     });
 });
 

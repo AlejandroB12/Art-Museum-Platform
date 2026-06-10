@@ -63,6 +63,17 @@ router.post('/admin-auth', (req, res) => {
         if (err) return res.status(500).send("Error en el servidor");
         if (results.length > 0) {
             req.session.id_usuario = results[0].id_usuario;
+            try {
+                const { client } = require('../config/cassandra');
+                client.execute(
+                    `INSERT INTO bitacora_seguridad (id_usuario, fecha_evento, tipo_evento, descripcion, ip_origen, dispositivo)
+                     VALUES (?, toTimestamp(now()), ?, ?, ?, ?)`,
+                    [results[0].id_usuario, 'INICIO_SESION', `Administrador ${results[0].Nombre} ${results[0].Apellido} ha iniciado sesion`, req.ip || '', req.headers['user-agent'] || ''],
+                    { prepare: true }
+                ).catch(e => console.error('Error registrando admin login:', e.message));
+            } catch (e) {
+                console.error('Error Cassandra admin login:', e.message);
+            }
             res.redirect('/admin/Panel-adminsitrador.html');
         } else {
             res.redirect('/admin/Credenciales-incorrectas-administrador.html');
@@ -165,6 +176,21 @@ router.patch('/aprobar-usuario/:id', (req, res) => {
             transporter.sendMail(mailOptions, (error) => {
                 if (error) console.error("Error al enviar correo de aprobación:", error);
             });
+
+            try {
+                const { client } = require('../config/cassandra');
+                const idAdmin = req.session?.id_usuario || 0;
+                client.execute(
+                    `INSERT INTO bitacora_seguridad (id_usuario, fecha_evento, tipo_evento, descripcion, ip_origen, dispositivo)
+                     VALUES (?, toTimestamp(now()), ?, ?, ?, ?)`,
+                    [parseInt(id), 'APROBACION_USUARIO',
+                     `Usuario ${usuario.Nombre} ${usuario.Apellido} ha sido aceptado por el administrador (ID: ${idAdmin}) a las ${new Date().toLocaleTimeString()}`,
+                     req.ip || '', req.headers['user-agent'] || ''],
+                    { prepare: true }
+                ).catch(e => console.error('Error registrando aprobacion:', e.message));
+            } catch (e) {
+                console.error('Error Cassandra aprobacion:', e.message);
+            }
 
             res.send("<h2>Usuario aprobado y activo. Correo enviado.</h2>");
         });
@@ -1267,6 +1293,47 @@ router.get('/cassandra/bitacora-seguridad', async (req, res) => {
         res.status(400).json({ success: false, message: 'id_usuario requerido' });
     } catch (err) {
         console.error('Error consultando bitácora (Cassandra):', err.message);
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// Todos los logs de seguridad (enriquecidos con nombre de usuario desde MySQL)
+router.get('/api/logs-seguridad', async (req, res) => {
+    try {
+        const result = await client.execute(
+            'SELECT * FROM bitacora_seguridad ALLOW FILTERING'
+        );
+        const rows = result.rows;
+
+        const idsUnicos = [...new Set(rows.map(r => r.id_usuario))];
+        const nombreMap = {};
+
+        if (idsUnicos.length > 0) {
+            const placeholders = idsUnicos.map(() => '?').join(',');
+            const [usuarios] = await db.promise().query(
+                `SELECT id_usuario, Nombre, Apellido FROM Usuario WHERE id_usuario IN (${placeholders})`,
+                idsUnicos
+            );
+            usuarios.forEach(u => {
+                nombreMap[u.id_usuario] = `${u.Nombre} ${u.Apellido}`;
+            });
+        }
+
+        const logs = rows.map(r => ({
+            id_usuario: r.id_usuario,
+            nombre_usuario: nombreMap[r.id_usuario] || `Usuario #${r.id_usuario}`,
+            fecha_evento: r.fecha_evento,
+            tipo_evento: r.tipo_evento,
+            descripcion: r.descripcion,
+            ip_origen: r.ip_origen,
+            dispositivo: r.dispositivo
+        }));
+
+        logs.sort((a, b) => new Date(b.fecha_evento) - new Date(a.fecha_evento));
+
+        res.json({ success: true, data: logs });
+    } catch (err) {
+        console.error('Error consultando logs de seguridad:', err.message);
         res.status(500).json({ success: false, message: err.message });
     }
 });
