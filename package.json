@@ -11,6 +11,7 @@
     "migrate:cassandra": "node scripts/migrate-cassandra.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1068.0",
     "cassandra-driver": "^4.9.0",
     "dotenv": "^16.6.1",
     "express": "^4.21.0",

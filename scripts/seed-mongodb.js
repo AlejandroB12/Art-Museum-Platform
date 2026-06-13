@@ -17,9 +17,16 @@ const seed = async () => {
         await mongoose.connect(process.env.MONGO_URI);
         console.log('Conectado a MongoDB Atlas');
 
-        const data = JSON.parse(
+        const data1 = JSON.parse(
             fs.readFileSync(path.join(__dirname, '..', 'data', 'museo_seed.json'), 'utf-8')
         );
+
+        const data2 = JSON.parse(
+            fs.readFileSync(path.join(__dirname, '..', 'data', '1000_obras_seed.json'), 'utf-8')
+        );
+
+        const autores = [...data1.autores, ...data2.autores];
+        const obras = [...data1.obras, ...data2.obras];
 
         await Autor.deleteMany({});
         await Obra.deleteMany({});
@@ -27,19 +34,19 @@ const seed = async () => {
         await Nacionalidad.deleteMany({});
         await Especializacion.deleteMany({});
 
-        const autores = await Autor.insertMany(data.autores);
-        console.log(`Insertados ${autores.length} autores`);
+        const autoresInsert = await Autor.insertMany(autores);
+        console.log(`Insertados ${autoresInsert.length} autores`);
 
-        const obras = await Obra.insertMany(data.obras);
-        console.log(`Insertadas ${obras.length} obras`);
+        const obrasInsert = await Obra.insertMany(obras);
+        console.log(`Insertadas ${obrasInsert.length} obras`);
 
-        const generos = await Genero.insertMany(data.generos);
+        const generos = await Genero.insertMany(data1.generos);
         console.log(`Insertados ${generos.length} géneros`);
 
-        const nacionalidades = await Nacionalidad.insertMany(data.nacionalidades);
+        const nacionalidades = await Nacionalidad.insertMany(data1.nacionalidades);
         console.log(`Insertadas ${nacionalidades.length} nacionalidades`);
 
-        const especializaciones = await Especializacion.insertMany(data.especializaciones);
+        const especializaciones = await Especializacion.insertMany(data1.especializaciones);
         console.log(`Insertadas ${especializaciones.length} especializaciones`);
 
         console.log('Seed completado exitosamente');
