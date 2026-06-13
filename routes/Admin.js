@@ -865,6 +865,49 @@ router.post('/api/obras-admin', async (req, res) => {
     }
 });
 
+router.put('/api/obras-admin/:id', async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { nombre, precio, estado_obra } = req.body;
+
+        if (!nombre || !nombre.trim()) {
+            return res.status(400).json({ success: false, message: 'El nombre es requerido' });
+        }
+
+        const obra = await Obra.findById(id);
+        if (!obra) {
+            return res.status(404).json({ success: false, message: 'Obra no encontrada' });
+        }
+
+        const estadoAnterior = obra.estado_obra;
+
+        obra.nombre = nombre.trim();
+        obra.precio = parseFloat(precio);
+        obra.estado_obra = estado_obra || 'Disponible';
+        await obra.save();
+
+        if (estadoAnterior !== obra.estado_obra) {
+            try {
+                const { client } = require('../config/cassandra');
+                await client.execute(
+                    `INSERT INTO historial_estatus_obra
+                     (id_obra, fecha_cambio, estatus_anterior, estatus_nuevo, modificado_por, motivo)
+                     VALUES (?, toTimestamp(now()), ?, ?, ?, ?)`,
+                    [id, estadoAnterior, obra.estado_obra, 'admin', 'Actualización desde panel'],
+                    { prepare: true }
+                );
+            } catch (cassErr) {
+                console.error('Error Cassandra:', cassErr.message);
+            }
+        }
+
+        res.json({ success: true, message: 'Obra actualizada correctamente' });
+    } catch (err) {
+        console.error('Error actualizando obra:', err);
+        res.status(500).json({ success: false, message: 'Error al actualizar obra' });
+    }
+});
+
 router.delete('/api/obras-admin/:id', async (req, res) => {
     try {
         const id = parseInt(req.params.id);

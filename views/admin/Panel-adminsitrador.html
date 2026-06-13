@@ -633,26 +633,25 @@
         consultarMembresias(); // Esto llamará a la función que ahora tiene el alert
     }
 }
-        // --- CRUD OBRAS (SIN OPCIÓN DE BORRAR) ---
+        // --- CRUD OBRAS (MongoDB) ---
         async function cargarObrasGestion() {
             try {
-                const res = await fetch('/api/obras');
+                const res = await fetch('/api/obras-admin');
                 const data = await res.json();
                 document.getElementById('body-gestion-obras').innerHTML = data.map(o => `
-                    <tr id="obra-fila-${o.id_Obra}">
-                        <td>${o.id_Obra}</td>
-                        <td><input type="text" id="obra-nom-${o.id_Obra}" value="${o.Nombre || ''}" class="edit-input"></td>
-                        <td><input type="number" id="obra-pre-${o.id_Obra}" value="${o.Precio || 0}" class="edit-input" style="width:80px"></td>
+                    <tr id="obra-fila-${o.id}">
+                        <td>${o.id}</td>
+                        <td><input type="text" id="obra-nom-${o.id}" value="${(o.nombre || '').replace(/"/g, '&quot;')}" class="edit-input"></td>
+                        <td><input type="number" id="obra-pre-${o.id}" value="${o.precio || 0}" class="edit-input" style="width:80px"></td>
                         <td>
-                            <select id="obra-est-${o.id_Obra}" class="edit-input">
-                                <option value="Disponible" ${o.Estado_obra === 'Disponible' ? 'selected' : ''}>Disponible</option>
-                                  <option value="Reservado" ${o.Estado_obra === 'Reservado' ? 'selected' : ''}>Reservado</option>
-                                <option value="Vendida" ${o.Estado_obra === 'Vendida' ? 'selected' : ''}>Vendida</option>
+                            <select id="obra-est-${o.id}" class="edit-input">
+                                <option value="Disponible" ${o.estado_obra === 'Disponible' ? 'selected' : ''}>Disponible</option>
+                                <option value="Reservado" ${o.estado_obra === 'Reservado' ? 'selected' : ''}>Reservado</option>
+                                <option value="Vendida" ${o.estado_obra === 'Vendida' ? 'selected' : ''}>Vendida</option>
                             </select>
                         </td>
                         <td>
-                            <button class="btn btn-blue" onclick="actualizarObra(${o.id_Obra}, this)">💾 Actualizar</button>
-                            <!-- Botón de borrar ELIMINADO -->
+                            <button class="btn btn-blue" onclick="actualizarObra(${o.id}, this)">💾 Actualizar</button>
                         </td>
                     </tr>
                 `).join('');
@@ -664,22 +663,29 @@
         async function actualizarObra(id, btn) {
             deshabilitarBoton(btn);
             const body = {
-                Nombre: document.getElementById(`obra-nom-${id}`).value,
-                Precio: document.getElementById(`obra-pre-${id}`).value,
-                Estado_obra: document.getElementById(`obra-est-${id}`).value
+                nombre: document.getElementById(`obra-nom-${id}`).value,
+                precio: document.getElementById(`obra-pre-${id}`).value,
+                estado_obra: document.getElementById(`obra-est-${id}`).value
             };
             
             try {
-                await fetch(`/api/obras/${id}`, { 
+                const res = await fetch(`/api/obras-admin/${id}`, { 
                     method: 'PUT', 
                     headers: {'Content-Type':'application/json'}, 
                     body: JSON.stringify(body) 
                 });
-                alert("✅ Obra actualizada correctamente");
-                cargarObrasGestion();
+                const result = await res.json();
+                if (result.success) {
+                    alert("✅ Obra actualizada correctamente");
+                    cargarObrasGestion();
+                } else {
+                    alert("❌ " + (result.message || 'Error al actualizar'));
+                    btn.disabled = false;
+                }
             } catch (error) {
                 console.error('Error actualizando obra:', error);
                 alert("❌ Error al actualizar: " + error.message);
+                btn.disabled = false;
             }
         }
 
