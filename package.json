@@ -8,7 +8,9 @@
     "dev": "node --watch server/server.js",
     "seed": "node scripts/seed-mongodb.js",
     "seed:cassandra": "node scripts/seed-cassandra.js",
-    "migrate:cassandra": "node scripts/migrate-cassandra.js"
+    "migrate:cassandra": "node scripts/migrate-cassandra.js",
+    "seed:neo4j": "node scripts/seed-neo4j.js",
+    "recomendaciones": "node scripts/test-recomendaciones.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1068.0",
@@ -19,6 +21,7 @@
     "mongodb": "^6.9.0",
     "mongoose": "^8.6.0",
     "mysql2": "^3.11.0",
+    "neo4j-driver": "^5.28.3",
     "nodemailer": "^6.9.15",
     "sharp": "^0.34.5"
   },
