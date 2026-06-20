@@ -8,6 +8,7 @@ require('dotenv').config(); // Carga las variables de entorno.
 // --- IMPORTACIÓN DE BASE DE DATOS ---
 const db = require('../config/database');
 const { client } = require('../config/cassandra');
+const ObraMongo = require('../models/Obra');
 
 // --- HELPER: Registrar evento en bitácora de seguridad ---
 const registrarEventoSeguridad = async (id_usuario, tipo_evento, descripcion, req) => {
@@ -193,10 +194,10 @@ router.get('/api/parroquias/:id_municipio', (req, res) => {
 router.get('/api/usuario-actual', (req, res) => {
     if (!req.session.id_usuario) return res.status(401).json({ error: "No iniciado" });
     
-    const sql = "SELECT Nombre FROM Usuario WHERE id_usuario = ?";
+    const sql = "SELECT id_usuario, Nombre FROM Usuario WHERE id_usuario = ?";
     db.query(sql, [req.session.id_usuario], (err, results) => {
         if (err || results.length === 0) return res.status(500).json({ error: "Error" });
-        res.json({ Nombre: results[0].Nombre });
+        res.json({ id_usuario: results[0].id_usuario, Nombre: results[0].Nombre });
     });
 });
 
@@ -267,19 +268,21 @@ router.get('/mis-compras', (req, res) => {
     if (!idUsuario) return res.status(401).json({ error: "Sesión no válida" });
 
     const sql = `
-        SELECT 
-            o.Nombre,
-            o.Precio, 
-            f.Fecha_Venta AS Fecha_emision,
-            g.Nombre AS Genero
+        SELECT o.Nombre, o.Precio, f.Fecha_Venta AS Fecha_emision, g.Nombre AS Genero, 'Pagado' AS Estado
         FROM Factura f
         INNER JOIN Obra o ON f.id_obra = o.id_Obra
         INNER JOIN Comprador c ON f.id_comprador = c.id_usuario
         LEFT JOIN Genero g ON o.id_Genero = g.id_Genero
         WHERE c.id_usuario = ?
-        ORDER BY f.Fecha_Venta DESC`;
+        UNION
+        SELECT o.Nombre, o.Precio, r.Fecha_Reserva AS Fecha_emision, g.Nombre AS Genero, 'Reservado' AS Estado
+        FROM Reserva r
+        INNER JOIN Obra o ON r.id_obra = o.id_Obra
+        LEFT JOIN Genero g ON o.id_Genero = g.id_Genero
+        WHERE r.id_usuario = ?
+        ORDER BY Fecha_emision DESC`;
 
-    db.query(sql, [idUsuario], (err, results) => {
+    db.query(sql, [idUsuario, idUsuario], (err, results) => {
         if (err) {
             console.error("--- ERROR EN BASE DE DATOS ---");
             console.error("Mensaje:", err.message);
@@ -304,70 +307,99 @@ router.get('/api/datos-envio-pago', (req, res) => {
         WHERE c.id_usuario = ?`;
 
     db.query(sql, [req.session.id_usuario], (err, results) => {
-        if (err || results.length === 0) return res.status(500).json({ error: "Error al obtener datos" });
+        if (err) return res.status(500).json({ error: "Error al obtener datos" });
+        if (results.length === 0) return res.json(null);
         
         res.json(results[0]); 
     });
 });
 // --- RUTA PARA REGISTRAR LA RESERVA Y ACTUALIZAR ESTADO DE OBRA ---
-router.post('/confirmar-reserva', (req, res) => {
+router.post('/confirmar-reserva', async (req, res) => {
     if (!req.session.id_usuario) return res.status(401).json({ error: "Sesión expirada" });
 
-    const { id_obra } = req.body;
+    const id_obra = Number(req.body.id_obra);
     const id_usuario = req.session.id_usuario;
     const fecha = new Date();
 
-    const sqlVerificar = "SELECT Estado_Obra FROM Obra WHERE id_Obra = ?";
-    db.query(sqlVerificar, [id_obra], (err, obraActual) => {
-        if (err) return res.status(500).json({ error: "Error al verificar obra" });
-        if (obraActual.length === 0) return res.status(404).json({ error: "La obra no existe" });
-        if (obraActual[0].Estado_Obra !== 'Disponible') {
-            return res.status(400).json({ error: "La obra no está disponible (estado: " + obraActual[0].Estado_Obra + ")" });
+    if (!Number.isInteger(id_obra) || id_obra <= 0) return res.status(400).json({ error: "ID de obra inválido" });
+
+    try {
+        // 1. Verificar obra en MongoDB (fuente de verdad del catálogo)
+        const obraMongo = await ObraMongo.findById(id_obra).lean();
+        if (!obraMongo) return res.status(404).json({ error: "La obra no existe" });
+        if (obraMongo.estado_obra !== 'Disponible') {
+            return res.status(400).json({ error: "La obra no está disponible (estado: " + obraMongo.estado_obra + ")" });
         }
 
-        db.beginTransaction((err) => {
-            if (err) return res.status(500).json({ error: "Error al iniciar transacción" });
+        // 2. Sincronizar MySQL (crear o actualizar registro de obra)
+        const generoMap = { 'Pintura': 1, 'Escultura': 2, 'Fotografía': 3, 'Orfebreria': 4, 'Ceramica': 5 };
+        const generoNombre = obraMongo.genero?.nombre || 'Pintura';
+        const idGenero = generoMap[generoNombre] || 1;
 
-            const sqlReserva = "INSERT INTO Reserva (id_Obra, id_Usuario, Fecha_Reserva) VALUES (?, ?, ?)";
-            db.query(sqlReserva, [id_obra, id_usuario, fecha], (err, result) => {
-                if (err) {
-                    return db.rollback(() => {
-                        res.status(500).json({ error: "Error al crear reserva: " + err.message });
-                    });
-                }
-
-                const sqlObra = "UPDATE Obra SET Estado_Obra = 'Reservado' WHERE id_Obra = ? AND Estado_Obra = 'Disponible'";
-                db.query(sqlObra, [id_obra], (err, result) => {
-                    if (err) {
-                        return db.rollback(() => {
-                            res.status(500).json({ error: "Error al actualizar obra: " + err.message });
-                        });
-                    }
-
-                    db.commit((err) => {
-                        if (err) {
-                            return db.rollback(() => {
-                                res.status(500).json({ error: "Error al confirmar transacción" });
-                            });
-                        }
-                        registrarEventoSeguridad(id_usuario, 'CONFIRMAR_RESERVA', `Obra ${id_obra} reservada`, req);
-                        try {
-                            const { client } = require('../config/cassandra');
-                            client.execute(
-                                `INSERT INTO historial_estatus_obra (id_obra, fecha_cambio, estatus_anterior, estatus_nuevo, modificado_por, motivo)
-                                 VALUES (?, toTimestamp(now()), 'Disponible', 'Reservado', ?, ?)`,
-                                [parseInt(id_obra), id_usuario, 'Comprador inició proceso de compra'],
-                                { prepare: true }
-                            ).catch(e => console.error('Error registrando cambio estatus:', e.message));
-                        } catch (e) {
-                            console.error('Error registrando en Cassandra:', e.message);
-                        }
-                        res.json({ success: true, message: "Reserva confirmada y obra actualizada" });
-                    });
-                });
-            });
+        // La FK Obra -> Factura es circular; la deshabilitamos temporalmente
+        await new Promise((resolve, reject) => {
+            db.query("SET FOREIGN_KEY_CHECKS = 0", (err) => err ? reject(err) : resolve());
         });
-    });
+
+        await new Promise((resolve, reject) => {
+            db.query(
+                "INSERT INTO Obra (id_Obra, Nombre, Fecha_creacion, Precio, Estado_obra, id_Genero, Fotografia) VALUES (?, ?, ?, ?, 'Reservado', ?, ?) ON DUPLICATE KEY UPDATE Estado_obra = 'Reservado'",
+                [id_obra, obraMongo.nombre, obraMongo.fecha_creacion || fecha, obraMongo.precio, idGenero, obraMongo.fotografia || ''],
+                (err) => err ? reject(err) : resolve()
+            );
+        });
+
+        await new Promise((resolve, reject) => {
+            db.query("SET FOREIGN_KEY_CHECKS = 1", (err) => err ? reject(err) : resolve());
+        });
+
+        // 3. Crear reserva en MySQL
+        await new Promise((resolve, reject) => {
+            db.query("INSERT INTO Reserva (id_Obra, id_Usuario, Fecha_Reserva) VALUES (?, ?, ?)",
+                [id_obra, id_usuario, fecha],
+                (err) => err ? reject(err) : resolve()
+            );
+        });
+
+        // 4. Actualizar estado en MongoDB (después de que MySQL haya funcionado)
+        await ObraMongo.findByIdAndUpdate(id_obra, { estado_obra: 'Reservado' });
+
+        // 5. Registrar en Cassandra (asíncrono, no bloquea la respuesta)
+        registrarEventoSeguridad(id_usuario, 'CONFIRMAR_RESERVA', `Obra ${id_obra} reservada`, req);
+        try {
+            const { client: cassClient } = require('../config/cassandra');
+            cassClient.execute(
+                `INSERT INTO historial_estatus_obra (id_obra, fecha_cambio, estatus_anterior, estatus_nuevo, modificado_por, motivo)
+                 VALUES (?, toTimestamp(now()), 'Disponible', 'Reservado', ?, ?)`,
+                [id_obra, id_usuario, 'Comprador inició proceso de compra'],
+                { prepare: true }
+            ).catch(e => console.error('Error registrando cambio estatus:', e.message));
+        } catch (e) {
+            console.error('Error registrando en Cassandra:', e.message);
+        }
+
+        // 6. Crear relación :COMPRO en Neo4j (asíncrono, no bloquea la respuesta)
+        try {
+            const { getSession } = require('../config/neo4j');
+            const neoSession = getSession();
+            neoSession.run(
+                `MERGE (c:Comprador {id_usuario: $compradorId})
+                 MERGE (o:Obra {id_obra: $obraId})
+                 MERGE (c)-[:COMPRO {fecha: datetime()}]->(o)`,
+                { compradorId: id_usuario, obraId: id_obra }
+            ).then(() => neoSession.close()).catch(e => {
+                console.error('Error creando relación Neo4j:', e.message);
+                neoSession.close();
+            });
+        } catch (e) {
+            console.error('Error conectando a Neo4j:', e.message);
+        }
+
+        res.json({ success: true, message: "Reserva confirmada y obra actualizada" });
+    } catch (err) {
+        console.error('Error en confirmar-reserva:', err);
+        res.status(500).json({ error: "Error al procesar la reserva", detalle: err.message });
+    }
 });
 
 router.get('/api/estado-usuario', (req, res) => {

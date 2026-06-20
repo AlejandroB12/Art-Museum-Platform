@@ -293,7 +293,12 @@
                 <p id="modal-artista" style="color: #00ff00; font-size: 0.9rem; text-transform: uppercase;"></p>
                 <hr style="border: 0; border-top: 1px solid #222; margin: 25px 0;">
                 <div id="modal-detalles-tecnicos" style="font-size: 0.85rem; line-height: 2; color: #ccc;">
-                    </div>
+                </div>
+                <hr style="border: 0; border-top: 1px solid #222; margin: 25px 0;">
+                <h3 style="color: #00ff00; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Te puede interesar</h3>
+                <div id="modal-relacionadas" style="font-size: 0.8rem; color: #888;">
+                    <p>Cargando obras relacionadas...</p>
+                </div>
             </div>
         </div>
     </div>
@@ -302,7 +307,7 @@
     const gallery = document.getElementById('gallery');
     const modal = document.getElementById('obra-modal');
 
-    function abrirModal(img, titulo, artista, detalles) {
+    function abrirModal(img, titulo, artista, detalles, genero) {
         document.getElementById('modal-imagen').src = img;
         document.getElementById('modal-titulo').innerText = titulo;
         document.getElementById('modal-artista').innerText = `Por ${artista}`;
@@ -310,6 +315,35 @@
         
         modal.style.display = 'flex';
         document.body.classList.add('modal-active');
+
+        cargarRelacionadas(genero);
+    }
+
+    async function cargarRelacionadas(genero) {
+        const container = document.getElementById('modal-relacionadas');
+        if (!genero) {
+            container.innerHTML = '<p>Selecciona una obra para ver sugerencias.</p>';
+            return;
+        }
+        container.innerHTML = '<p>Cargando...</p>';
+        try {
+            const res = await fetch(`/api/recomendaciones/obras-por-genero/${encodeURIComponent(genero)}`);
+            if (!res.ok) throw new Error('Error en API');
+            const obras = await res.json();
+            if (obras.length === 0) {
+                container.innerHTML = '<p>No hay otras obras disponibles de este género.</p>';
+                return;
+            }
+            container.innerHTML = obras.map(o =>
+                `<div style="padding: 8px 0; border-bottom: 1px solid #1a1a1a; display: flex; justify-content: space-between;">
+                    <span>${o.Nombre}</span>
+                    <span style="color: #00ff00;">$${Number(o.Precio).toLocaleString()}</span>
+                </div>`
+            ).join('');
+        } catch (e) {
+            console.error('Error cargando relacionadas:', e);
+            container.innerHTML = '<p style="color: #666;">No se pudieron cargar sugerencias.</p>';
+        }
     }
 
     function cerrarModal() {
@@ -419,7 +453,7 @@
                 card.className = 'art-card';
                 card.innerHTML = `
                     <div class="art-img" style="background-image: url('${imgSource}'); background-size: cover; background-position: center;" 
-                         onclick="abrirModal('${imgSource}', '${obra.Nombre.replace(/'/g, "\\'")}', '${autorNombreCompleto.replace(/'/g, "\\'")}', \`${detallesHTML}\`)">
+                         onclick="abrirModal('${imgSource}', '${obra.Nombre.replace(/'/g, "\\'")}', '${autorNombreCompleto.replace(/'/g, "\\'")}', \`${detallesHTML}\`, '${obra.GeneroNombre || ''}')">
                     </div>
                     <div class="art-info">
                         <a href="Autor.html?id=${obra.id_Autor}" class="author-link">

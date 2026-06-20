@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { getSession } = require('../config/neo4j');
 
+const toNum = (v) => v != null ? Number(v) : 0;
+
 router.get('/recomendaciones/mismo-genero/:idUsuario', async (req, res) => {
     const { idUsuario } = req.params;
     const session = getSession();
@@ -21,7 +23,7 @@ router.get('/recomendaciones/mismo-genero/:idUsuario', async (req, res) => {
             LIMIT 10
         `, { idUsuario: parseInt(idUsuario) });
         res.json(result.records.map(r => ({
-            id_Obra: r.get('id_Obra').toNumber(),
+            id_Obra: toNum(r.get('id_Obra')),
             Nombre: r.get('Nombre'),
             Precio: r.get('Precio'),
             Genero: r.get('Genero')
@@ -54,10 +56,10 @@ router.get('/recomendaciones/colaborativo/:idUsuario', async (req, res) => {
             LIMIT 10
         `, { idUsuario: parseInt(idUsuario) });
         res.json(result.records.map(r => ({
-            id_Obra: r.get('id_Obra').toNumber(),
+            id_Obra: toNum(r.get('id_Obra')),
             Nombre: r.get('Nombre'),
             Precio: r.get('Precio'),
-            CantidadCoincidencias: r.get('CantidadCoincidencias').toNumber()
+            CantidadCoincidencias: toNum(r.get('CantidadCoincidencias'))
         })));
     } catch (err) {
         console.error('Error en recomendaciones colaborativo:', err);
@@ -93,7 +95,7 @@ router.get('/recomendaciones/personalizadas/:idUsuario', async (req, res) => {
             LIMIT 10
         `, { idUsuario: parseInt(idUsuario) });
         res.json(result.records.map(r => ({
-            id_Obra: r.get('id_Obra').toNumber(),
+            id_Obra: toNum(r.get('id_Obra')),
             Nombre: r.get('Nombre'),
             Precio: r.get('Precio'),
             Genero: r.get('Genero')
@@ -119,10 +121,10 @@ router.get('/recomendaciones/artistas-populares', async (req, res) => {
             LIMIT 10
         `);
         res.json(result.records.map(r => ({
-            id_Artista: r.get('id_Artista').toNumber(),
+            id_Artista: toNum(r.get('id_Artista')),
             Artista: r.get('Artista'),
-            ObrasVendidas: r.get('ObrasVendidas').toNumber(),
-            CompradoresUnicos: r.get('CompradoresUnicos').toNumber()
+            ObrasVendidas: toNum(r.get('ObrasVendidas')),
+            CompradoresUnicos: toNum(r.get('CompradoresUnicos'))
         })));
     } catch (err) {
         console.error('Error en artistas populares:', err);
@@ -146,13 +148,39 @@ router.get('/recomendaciones/generos-populares', async (req, res) => {
         `);
         res.json(result.records.map(r => ({
             Genero: r.get('Genero'),
-            ObrasVendidas: r.get('ObrasVendidas').toNumber(),
-            CompradoresDistintos: r.get('CompradoresDistintos').toNumber(),
+            ObrasVendidas: toNum(r.get('ObrasVendidas')),
+            CompradoresDistintos: toNum(r.get('CompradoresDistintos')),
             PrecioPromedio: r.get('PrecioPromedio'),
             IngresoTotal: r.get('IngresoTotal')
         })));
     } catch (err) {
         console.error('Error en generos populares:', err);
+        res.status(500).json({ error: err.message });
+    } finally {
+        await session.close();
+    }
+});
+
+router.get('/recomendaciones/obras-por-genero/:genero', async (req, res) => {
+    const { genero } = req.params;
+    const session = getSession();
+    try {
+        const result = await session.run(`
+            MATCH (g:Genero {nombre: $genero})<-[:TRABAJA_EN]-(:Artista)-[:CREO]->(o:Obra)
+            WHERE o.estado = 'Disponible'
+            RETURN o.id_obra AS id_Obra,
+                   o.nombre AS Nombre,
+                   o.precio AS Precio
+            ORDER BY o.precio ASC
+            LIMIT 6
+        `, { genero });
+        res.json(result.records.map(r => ({
+            id_Obra: toNum(r.get('id_Obra')),
+            Nombre: r.get('Nombre'),
+            Precio: r.get('Precio')
+        })));
+    } catch (err) {
+        console.error('Error en obras por genero:', err);
         res.status(500).json({ error: err.message });
     } finally {
         await session.close();
@@ -175,11 +203,11 @@ router.get('/grafo/estadisticas', async (req, res) => {
         res.json({
             nodos: nodos.records.map(r => ({
                 tipo: r.get('Tipo')[0],
-                cantidad: r.get('Cantidad').toNumber()
+                cantidad: toNum(r.get('Cantidad'))
             })),
             relaciones: relaciones.records.map(r => ({
                 tipo: r.get('Tipo'),
-                cantidad: r.get('Cantidad').toNumber()
+                cantidad: toNum(r.get('Cantidad'))
             }))
         });
     } catch (err) {

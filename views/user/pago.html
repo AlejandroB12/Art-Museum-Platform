@@ -115,13 +115,21 @@
 
                 if (response.ok) {
                     const user = await response.json();
-                    datosEnvio.innerHTML = `
-                        <div style="font-weight:bold; color: #fff;">${user.Nombre} ${user.Apellido}</div>
-                        <div style="color: #aaa;">Dirección: ${user.Calle}</div>
-                        <div style="color: #aaa;">${user.Parroquia}, ${user.Municipio}</div>
-                        <a href="/user/Panel-usuario.html" style="font-size: 0.7rem; color: #00ff00; text-decoration: none;">Editar dirección</a>
-                    `;
+                    if (!user) {
+                        datosEnvio.innerHTML = `
+                            <div style="color: #ffaa00;">No has registrado tus datos de envío.</div>
+                            <a href="/user/Panel-usuario.html" style="font-size: 0.8rem; color: #00ff00; text-decoration: none;">Completar dirección</a>
+                        `;
+                    } else {
+                        datosEnvio.innerHTML = `
+                            <div style="font-weight:bold; color: #fff;">${user.Nombre} ${user.Apellido}</div>
+                            <div style="color: #aaa;">Dirección: ${user.Calle || 'No registrada'}</div>
+                            <div style="color: #aaa;">${user.Parroquia || ''}${user.Parroquia && user.Municipio ? ', ' : ''}${user.Municipio || ''}</div>
+                            <a href="/user/Panel-usuario.html" style="font-size: 0.7rem; color: #00ff00; text-decoration: none;">Editar dirección</a>
+                        `;
+                    }
                 } else {
+                    const errData = await response.json().catch(() => ({}));
                     datosEnvio.innerHTML = `<div style="color: #ff4444;">Error al cargar datos de envío.</div>`;
                 }
             } catch (error) {
@@ -208,6 +216,12 @@
                 return;
             }
 
+            const idObra = Number(obraData.id_Obra);
+            if (!Number.isInteger(idObra) || idObra <= 0) {
+                mostrarError("ID de obra inválido.");
+                return;
+            }
+
             btnPagar.innerText = "PROCESANDO...";
             btnPagar.disabled = true;
 
@@ -216,7 +230,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        id_obra: parseInt(obraData.id_Obra) 
+                        id_obra: idObra
                     })
                 });
 
