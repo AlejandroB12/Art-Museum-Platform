@@ -88,17 +88,19 @@ async function seedNeo4j() {
 
     for (const o of obras) {
         await session.run(
-            `CREATE (o:Obra {
-                id_obra: $id,
-                nombre: $nombre,
-                precio: $precio,
-                estado: $estado
-            })`,
+            `CREATE (:Obra {
+            id_obra: $id,
+            nombre: $nombre,
+            precio: $precio,
+            estado: $estado,
+            fotografia: $fotografia
+        })`,
             {
                 id: o._id,
                 nombre: o.nombre,
                 precio: o.precio || 0,
-                estado: o.estado_obra || 'Disponible'
+                estado: o.estado_obra || 'Disponible',
+                fotografia: o.fotografia || ''
             }
         );
     }

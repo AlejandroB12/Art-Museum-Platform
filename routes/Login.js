@@ -37,10 +37,10 @@ const transporter = nodemailer.createTransport({
 router.post('/login-auth', (req, res) => {
     const { username, password } = req.body;
     const sql = "SELECT * FROM Usuario WHERE Email = ? AND Contraseña = ?";
-    
+
     db.query(sql, [username, password], (err, results) => {
         if (err) return res.status(500).send("Error en el servidor");
-        
+
         if (results.length > 0) {
             const usuario = results[0];
 
@@ -49,7 +49,7 @@ router.post('/login-auth', (req, res) => {
             }
 
             const sqlPago = "SELECT FechaPago FROM Membresia WHERE id_usuario = ? ORDER BY FechaPago DESC LIMIT 1";
-            
+
             db.query(sqlPago, [usuario.id_usuario], (err, pagos) => {
                 if (err) return res.status(500).send("Error al verificar membresía");
 
@@ -71,7 +71,7 @@ router.post('/login-auth', (req, res) => {
                 registrarEventoSeguridad(usuario.id_usuario, 'INICIO_SESION', 'Inicio de sesión exitoso', req);
 
                 if (usuario.Rol === 'administrador') {
-                    res.redirect('/Admin.html'); 
+                    res.redirect('/Admin.html');
                 } else {
                     res.redirect(`/user/Panel-usuario.html?email=${usuario.Email}`);
                 }
@@ -86,7 +86,7 @@ router.post('/login-auth', (req, res) => {
 router.post('/recuperar-pw', (req, res) => {
     const { correo } = req.body;
     const sql = "SELECT id_usuario FROM Usuario WHERE Email = ?";
-    
+
     db.query(sql, [correo], (err, results) => {
         if (err) return res.status(500).send("Error en el servidor");
         if (results.length > 0) {
@@ -129,7 +129,7 @@ router.post('/registrar', (req, res) => {
         if (err) { console.error(err); return res.status(500).send("Error de inicio de transacción"); }
 
         const sqlUser = "INSERT INTO Usuario (Email, Contraseña, Nombre, Apellido, Estatus, Rol) VALUES (?, ?, ?, ?, 0, 'comprador')";
-        
+
         db.query(sqlUser, [correo, password, nombre, apellido], (err, result) => {
             if (err) {
                 return db.rollback(() => {
@@ -137,11 +137,11 @@ router.post('/registrar', (req, res) => {
                     res.status(500).send("Error al crear usuario: " + err.message);
                 });
             }
-            
+
             const idUsuario = result.insertId;
 
             const sqlComprador = "INSERT INTO Comprador (id_usuario, Cedula, Telefono, CodigoVerificacion, id_parroquia, Calle) VALUES (?, ?, ?, ?, ?, ?)";
-            
+
             if (!cedula) {
                 return db.rollback(() => res.status(400).send("Error: La cédula es obligatoria para compradores."));
             }
@@ -192,17 +192,21 @@ router.get('/api/parroquias/:id_municipio', (req, res) => {
 
 // --- OTROS ENDPOINTS ---
 router.get('/api/usuario-actual', (req, res) => {
-    if (!req.session.id_usuario) return res.status(401).json({ error: "No iniciado" });
-    
-    const sql = "SELECT id_usuario, Nombre FROM Usuario WHERE id_usuario = ?";
-    db.query(sql, [req.session.id_usuario], (err, results) => {
-        if (err || results.length === 0) return res.status(500).json({ error: "Error" });
-        res.json({ id_usuario: results[0].id_usuario, Nombre: results[0].Nombre });
-    });
+    if (req.session && req.session.usuario) {
+        return res.json(req.session.usuario);
+    }
+    if (req.session && req.session.id_usuario) {
+        return res.json({
+            id_usuario: req.session.id_usuario,
+            Nombre: req.session.usuario?.Nombre || 'Invitado',
+            Email: req.session.usuario?.Email || 'guest@museo.com'
+        });
+    }
+    return res.status(401).json({ error: "No autenticado" });
 });
 
 router.post('/guardar-seguridad', (req, res) => {
-   console.log("Sesión:", req.session.id_usuario); // MIRA ESTO EN LA CONSOLA
+    console.log("Sesión:", req.session.id_usuario); // MIRA ESTO EN LA CONSOLA
     console.log("Datos recibidos:", req.body);      // MIRA ESTO EN LA CONSOLA
 
     if (!req.session.id_usuario) {
@@ -215,7 +219,7 @@ router.post('/guardar-seguridad', (req, res) => {
 
     // Limpiamos preguntas anteriores del usuario (opcional, para evitar duplicados)
     db.query("DELETE FROM CodigoSeguridad WHERE id_usuario = ?", [id_usuario], (err) => {
-        
+
         // Insertamos las nuevas
         const valores = datos.map(p => [p.pregunta, p.resp, id_usuario]);
         const sql = "INSERT INTO CodigoSeguridad (Pregunta, Respuesta, id_usuario) VALUES ?";
@@ -288,7 +292,7 @@ router.get('/mis-compras', (req, res) => {
             console.error("Mensaje:", err.message);
             return res.status(500).json({ error: "Error en la consulta: " + err.message });
         }
-        
+
         console.log("Compras encontradas:", results.length);
         res.json(results);
     });
@@ -297,7 +301,7 @@ router.get('/mis-compras', (req, res) => {
 // En Login.js
 router.get('/api/datos-envio-pago', (req, res) => {
     if (!req.session.id_usuario) return res.status(401).json({ error: "No iniciado" });
-    
+
     const sql = `
         SELECT u.Nombre, u.Apellido, c.Calle, p.nombre AS Parroquia, m.nombre AS Municipio
         FROM Comprador c
@@ -309,8 +313,8 @@ router.get('/api/datos-envio-pago', (req, res) => {
     db.query(sql, [req.session.id_usuario], (err, results) => {
         if (err) return res.status(500).json({ error: "Error al obtener datos" });
         if (results.length === 0) return res.json(null);
-        
-        res.json(results[0]); 
+
+        res.json(results[0]);
     });
 });
 // --- RUTA PARA REGISTRAR LA RESERVA Y ACTUALIZAR ESTADO DE OBRA ---
@@ -413,7 +417,7 @@ router.get('/api/estado-usuario', (req, res) => {
 
 router.get('/logout', (req, res) => {
     const idUsuario = req.session?.id_usuario;
-    
+
     if (idUsuario) {
         registrarEventoSeguridad(idUsuario, 'CIERRE_SESION', 'Cierre de sesión manual', req);
     }

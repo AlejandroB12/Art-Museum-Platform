@@ -136,11 +136,17 @@ router.get('/estado-usuario', (req, res) => {
 });
 
 router.get('/usuario-actual', (req, res) => {
-    if (req.session.usuario) {
-        res.json(req.session.usuario);
-    } else {
-        res.status(401).json({ error: "No autenticado" });
+    if (req.session && req.session.usuario) {
+        return res.json(req.session.usuario);
     }
+    if (req.session && req.session.id_usuario) {
+        return res.json({
+            id_usuario: req.session.id_usuario,
+            Nombre: req.session.usuario?.Nombre || 'Invitado',
+            Email: req.session.usuario?.Email || 'guest@museo.com'
+        });
+    }
+    return res.status(401).json({ error: "No autenticado" });
 });
 
 router.get('/artistas-catalogo', async (req, res) => {
