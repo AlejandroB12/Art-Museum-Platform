@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>Panel Administrativo - Museo</title>
     <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-    
+
     <style>
         :root {
             --sidebar-bg: #1a202c;
@@ -16,95 +17,164 @@
             --accent: #3182ce;
         }
 
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            margin: 0; 
-            background: #f4f6f9; 
-            display: flex; 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background: #f4f6f9;
+            display: flex;
         }
-        
-        .sidebar { 
-            width: 280px; 
-            background: var(--sidebar-bg); 
-            color: white; 
-            height: 100vh; 
-            position: fixed; 
-            padding: 20px; 
-            box-sizing: border-box; 
+
+        .sidebar {
+            width: 280px;
+            background: var(--sidebar-bg);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            padding: 20px;
+            box-sizing: border-box;
             overflow-y: auto;
         }
 
-        .sidebar h2 { 
-            color: var(--active-color); 
-            text-align: center; 
-            border-bottom: 1px solid #2d3748; 
-            padding-bottom: 10px; 
-            margin-top: 0; 
-        }
-        
-        .nav-group { margin-top: 25px; }
-        .nav-label { 
-            font-size: 0.75rem; 
-            color: #718096; 
-            text-transform: uppercase; 
-            letter-spacing: 1px; 
-            margin-bottom: 10px; 
-            display: block; 
+        .sidebar h2 {
+            color: var(--active-color);
+            text-align: center;
+            border-bottom: 1px solid #2d3748;
+            padding-bottom: 10px;
+            margin-top: 0;
         }
 
-        .nav-item { 
-            padding: 12px 15px; 
-            cursor: pointer; 
-            border-radius: 8px; 
-            margin-bottom: 5px; 
-            transition: 0.3s; 
-            color: #cbd5e0; 
+        .nav-group {
+            margin-top: 25px;
         }
 
-        .nav-item:hover { background: #2d3748; color: white; }
-        .nav-item.active { background: #2d3748; color: var(--active-color); font-weight: bold; }
-
-        .main { 
-            margin-left: 280px; 
-            padding: 40px; 
-            width: calc(100% - 280px); 
-            box-sizing: border-box; 
+        .nav-label {
+            font-size: 0.75rem;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            display: block;
         }
 
-        .card { 
-            background: white; 
-            padding: 25px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
-            margin-bottom: 20px; 
-        }
-        
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #edf2f7; }
-        th { background: #f7fafc; color: #4a5568; font-weight: 600; }
-        
-        .btn { border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-blue { background: var(--accent); color: white; }
-        .btn-green { background: #38a169; color: white; }
-        .btn-pdf { background: var(--danger); color: white; margin-top: 10px; }
-        .btn-red { background: #e53e3e; color: white; }
-
-        .edit-input { padding: 5px; border: 1px solid #cbd5e0; border-radius: 4px; width: 90%; }
-        
-        .report-filter { 
-            display: flex; 
-            gap: 15px; 
-            margin-bottom: 25px; 
-            align-items: flex-end; 
-            background: #edf2f7; 
-            padding: 15px; 
-            border-radius: 8px; 
+        .nav-item {
+            padding: 12px 15px;
+            cursor: pointer;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            transition: 0.3s;
+            color: #cbd5e0;
         }
 
-        .report-filter input { padding: 8px; border: 1px solid #cbd5e0; border-radius: 4px; }
-        header h1 { margin: 0; font-size: 1.8rem; color: #2d3748; }
-        
+        .nav-item:hover {
+            background: #2d3748;
+            color: white;
+        }
+
+        .nav-item.active {
+            background: #2d3748;
+            color: var(--active-color);
+            font-weight: bold;
+        }
+
+        .main {
+            margin-left: 280px;
+            padding: 40px;
+            width: calc(100% - 280px);
+            box-sizing: border-box;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #edf2f7;
+        }
+
+        th {
+            background: #f7fafc;
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        .btn {
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-blue {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-green {
+            background: #38a169;
+            color: white;
+        }
+
+        .btn-pdf {
+            background: var(--danger);
+            color: white;
+            margin-top: 10px;
+        }
+
+        .btn-red {
+            background: #e53e3e;
+            color: white;
+        }
+
+        .edit-input {
+            padding: 5px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            width: 90%;
+        }
+
+        .report-filter {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            align-items: flex-end;
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .report-filter input {
+            padding: 8px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            color: #2d3748;
+        }
+
         .badge-pending {
             background: #fef3c7;
             color: #92400e;
@@ -114,39 +184,62 @@
             font-weight: bold;
         }
 
-        .status-disponible { color: #2b6cb0; font-weight: bold; }
-        .status-reservado { color: #dd6b20; font-weight: bold; }
-        .status-vendida { color: #c53030; font-weight: bold; }
+        .status-disponible {
+            color: #2b6cb0;
+            font-weight: bold;
+        }
+
+        .status-reservado {
+            color: #dd6b20;
+            font-weight: bold;
+        }
+
+        .status-vendida {
+            color: #c53030;
+            font-weight: bold;
+        }
     </style>
 </head>
+
 <body>
 
     <div class="sidebar">
         <h2>Museo UNEG</h2>
-        
+
         <div class="nav-group">
             <span class="nav-label">Gestión Maestra</span>
             <div class="nav-item active" id="btn-gestion" onclick="mostrarTab('gestion')">📦 Inventario y Usuarios</div>
             <div class="nav-item" id="btn-facturacion" onclick="mostrarTab('facturacion')">🧾 Facturar Reservas</div>
-            <div class="nav-item" id="btn-usuarios-pagos" onclick="mostrarTab('usuarios-pagos')">💳 Validar Pagos Membresía</div>
-            <div class="nav-item" id="btn-validar-usuarios" onclick="mostrarTab('validar-usuarios')">👤 Validar Registro Usuarios</div>
+            <div class="nav-item" id="btn-usuarios-pagos" onclick="mostrarTab('usuarios-pagos')">💳 Validar Pagos
+                Membresía</div>
+            <div class="nav-item" id="btn-validar-usuarios" onclick="mostrarTab('validar-usuarios')">👤 Validar Registro
+                Usuarios</div>
             <div class="nav-item" id="btn-generos" onclick="mostrarTab('generos')">🎭 Gestionar Géneros</div>
             <div class="nav-item" id="btn-autores" onclick="mostrarTab('autores')">✍️ Gestionar Autores</div>
             <div class="nav-item" id="btn-obras" onclick="mostrarTab('obras')">🖼️ Gestionar Obras</div>
-            <div class="nav-item" id="btn-especializaciones" onclick="mostrarTab('especializaciones')">🏷️ Especializaciones</div>
+            <div class="nav-item" id="btn-especializaciones" onclick="mostrarTab('especializaciones')">🏷️
+                Especializaciones</div>
         </div>
 
         <div class="nav-group">
             <span class="nav-label">Reportes</span>
             <div class="nav-item" id="btn-rep-obras" onclick="mostrarTab('rep-obras')">📊 Obras Vendidas</div>
-            <div class="nav-item" id="btn-rep-facturas" onclick="mostrarTab('rep-facturas')">📈 Resumen Facturación</div>
-            <div class="nav-item" id="btn-rep-membresias" onclick="mostrarTab('rep-membresias')">🎫 Reporte Membresías</div>
+            <div class="nav-item" id="btn-rep-facturas" onclick="mostrarTab('rep-facturas')">📈 Resumen Facturación
+            </div>
+            <div class="nav-item" id="btn-rep-membresias" onclick="mostrarTab('rep-membresias')">🎫 Reporte Membresías
+            </div>
+        </div>
+        <div class="nav-group">
+            <span class="nav-label">Estadísticas</span>
+            <div class="nav-item" id="btn-tendencias" onclick="mostrarTab('tendencias')">📈 Tendencias del Museo</div>
         </div>
 
         <div class="nav-group">
             <span class="nav-label">Cassandra</span>
-            <div class="nav-item" id="btn-historial-estatus" onclick="mostrarTab('historial-estatus')">📋 Historial de Estatus</div>
-            <div class="nav-item" id="btn-logs-seguridad" onclick="mostrarTab('logs-seguridad'); cargarLogsSeguridad();">🔒 Bitácora de Seguridad</div>
+            <div class="nav-item" id="btn-historial-estatus" onclick="mostrarTab('historial-estatus')">📋 Historial de
+                Estatus</div>
+            <div class="nav-item" id="btn-logs-seguridad"
+                onclick="mostrarTab('logs-seguridad'); cargarLogsSeguridad();">🔒 Bitácora de Seguridad</div>
         </div>
 
         <div class="nav-group" style="margin-top: 50px;">
@@ -255,10 +348,18 @@
                     <button class="btn btn-blue" onclick="consultarObras()">Filtrar</button>
                 </div>
                 <table id="tabla-obras-vendidas">
-                    <thead><tr><th>ID Factura</th><th>Obra</th><th>Total Pagado</th><th>Fecha</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>ID Factura</th>
+                            <th>Obra</th>
+                            <th>Total Pagado</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
                     <tbody></tbody>
                 </table>
-                <button class="btn btn-pdf" onclick="generarPDF('tabla-obras-vendidas', 'Obras Vendidas')">📄 Generar PDF</button>
+                <button class="btn btn-pdf" onclick="generarPDF('tabla-obras-vendidas', 'Obras Vendidas')">📄 Generar
+                    PDF</button>
             </div>
         </div>
 
@@ -272,10 +373,21 @@
                     <button class="btn btn-blue" onclick="consultarFacturacion()">Filtrar</button>
                 </div>
                 <table id="tabla-facturacion">
-                    <thead><tr><th>ID</th><th>Obra</th><th>Neto</th><th>%</th><th>Ganancia</th><th>Total</th><th>Fecha</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Obra</th>
+                            <th>Neto</th>
+                            <th>%</th>
+                            <th>Ganancia</th>
+                            <th>Total</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
                     <tbody></tbody>
                 </table>
-                <button class="btn btn-pdf" onclick="generarPDF('tabla-facturacion', 'Resumen Facturación')">📄 Generar PDF</button>
+                <button class="btn btn-pdf" onclick="generarPDF('tabla-facturacion', 'Resumen Facturación')">📄 Generar
+                    PDF</button>
             </div>
         </div>
 
@@ -286,7 +398,8 @@
                 <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
                     <div>
                         <label>Nombre del género:</label>
-                        <input type="text" id="input-genero-nombre" class="edit-input" placeholder="Ej: Acuarela" style="width:200px;">
+                        <input type="text" id="input-genero-nombre" class="edit-input" placeholder="Ej: Acuarela"
+                            style="width:200px;">
                     </div>
                     <button class="btn btn-green" onclick="agregarGenero()">➕ Agregar Género</button>
                 </div>
@@ -313,11 +426,13 @@
                 <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
                     <div>
                         <label>Nombre:</label>
-                        <input type="text" id="input-autor-nombre" class="edit-input" placeholder="Nombre" style="width:180px;">
+                        <input type="text" id="input-autor-nombre" class="edit-input" placeholder="Nombre"
+                            style="width:180px;">
                     </div>
                     <div>
                         <label>Apellido:</label>
-                        <input type="text" id="input-autor-apellido" class="edit-input" placeholder="Apellido" style="width:180px;">
+                        <input type="text" id="input-autor-apellido" class="edit-input" placeholder="Apellido"
+                            style="width:180px;">
                     </div>
                     <div>
                         <label>Nacionalidad (opcional):</label>
@@ -327,7 +442,8 @@
                     </div>
                     <div>
                         <label>Biografía (opcional):</label>
-                        <textarea id="input-autor-biografia" class="edit-input" placeholder="Breve biografía" style="width:300px; height:80px; resize:vertical;"></textarea>
+                        <textarea id="input-autor-biografia" class="edit-input" placeholder="Breve biografía"
+                            style="width:300px; height:80px; resize:vertical;"></textarea>
                     </div>
                     <div>
                         <label>Foto (opcional):</label>
@@ -362,7 +478,8 @@
                 <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
                     <div>
                         <label>Nombre:</label>
-                        <input type="text" id="input-obra-nombre" class="edit-input" placeholder="Nombre de la obra" style="width:200px;">
+                        <input type="text" id="input-obra-nombre" class="edit-input" placeholder="Nombre de la obra"
+                            style="width:200px;">
                     </div>
                     <div>
                         <label>Fecha creación:</label>
@@ -370,7 +487,8 @@
                     </div>
                     <div>
                         <label>Precio ($):</label>
-                        <input type="number" id="input-obra-precio" class="edit-input" placeholder="0.00" step="0.01" style="width:120px;">
+                        <input type="number" id="input-obra-precio" class="edit-input" placeholder="0.00" step="0.01"
+                            style="width:120px;">
                     </div>
                     <div>
                         <label>Estado:</label>
@@ -423,7 +541,8 @@
                 <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:15px;">
                     <div>
                         <label>Género:</label>
-                        <select id="input-esp-genero" class="edit-input" style="width:220px;" onchange="onGeneroEspChange()">
+                        <select id="input-esp-genero" class="edit-input" style="width:220px;"
+                            onchange="onGeneroEspChange()">
                             <option value="">— Seleccione un género —</option>
                         </select>
                     </div>
@@ -431,7 +550,8 @@
                 <div id="esp-atributos-section" style="display:none;">
                     <div style="margin-bottom:10px;">
                         <strong>Atributos:</strong>
-                        <button class="btn btn-blue" onclick="agregarFilaAtributo()" style="margin-left:10px;padding:4px 12px;">➕ Agregar atributo</button>
+                        <button class="btn btn-blue" onclick="agregarFilaAtributo()"
+                            style="margin-left:10px;padding:4px 12px;">➕ Agregar atributo</button>
                     </div>
                     <table id="tabla-atributos" style="width:100%;margin-bottom:15px;">
                         <thead>
@@ -445,7 +565,8 @@
                         <tbody id="body-atributos"></tbody>
                     </table>
                     <button class="btn btn-green" onclick="agregarEspecializacion()">💾 Guardar Especialización</button>
-                    <button class="btn btn-gray" id="btn-cancelar-editar-esp" onclick="resetFormEspecializacion()" style="display:none;margin-left:8px;padding:8px 20px;">❌ Cancelar edición</button>
+                    <button class="btn btn-gray" id="btn-cancelar-editar-esp" onclick="resetFormEspecializacion()"
+                        style="display:none;margin-left:8px;padding:8px 20px;">❌ Cancelar edición</button>
                 </div>
             </div>
             <div class="card">
@@ -475,10 +596,18 @@
                     <button class="btn btn-blue" onclick="consultarMembresias()">Filtrar</button>
                 </div>
                 <table id="tabla-membresias">
-                    <thead><tr><th>ID Pago</th><th>Email</th><th>Fecha Pago</th><th>Monto</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>ID Pago</th>
+                            <th>Email</th>
+                            <th>Fecha Pago</th>
+                            <th>Monto</th>
+                        </tr>
+                    </thead>
                     <tbody></tbody>
                 </table>
-                <button class="btn btn-pdf" onclick="generarPDF('tabla-membresias', 'Membresías Pagadas')">📄 Generar PDF</button>
+                <button class="btn btn-pdf" onclick="generarPDF('tabla-membresias', 'Membresías Pagadas')">📄 Generar
+                    PDF</button>
             </div>
         </div>
 
@@ -509,7 +638,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr id="he-sin-seleccion"><td colspan="7" style="text-align:center;color:#718096;">Seleccione una obra y haga clic en "Ver Historial"</td></tr>
+                        <tr id="he-sin-seleccion">
+                            <td colspan="7" style="text-align:center;color:#718096;">Seleccione una obra y haga clic en
+                                "Ver Historial"</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -519,7 +651,8 @@
         <div id="tab-logs-seguridad" class="tab-content" style="display:none">
             <div class="card">
                 <h3>🔒 Bitácora de Seguridad</h3>
-                <p style="color:#718096; font-size:0.85rem; margin-bottom:15px;">Eventos de seguridad registrados en Cassandra (solo-append, inmutable)</p>
+                <p style="color:#718096; font-size:0.85rem; margin-bottom:15px;">Eventos de seguridad registrados en
+                    Cassandra (solo-append, inmutable)</p>
                 <div style="margin-bottom:15px;">
                     <select id="log-filtro-tipo" onchange="cargarLogsSeguridad()">
                         <option value="">Todos los tipos</option>
@@ -548,9 +681,50 @@
                             </tr>
                         </thead>
                         <tbody id="tabla-logs-seguridad">
-                            <tr><td colspan="6" style="text-align:center;color:#718096;">Cargando registros...</td></tr>
+                            <tr>
+                                <td colspan="6" style="text-align:center;color:#718096;">Cargando registros...</td>
+                            </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+        <!-- Tab: Tendencias del Museo -->
+        <div id="tab-tendencias" class="tab-content" style="display:none">
+            <div class="card">
+                <h3>📈 Tendencias del Museo</h3>
+                <p style="color:#718096; font-size:0.85rem; margin-bottom:20px;">Datos en vivo desde Neo4j</p>
+
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px;">
+                    <!-- Artistas Populares -->
+                    <div style="background:#f7fafc; border:1px solid #e2e8f0; padding:20px; border-radius:8px;">
+                        <h4
+                            style="color:#2d3748; margin-top:0; font-size:0.9rem; text-transform:uppercase; letter-spacing:1px;">
+                            🎨 Artistas Populares</h4>
+                        <div id="pop-artistas">
+                            <p style="color:#a0aec0;">Cargando...</p>
+                        </div>
+                    </div>
+
+                    <!-- Géneros más vendidos -->
+                    <div style="background:#f7fafc; border:1px solid #e2e8f0; padding:20px; border-radius:8px;">
+                        <h4
+                            style="color:#2d3748; margin-top:0; font-size:0.9rem; text-transform:uppercase; letter-spacing:1px;">
+                            🎭 Géneros más vendidos</h4>
+                        <div id="pop-generos">
+                            <p style="color:#a0aec0;">Cargando...</p>
+                        </div>
+                    </div>
+
+                    <!-- Estadísticas del Grafo -->
+                    <div style="background:#f7fafc; border:1px solid #e2e8f0; padding:20px; border-radius:8px;">
+                        <h4
+                            style="color:#2d3748; margin-top:0; font-size:0.9rem; text-transform:uppercase; letter-spacing:1px;">
+                            🔗 Estadísticas del Grafo</h4>
+                        <div id="grafo-stats">
+                            <p style="color:#a0aec0;">Cargando...</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -564,75 +738,78 @@
         }
 
         function mostrarTab(tab) {
-    document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
-    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-    
-    const tabElement = document.getElementById('tab-' + tab);
-    if (tabElement) tabElement.style.display = 'block';
-    
-    const btnElement = document.getElementById('btn-' + tab);
-    if (btnElement) btnElement.classList.add('active');
-    
-    // Actualizar título
-    const titulos = {
-        'gestion': 'Gestión de Inventario y Usuarios',
-        'facturacion': 'Facturación de Reservas',
-        'usuarios-pagos': 'Validar Pagos de Membresía',
-        'validar-usuarios': 'Validar Registro de Usuarios',
-        'generos': 'Gestión de Géneros',
-        'autores': 'Gestión de Autores',
-        'obras': 'Gestión de Obras',
-        'especializaciones': 'Gestión de Especializaciones',
-        'rep-obras': 'Reporte de Obras Vendidas',
-        'rep-facturas': 'Resumen de Facturación',
-        'rep-membresias': 'Reporte de Membresías Pagadas',
-        'historial-estatus': 'Historial de Cambios de Estatus',
-        'logs-seguridad': 'Bitácora de Seguridad'
-    };
-    document.getElementById('titulo-seccion').textContent = titulos[tab] || 'Panel Administrativo';
-    
-    // Cargar datos según el tab
-    if (tab === 'gestion') { 
-        cargarObrasGestion(); 
-        cargarUsuariosGestion(); 
-    }
-    if (tab === 'usuarios-pagos') cargarPagos();
-    if (tab === 'validar-usuarios') cargarUsuariosPendientes();
-    if (tab === 'facturacion') cargarReservadas();
-    if (tab === 'historial-estatus') cargarObrasConHistorial();
-    if (tab === 'generos') cargarGeneros();
-    if (tab === 'autores') { cargarAutores(); cargarNacionalidades(); }
-    if (tab === 'obras') { cargarObrasAdmin(); cargarGenerosSelect(); cargarAutoresSelect(); }
-    if (tab === 'especializaciones') { cargarEspecializaciones(); cargarGenerosSelectEsp(); }
-    if (tab === 'rep-obras') {
-        // Establecer fechas por defecto (últimos 30 días)
-        const hoy = new Date();
-        const hace30Dias = new Date();
-        hace30Dias.setDate(hoy.getDate() - 30);
-        
-        document.getElementById('obras-inicio').value = hace30Dias.toISOString().split('T')[0];
-        document.getElementById('obras-fin').value = hoy.toISOString().split('T')[0];
-        consultarObras();
-    }
-    if (tab === 'rep-facturas') {
-        const hoy = new Date();
-        const hace30Dias = new Date();
-        hace30Dias.setDate(hoy.getDate() - 30);
-        
-        document.getElementById('fact-inicio').value = hace30Dias.toISOString().split('T')[0];
-        document.getElementById('fact-fin').value = hoy.toISOString().split('T')[0];
-        consultarFacturacion();
-    }
-    if (tab === 'rep-membresias') {
-        const hoy = new Date();
-        const hace30Dias = new Date();
-        hace30Dias.setDate(hoy.getDate() - 30);
-        
-        document.getElementById('mem-inicio').value = hace30Dias.toISOString().split('T')[0];
-        document.getElementById('mem-fin').value = hoy.toISOString().split('T')[0];
-        consultarMembresias(); // Esto llamará a la función que ahora tiene el alert
-    }
-}
+            document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+
+            const tabElement = document.getElementById('tab-' + tab);
+            if (tabElement) tabElement.style.display = 'block';
+
+            const btnElement = document.getElementById('btn-' + tab);
+            if (btnElement) btnElement.classList.add('active');
+
+            // Actualizar título
+            const titulos = {
+                'gestion': 'Gestión de Inventario y Usuarios',
+                'facturacion': 'Facturación de Reservas',
+                'usuarios-pagos': 'Validar Pagos de Membresía',
+                'validar-usuarios': 'Validar Registro de Usuarios',
+                'generos': 'Gestión de Géneros',
+                'autores': 'Gestión de Autores',
+                'obras': 'Gestión de Obras',
+                'especializaciones': 'Gestión de Especializaciones',
+                'rep-obras': 'Reporte de Obras Vendidas',
+                'rep-facturas': 'Resumen de Facturación',
+                'rep-membresias': 'Reporte de Membresías Pagadas',
+                'historial-estatus': 'Historial de Cambios de Estatus',
+                'logs-seguridad': 'Bitácora de Seguridad',
+                'tendencias': 'Tendencias del Museo',
+            };
+            document.getElementById('titulo-seccion').textContent = titulos[tab] || 'Panel Administrativo';
+
+            // Cargar datos según el tab
+            if (tab === 'gestion') {
+                cargarObrasGestion();
+                cargarUsuariosGestion();
+            }
+            if (tab === 'usuarios-pagos') cargarPagos();
+            if (tab === 'validar-usuarios') cargarUsuariosPendientes();
+            if (tab === 'facturacion') cargarReservadas();
+            if (tab === 'historial-estatus') cargarObrasConHistorial();
+            if (tab === 'generos') cargarGeneros();
+            if (tab === 'autores') { cargarAutores(); cargarNacionalidades(); }
+            if (tab === 'obras') { cargarObrasAdmin(); cargarGenerosSelect(); cargarAutoresSelect(); }
+            if (tab === 'especializaciones') { cargarEspecializaciones(); cargarGenerosSelectEsp(); }
+            if (tab === 'rep-obras') {
+                // Establecer fechas por defecto (últimos 30 días)
+                const hoy = new Date();
+                const hace30Dias = new Date();
+                hace30Dias.setDate(hoy.getDate() - 30);
+
+                document.getElementById('obras-inicio').value = hace30Dias.toISOString().split('T')[0];
+                document.getElementById('obras-fin').value = hoy.toISOString().split('T')[0];
+                consultarObras();
+            }
+            if (tab === 'rep-facturas') {
+                const hoy = new Date();
+                const hace30Dias = new Date();
+                hace30Dias.setDate(hoy.getDate() - 30);
+
+                document.getElementById('fact-inicio').value = hace30Dias.toISOString().split('T')[0];
+                document.getElementById('fact-fin').value = hoy.toISOString().split('T')[0];
+                consultarFacturacion();
+            }
+            if (tab === 'rep-membresias') {
+                const hoy = new Date();
+                const hace30Dias = new Date();
+                hace30Dias.setDate(hoy.getDate() - 30);
+
+                document.getElementById('mem-inicio').value = hace30Dias.toISOString().split('T')[0];
+                document.getElementById('mem-fin').value = hoy.toISOString().split('T')[0];
+                consultarMembresias(); // Esto llamará a la función que ahora tiene el alert
+            }
+
+            if (tab === 'tendencias') cargarTendencias();
+        }
         // --- CRUD OBRAS (MongoDB) ---
         async function cargarObrasGestion() {
             try {
@@ -667,12 +844,12 @@
                 precio: document.getElementById(`obra-pre-${id}`).value,
                 estado_obra: document.getElementById(`obra-est-${id}`).value
             };
-            
+
             try {
-                const res = await fetch(`/api/obras-admin/${id}`, { 
-                    method: 'PUT', 
-                    headers: {'Content-Type':'application/json'}, 
-                    body: JSON.stringify(body) 
+                const res = await fetch(`/api/obras-admin/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
                 });
                 const result = await res.json();
                 if (result.success) {
@@ -716,122 +893,122 @@
             }
         }
 
-       // --- ACTUALIZAR USUARIO (VERSIÓN MEJORADA) ---
-async function actualizarUsuario(id, btn) {
-    deshabilitarBoton(btn);
-    
-    const estatusSelect = document.getElementById(`user-est-${id}`);
-    if (!estatusSelect) {
-        alert("Error: No se encontró el selector de estatus");
-        return;
-    }
-    
-    const nuevoEstatus = estatusSelect.value; // "1" o "0"
-    const estadoTexto = nuevoEstatus == 1 ? 'activado' : 'desactivado';
-    
-    // Confirmar con el usuario
-    if (!confirm(`¿Está seguro de ${estadoTexto} este usuario?`)) {
-        btn.disabled = false;
-        return;
-    }
-    
-    // Cambiar texto del botón mientras procesa
-    const btnOriginal = btn.innerHTML;
-    btn.innerHTML = '⏳ Actualizando...';
-    
-    try {
-        const response = await fetch(`/api/usuarios/${id}`, { 
-            method: 'PUT', 
-            headers: {'Content-Type': 'application/json'}, 
-            body: JSON.stringify({ Estatus: parseInt(nuevoEstatus) }) // Asegurar que sea número
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `Error HTTP: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            // Mostrar notificación de éxito
-            mostrarNotificacion(`✅ Usuario ${estadoTexto} correctamente`, 'success');
-            
-            // Opcional: cambiar color de la fila para indicar cambio
-            const fila = document.getElementById(`usuario-fila-${id}`);
-            if (fila) {
-                fila.style.transition = "background-color 0.5s ease";
-                fila.style.backgroundColor = nuevoEstatus == 1 ? '#c6f6d5' : '#fed7d7'; // Verde claro / Rojo claro
-                setTimeout(() => {
-                    fila.style.backgroundColor = '';
-                }, 2000);
+        // --- ACTUALIZAR USUARIO (VERSIÓN MEJORADA) ---
+        async function actualizarUsuario(id, btn) {
+            deshabilitarBoton(btn);
+
+            const estatusSelect = document.getElementById(`user-est-${id}`);
+            if (!estatusSelect) {
+                alert("Error: No se encontró el selector de estatus");
+                return;
             }
-        } else {
-            throw new Error(result.message || 'Error al actualizar');
+
+            const nuevoEstatus = estatusSelect.value; // "1" o "0"
+            const estadoTexto = nuevoEstatus == 1 ? 'activado' : 'desactivado';
+
+            // Confirmar con el usuario
+            if (!confirm(`¿Está seguro de ${estadoTexto} este usuario?`)) {
+                btn.disabled = false;
+                return;
+            }
+
+            // Cambiar texto del botón mientras procesa
+            const btnOriginal = btn.innerHTML;
+            btn.innerHTML = '⏳ Actualizando...';
+
+            try {
+                const response = await fetch(`/api/usuarios/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ Estatus: parseInt(nuevoEstatus) }) // Asegurar que sea número
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `Error HTTP: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Mostrar notificación de éxito
+                    mostrarNotificacion(`✅ Usuario ${estadoTexto} correctamente`, 'success');
+
+                    // Opcional: cambiar color de la fila para indicar cambio
+                    const fila = document.getElementById(`usuario-fila-${id}`);
+                    if (fila) {
+                        fila.style.transition = "background-color 0.5s ease";
+                        fila.style.backgroundColor = nuevoEstatus == 1 ? '#c6f6d5' : '#fed7d7'; // Verde claro / Rojo claro
+                        setTimeout(() => {
+                            fila.style.backgroundColor = '';
+                        }, 2000);
+                    }
+                } else {
+                    throw new Error(result.message || 'Error al actualizar');
+                }
+
+            } catch (error) {
+                console.error('Error actualizando usuario:', error);
+                mostrarNotificacion(`❌ Error: ${error.message}`, 'error');
+            } finally {
+                // Restaurar botón
+                btn.innerHTML = btnOriginal;
+                setTimeout(() => { btn.disabled = false; }, 1500);
+            }
         }
-        
-    } catch (error) {
-        console.error('Error actualizando usuario:', error);
-        mostrarNotificacion(`❌ Error: ${error.message}`, 'error');
-    } finally {
-        // Restaurar botón
-        btn.innerHTML = btnOriginal;
-        setTimeout(() => { btn.disabled = false; }, 1500);
-    }
-}
 
         async function borrarUsuario(id, btn) {
-    if (!confirm("¿Eliminar usuario permanentemente? Esta acción eliminará todos sus registros relacionados (compras, reservas, membresías).")) return;
-    deshabilitarBoton(btn);
+            if (!confirm("¿Eliminar usuario permanentemente? Esta acción eliminará todos sus registros relacionados (compras, reservas, membresías).")) return;
+            deshabilitarBoton(btn);
 
-    try {
-        // Mostrar indicador de carga
-        const fila = document.getElementById(`usuario-fila-${id}`);
-        if (fila) {
-            fila.style.opacity = "0.5";
-        }
+            try {
+                // Mostrar indicador de carga
+                const fila = document.getElementById(`usuario-fila-${id}`);
+                if (fila) {
+                    fila.style.opacity = "0.5";
+                }
 
-        // 1. Primero eliminar registros relacionados (orden correcto)
-        console.log('Eliminando registros relacionados del usuario:', id);
-        
-        // Eliminar de Reserva (si existe)
-        await fetch(`/api/eliminar-reservas-usuario/${id}`, { method: 'DELETE' });
-        
-        // Eliminar de Membresia (si existe)
-        await fetch(`/api/eliminar-membresias-usuario/${id}`, { method: 'DELETE' });
-        
-        // Eliminar de Comprador (si existe)
-        await fetch(`/api/eliminar-comprador/${id}`, { method: 'DELETE' });
-        
-        // Finalmente eliminar el Usuario
-        const res = await fetch(`/api/usuarios/${id}`, { method: 'DELETE' });
-        
-        if (!res.ok) {
-            const errorText = await res.text();
-            throw new Error(errorText || 'Error al eliminar');
-        }
+                // 1. Primero eliminar registros relacionados (orden correcto)
+                console.log('Eliminando registros relacionados del usuario:', id);
 
-        // Animación de eliminación
-        if (fila) {
-            fila.style.transition = "all 0.4s ease";
-            fila.style.opacity = "0";
-            fila.style.transform = "translateX(-20px)";
-            setTimeout(() => fila.remove(), 400);
+                // Eliminar de Reserva (si existe)
+                await fetch(`/api/eliminar-reservas-usuario/${id}`, { method: 'DELETE' });
+
+                // Eliminar de Membresia (si existe)
+                await fetch(`/api/eliminar-membresias-usuario/${id}`, { method: 'DELETE' });
+
+                // Eliminar de Comprador (si existe)
+                await fetch(`/api/eliminar-comprador/${id}`, { method: 'DELETE' });
+
+                // Finalmente eliminar el Usuario
+                const res = await fetch(`/api/usuarios/${id}`, { method: 'DELETE' });
+
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    throw new Error(errorText || 'Error al eliminar');
+                }
+
+                // Animación de eliminación
+                if (fila) {
+                    fila.style.transition = "all 0.4s ease";
+                    fila.style.opacity = "0";
+                    fila.style.transform = "translateX(-20px)";
+                    setTimeout(() => fila.remove(), 400);
+                }
+
+                alert("✅ Usuario y todos sus registros asociados eliminados correctamente");
+
+            } catch (error) {
+                console.error('Error eliminando usuario:', error);
+                alert("❌ Error al eliminar: " + error.message);
+
+                // Restaurar opacidad
+                const fila = document.getElementById(`usuario-fila-${id}`);
+                if (fila) {
+                    fila.style.opacity = "1";
+                }
+            }
         }
-        
-        alert("✅ Usuario y todos sus registros asociados eliminados correctamente");
-        
-    } catch (error) {
-        console.error('Error eliminando usuario:', error);
-        alert("❌ Error al eliminar: " + error.message);
-        
-        // Restaurar opacidad
-        const fila = document.getElementById(`usuario-fila-${id}`);
-        if (fila) {
-            fila.style.opacity = "1";
-        }
-    }
-}
 
         // --- USUARIOS PENDIENTES ---
         async function cargarUsuariosPendientes() {
@@ -839,12 +1016,12 @@ async function actualizarUsuario(id, btn) {
                 const res = await fetch('/api/usuarios-pendientes');
                 const usuarios = await res.json();
                 const tbody = document.getElementById('lista-usuarios-pendientes');
-                
+
                 if (usuarios.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:30px;">No hay usuarios pendientes de registro</td></tr>`;
                     return;
                 }
-                
+
                 tbody.innerHTML = usuarios.map(u => `
                     <tr id="usuario-pendiente-${u.id_usuario}">
                         <td>${u.id_usuario}</td>
@@ -863,10 +1040,10 @@ async function actualizarUsuario(id, btn) {
         async function aprobarUsuarioRegistro(id, btn) {
             if (!confirm("¿Aprobar este usuario?")) return;
             deshabilitarBoton(btn);
-            
+
             try {
                 const res = await fetch(`/aprobar-usuario/${id}`, { method: 'PATCH' });
-                if (res.ok) { 
+                if (res.ok) {
                     const fila = document.getElementById(`usuario-pendiente-${id}`);
                     if (fila) {
                         fila.style.transition = "all 0.4s ease";
@@ -875,7 +1052,7 @@ async function actualizarUsuario(id, btn) {
                         setTimeout(() => {
                             fila.remove();
                             if (document.querySelector('#lista-usuarios-pendientes tr') === null) {
-                                document.getElementById('lista-usuarios-pendientes').innerHTML = 
+                                document.getElementById('lista-usuarios-pendientes').innerHTML =
                                     `<tr><td colspan="4" style="text-align:center; padding:30px;">No hay usuarios pendientes de registro</td></tr>`;
                             }
                         }, 400);
@@ -895,12 +1072,12 @@ async function actualizarUsuario(id, btn) {
                 const res = await fetch('/api/solicitudes-pago');
                 const pagos = await res.json();
                 const tbody = document.getElementById('lista-pagos');
-                
+
                 if (pagos.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding:30px;">No hay solicitudes de pago pendientes</td></tr>`;
                     return;
                 }
-                
+
                 tbody.innerHTML = pagos.map(p => `
                     <tr id="pago-fila-${p.id_solicitud}">
                         <td>${p.Email}</td>
@@ -917,15 +1094,15 @@ async function actualizarUsuario(id, btn) {
         async function aprobarPagoRegistro(id_solicitud, id_usuario, btn) {
             if (!confirm("¿Confirmar recepción de pago y activar membresía?")) return;
             deshabilitarBoton(btn);
-            
+
             try {
                 const res = await fetch('/aprobar-pago', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id_solicitud, id_usuario })
                 });
-                
-                if (res.ok) { 
+
+                if (res.ok) {
                     const fila = document.getElementById(`pago-fila-${id_solicitud}`);
                     if (fila) {
                         fila.style.transition = "all 0.4s ease";
@@ -934,7 +1111,7 @@ async function actualizarUsuario(id, btn) {
                         setTimeout(() => {
                             fila.remove();
                             if (document.querySelector('#lista-pagos tr') === null) {
-                                document.getElementById('lista-pagos').innerHTML = 
+                                document.getElementById('lista-pagos').innerHTML =
                                     `<tr><td colspan="2" style="text-align:center; padding:30px;">No hay solicitudes de pago pendientes</td></tr>`;
                             }
                         }, 400);
@@ -952,14 +1129,14 @@ async function actualizarUsuario(id, btn) {
             try {
                 console.log('Cargando obras reservadas...');
                 const res = await fetch('/api/obras-reservadas');
-                
+
                 if (!res.ok) {
                     throw new Error(`Error HTTP: ${res.status}`);
                 }
-                
+
                 const obrasReservadas = await res.json();
                 console.log('Obras reservadas obtenidas:', obrasReservadas);
-                
+
                 if (obrasReservadas.length === 0) {
                     document.getElementById('lista-reservadas').innerHTML = `
                         <tr>
@@ -970,16 +1147,16 @@ async function actualizarUsuario(id, btn) {
                     `;
                     return;
                 }
-                
+
                 // Renderizar tabla simplificada (solo obra y precio)
                 document.getElementById('lista-reservadas').innerHTML = obrasReservadas.map(obra => {
                     const nombreObraEscapado = (obra.Nombre || '').replace(/'/g, "\\'");
-                    
+
                     return `
                         <tr>
                             <td>${obra.id_Obra}</td>
                             <td>${obra.Nombre || 'Sin nombre'}</td>
-                            <td>$${(obra.Precio || 0).toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td>$${(obra.Precio || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                             <td>
                                 <button class="btn btn-green" onclick="prepararFactura(
                                     ${obra.id_Obra}, 
@@ -991,7 +1168,7 @@ async function actualizarUsuario(id, btn) {
                         </tr>
                     `;
                 }).join('');
-                
+
             } catch (error) {
                 console.error('Error cargando reservas:', error);
                 document.getElementById('lista-reservadas').innerHTML = `
@@ -1011,7 +1188,7 @@ async function actualizarUsuario(id, btn) {
             try {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
-                
+
                 // Configuración de colores
                 const colors = {
                     primary: [26, 32, 44], // #1a202c
@@ -1019,49 +1196,49 @@ async function actualizarUsuario(id, btn) {
                     accent: [49, 130, 206], // #3182ce
                     border: [226, 232, 240] // #e2e8f0
                 };
-                
+
                 // Encabezado
                 doc.setFontSize(20);
                 doc.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
                 doc.text('MUSEO', 105, 20, { align: 'center' });
-                
+
                 doc.setFontSize(16);
                 doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
                 doc.text('FACTURA DE VENTA', 105, 30, { align: 'center' });
-                
+
                 // Línea decorativa
                 doc.setDrawColor(colors.border[0], colors.border[1], colors.border[2]);
                 doc.setLineWidth(1);
                 doc.line(20, 35, 190, 35);
-                
+
                 // Información de la factura
                 doc.setFontSize(12);
                 doc.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
                 doc.text(`Factura N°: ${datos.id_factura}`, 20, 45);
                 doc.text(`Fecha: ${datos.fecha || new Date().toLocaleDateString()}`, 20, 52);
                 doc.text(`Hora: ${datos.hora || new Date().toLocaleTimeString()}`, 20, 59);
-                
+
                 // Datos del comprador
                 doc.setFontSize(14);
                 doc.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
                 doc.text('DATOS DEL COMPRADOR', 20, 75);
-                
+
                 doc.setFontSize(12);
                 doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
                 doc.text(`ID: ${datos.id_comprador || 'N/A'}`, 20, 83);
                 doc.text(`Nombre: ${datos.nombreComprador || 'No disponible'}`, 20, 90);
                 doc.text(`Email: ${datos.emailComprador || 'No disponible'}`, 20, 97);
-                
+
                 // Datos de la obra
                 doc.setFontSize(14);
                 doc.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
                 doc.text('DATOS DE LA OBRA', 20, 115);
-                
+
                 doc.setFontSize(12);
                 doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
                 doc.text(`ID Obra: ${datos.id_obra}`, 20, 123);
                 doc.text(`Nombre: ${datos.nombreObra || 'No disponible'}`, 20, 130);
-                
+
                 // Tabla de detalles
                 const tableBody = [
                     ['Precio Base', 'Valor de la obra', `$${datos.precio_neto.toFixed(2)}`],
@@ -1069,14 +1246,14 @@ async function actualizarUsuario(id, btn) {
                     ['Comisión Museo', `${datos.porcentaje_comision}%`, `$${datos.ganancia_museo.toFixed(2)}`],
                     ['TOTAL A PAGAR', '', `$${datos.total.toFixed(2)}`]
                 ];
-                
+
                 doc.autoTable({
                     startY: 140,
                     head: [['Concepto', 'Detalle', 'Monto']],
                     body: tableBody,
                     theme: 'striped',
-                    headStyles: { 
-                        fillColor: [49, 130, 206], 
+                    headStyles: {
+                        fillColor: [49, 130, 206],
                         textColor: 255,
                         fontStyle: 'bold'
                     },
@@ -1092,20 +1269,20 @@ async function actualizarUsuario(id, btn) {
                     foot: [['', '', '']],
                     footStyles: { fillColor: [255, 255, 255] }
                 });
-                
+
                 // Mensaje de agradecimiento
                 const finalY = doc.lastAutoTable.finalY + 10;
                 doc.setFontSize(12);
                 doc.setTextColor(colors.accent[0], colors.accent[1], colors.accent[2]);
                 doc.text('¡Gracias por su compra!', 105, finalY, { align: 'center' });
-                
+
                 doc.setFontSize(10);
                 doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
                 doc.text('Esta factura es un documento oficial del Museo UNEG', 105, finalY + 7, { align: 'center' });
-                
+
                 // Guardar el PDF
                 doc.save(`Factura_${datos.id_factura}.pdf`);
-                
+
                 return true;
             } catch (error) {
                 console.error('Error generando PDF:', error);
@@ -1114,82 +1291,82 @@ async function actualizarUsuario(id, btn) {
         }
 
         // Función simplificada para preparar factura (solo obra y precio)
-       
-// Función simplificada para preparar factura (solo obra y precio)
-// Función simplificada para preparar factura (solo obra y precio)
-// Función simplificada para preparar factura (solo obra y precio)
-async function prepararFactura(id_obra, precio, nombreObra, btn) {
-    const admin_id = prompt("Ingrese su ID de Administrador:");
-    if(!admin_id || admin_id.trim() === '') {
-        alert("Debe ingresar un ID de administrador");
-        return;
-    }
-    
-    let comision = prompt("Ingrese % de comisión (5-10):", "10");
-    comision = parseFloat(comision);
-    if (isNaN(comision) || comision < 5 || comision > 10) {
-        alert("Error: El porcentaje debe estar entre 5 y 10");
-        return;
-    }
-    
-    deshabilitarBoton(btn);
-    
-    try {
-        const precioNum = parseFloat(precio) || 0;
-        
-        const body = { 
-            id_obra, 
-            id_admin: parseInt(admin_id), 
-            precio_neto: precioNum, 
-            porcentaje_comision: comision 
-        };
-        
-        const response = await fetch('/generar-factura', { 
-            method: 'POST', 
-            headers: {'Content-Type': 'application/json'}, 
-            body: JSON.stringify(body) 
-        });
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(errorText || `Error HTTP: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            // Generar PDF con los datos de la factura
-            generarPDFFactura(result.datos);
-            
-            // ===== NUEVO: USAR EL FLAG mostrarEnvio =====
-            if (result.mostrarEnvio) {
-                const registrarEnvio = confirm(
-                    `✅ Factura #${result.id_factura} generada con éxito.\n\n` +
-                    `¿Desea registrar el envío de esta obra ahora?`
-                );
-                
-                if (registrarEnvio) {
-                    // Abrir ventana de envío en nueva pestaña
-                    window.open(`Registrar-envio.html?id_factura=${result.id_factura}`, '_blank');
-                }
-            } else {
-                // Si no hay flag, solo mostrar mensaje simple
-                alert(`✅ Factura #${result.id_factura} generada con éxito`);
+
+        // Función simplificada para preparar factura (solo obra y precio)
+        // Función simplificada para preparar factura (solo obra y precio)
+        // Función simplificada para preparar factura (solo obra y precio)
+        async function prepararFactura(id_obra, precio, nombreObra, btn) {
+            const admin_id = prompt("Ingrese su ID de Administrador:");
+            if (!admin_id || admin_id.trim() === '') {
+                alert("Debe ingresar un ID de administrador");
+                return;
             }
-            
-            // Recargar la lista de obras reservadas
-            setTimeout(() => cargarReservadas(), 500);
-        } else {
-            throw new Error(result.message || "Error al generar factura");
+
+            let comision = prompt("Ingrese % de comisión (5-10):", "10");
+            comision = parseFloat(comision);
+            if (isNaN(comision) || comision < 5 || comision > 10) {
+                alert("Error: El porcentaje debe estar entre 5 y 10");
+                return;
+            }
+
+            deshabilitarBoton(btn);
+
+            try {
+                const precioNum = parseFloat(precio) || 0;
+
+                const body = {
+                    id_obra,
+                    id_admin: parseInt(admin_id),
+                    precio_neto: precioNum,
+                    porcentaje_comision: comision
+                };
+
+                const response = await fetch('/generar-factura', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || `Error HTTP: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Generar PDF con los datos de la factura
+                    generarPDFFactura(result.datos);
+
+                    // ===== NUEVO: USAR EL FLAG mostrarEnvio =====
+                    if (result.mostrarEnvio) {
+                        const registrarEnvio = confirm(
+                            `✅ Factura #${result.id_factura} generada con éxito.\n\n` +
+                            `¿Desea registrar el envío de esta obra ahora?`
+                        );
+
+                        if (registrarEnvio) {
+                            // Abrir ventana de envío en nueva pestaña
+                            window.open(`Registrar-envio.html?id_factura=${result.id_factura}`, '_blank');
+                        }
+                    } else {
+                        // Si no hay flag, solo mostrar mensaje simple
+                        alert(`✅ Factura #${result.id_factura} generada con éxito`);
+                    }
+
+                    // Recargar la lista de obras reservadas
+                    setTimeout(() => cargarReservadas(), 500);
+                } else {
+                    throw new Error(result.message || "Error al generar factura");
+                }
+
+            } catch (error) {
+                console.error('Error generando factura:', error);
+                alert("❌ Error al generar factura: " + error.message);
+            } finally {
+                setTimeout(() => { if (btn) btn.disabled = false; }, 2000);
+            }
         }
-        
-    } catch (error) {
-        console.error('Error generando factura:', error);
-        alert("❌ Error al generar factura: " + error.message);
-    } finally {
-        setTimeout(() => { if (btn) btn.disabled = false; }, 2000);
-    }
-}
         // --- REPORTES ---
         function renderizarReporte(tablaId, datos, columnas) {
             const tbody = document.querySelector(`#${tablaId} tbody`);
@@ -1209,12 +1386,12 @@ async function prepararFactura(id_obra, precio, nombreObra, btn) {
             }
             const tbody = document.querySelector('#tabla-obras-vendidas tbody');
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Consultando...</td></tr>';
-            
+
             try {
                 const res = await fetch(`/consultas/obras-vendidas?fecha_inicio=${inicio}&fecha_fin=${fin}`);
                 if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
                 const data = await res.json();
-                renderizarReporte('tabla-obras-vendidas', data.map(d => 
+                renderizarReporte('tabla-obras-vendidas', data.map(d =>
                     `<tr><td>${d.id_factura}</td><td>${d.Obra || ''}</td><td>$${(d.Total_Pagado || 0).toLocaleString()}</td><td>${d.Fecha || ''}</td></tr>`
                 ).join(''), 4);
             } catch (error) {
@@ -1232,12 +1409,12 @@ async function prepararFactura(id_obra, precio, nombreObra, btn) {
             }
             const tbody = document.querySelector('#tabla-facturacion tbody');
             tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Consultando...</td></tr>';
-            
+
             try {
                 const res = await fetch(`/consultas/resumen-facturacion?fecha_inicio=${inicio}&fecha_fin=${fin}`);
                 if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
                 const data = await res.json();
-                renderizarReporte('tabla-facturacion', data.map(d => 
+                renderizarReporte('tabla-facturacion', data.map(d =>
                     `<tr><td>${d.id_factura}</td><td>${d.Obra || ''}</td><td>$${(d.Precio_Obra || 0).toLocaleString()}</td><td>${d.Porcentaje_Museo || 0}%</td><td>$${(d.Ganancia_Museo || 0).toLocaleString()}</td><td>$${(d.Total_Recaudado || 0).toLocaleString()}</td><td>${d.Fecha || ''}</td></tr>`
                 ).join(''), 7);
             } catch (error) {
@@ -1247,57 +1424,57 @@ async function prepararFactura(id_obra, precio, nombreObra, btn) {
         }
 
         // --- REPORTE DE MEMBRESÍAS (CORREGIDO) ---
-async function consultarMembresias() {
-    const inicio = document.getElementById('mem-inicio').value;
-    const fin = document.getElementById('mem-fin').value;
-    
-    if (!inicio || !fin) {
-        alert("Seleccione ambas fechas");
-        return;
-    }
-    
-    try {
-        console.log('Consultando membresías desde:', inicio, 'hasta:', fin);
-        const res = await fetch(`/consultas/resumen-membresias?fecha_inicio=${inicio}&fecha_fin=${fin}`);
-        
-        if (!res.ok) {
-            throw new Error(`Error HTTP: ${res.status}`);
-        }
-        
-        const data = await res.json();
-        console.log('Datos de membresías recibidos:', data);
-        
-        const tbody = document.querySelector('#tabla-membresias tbody');
-        
-        if (data.length === 0) {
-            tbody.innerHTML = `
+        async function consultarMembresias() {
+            const inicio = document.getElementById('mem-inicio').value;
+            const fin = document.getElementById('mem-fin').value;
+
+            if (!inicio || !fin) {
+                alert("Seleccione ambas fechas");
+                return;
+            }
+
+            try {
+                console.log('Consultando membresías desde:', inicio, 'hasta:', fin);
+                const res = await fetch(`/consultas/resumen-membresias?fecha_inicio=${inicio}&fecha_fin=${fin}`);
+
+                if (!res.ok) {
+                    throw new Error(`Error HTTP: ${res.status}`);
+                }
+
+                const data = await res.json();
+                console.log('Datos de membresías recibidos:', data);
+
+                const tbody = document.querySelector('#tabla-membresias tbody');
+
+                if (data.length === 0) {
+                    tbody.innerHTML = `
                 <tr>
                     <td colspan="4" style="text-align:center; padding:30px;">
                         No hay datos de membresías en el período seleccionado
                     </td>
                 </tr>
             `;
-        } else {
-            tbody.innerHTML = data.map(d => 
-                `<tr>
+                } else {
+                    tbody.innerHTML = data.map(d =>
+                        `<tr>
                     <td>${d.idMembresia}</td>
                     <td>${d.Email || 'N/A'}</td>
                     <td>${d.FechaPago || 'N/A'}</td>
-                    <td>$${(d.MontoPagado || 0).toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    <td>$${(d.MontoPagado || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 </tr>`
-            ).join('');
-        }
-    } catch (error) {
-        console.error('Error consultando membresías:', error);
-        document.querySelector('#tabla-membresias tbody').innerHTML = `
+                    ).join('');
+                }
+            } catch (error) {
+                console.error('Error consultando membresías:', error);
+                document.querySelector('#tabla-membresias tbody').innerHTML = `
             <tr>
                 <td colspan="4" style="text-align:center; padding:30px; color: #e53e3e;">
                     Error al consultar: ${error.message}
                 </td>
             </tr>
         `;
-    }
-}
+            }
+        }
 
         function generarPDF(tablaId, titulo) {
             try {
@@ -1312,44 +1489,44 @@ async function consultarMembresias() {
             }
         }
         // Función para mostrar notificaciones
-function mostrarNotificacion(mensaje, tipo = 'info') {
-    // Crear o reutilizar elemento de notificación
-    let notificacion = document.getElementById('notificacion-toast');
-    if (!notificacion) {
-        notificacion = document.createElement('div');
-        notificacion.id = 'notificacion-toast';
-        notificacion.style.position = 'fixed';
-        notificacion.style.top = '20px';
-        notificacion.style.right = '20px';
-        notificacion.style.padding = '12px 24px';
-        notificacion.style.borderRadius = '8px';
-        notificacion.style.color = 'white';
-        notificacion.style.fontWeight = 'bold';
-        notificacion.style.zIndex = '9999';
-        notificacion.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-        notificacion.style.transition = 'all 0.3s ease';
-        document.body.appendChild(notificacion);
-    }
-    
-    // Configurar color según tipo
-    const colores = {
-        success: '#48bb78',
-        error: '#e53e3e',
-        warning: '#ecc94b',
-        info: '#3182ce'
-    };
-    
-    notificacion.style.backgroundColor = colores[tipo] || colores.info;
-    notificacion.innerHTML = mensaje;
-    notificacion.style.opacity = '1';
-    notificacion.style.transform = 'translateX(0)';
-    
-    // Ocultar después de 3 segundos
-    setTimeout(() => {
-        notificacion.style.opacity = '0';
-        notificacion.style.transform = 'translateX(50px)';
-    }, 3000);
-}
+        function mostrarNotificacion(mensaje, tipo = 'info') {
+            // Crear o reutilizar elemento de notificación
+            let notificacion = document.getElementById('notificacion-toast');
+            if (!notificacion) {
+                notificacion = document.createElement('div');
+                notificacion.id = 'notificacion-toast';
+                notificacion.style.position = 'fixed';
+                notificacion.style.top = '20px';
+                notificacion.style.right = '20px';
+                notificacion.style.padding = '12px 24px';
+                notificacion.style.borderRadius = '8px';
+                notificacion.style.color = 'white';
+                notificacion.style.fontWeight = 'bold';
+                notificacion.style.zIndex = '9999';
+                notificacion.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                notificacion.style.transition = 'all 0.3s ease';
+                document.body.appendChild(notificacion);
+            }
+
+            // Configurar color según tipo
+            const colores = {
+                success: '#48bb78',
+                error: '#e53e3e',
+                warning: '#ecc94b',
+                info: '#3182ce'
+            };
+
+            notificacion.style.backgroundColor = colores[tipo] || colores.info;
+            notificacion.innerHTML = mensaje;
+            notificacion.style.opacity = '1';
+            notificacion.style.transform = 'translateX(0)';
+
+            // Ocultar después de 3 segundos
+            setTimeout(() => {
+                notificacion.style.opacity = '0';
+                notificacion.style.transform = 'translateX(50px)';
+            }, 3000);
+        }
 
         // --- CRUD GÉNEROS (MongoDB) ---
         async function cargarGeneros() {
@@ -2466,8 +2643,8 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
                         .sort((a, b) => new Date(b.fecha_cambio) - new Date(a.fecha_cambio))
                         .forEach(row => {
                             const f = new Date(row.fecha_cambio);
-                            const fechaStr = f.toLocaleDateString('es-ES', { year:'numeric', month:'2-digit', day:'2-digit' }) + ' ' +
-                                             f.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
+                            const fechaStr = f.toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }) + ' ' +
+                                f.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
                             const antCls = 'status-' + (row.estatus_anterior || '').toLowerCase();
                             const nueCls = 'status-' + (row.estatus_nuevo || '').toLowerCase();
                             tbody.innerHTML += `<tr>
@@ -2516,8 +2693,8 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
 
                     logs.forEach(l => {
                         const f = new Date(l.fecha_evento);
-                        const fechaStr = f.toLocaleDateString('es-ES', { year:'numeric', month:'2-digit', day:'2-digit' }) + ' ' +
-                                         f.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+                        const fechaStr = f.toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }) + ' ' +
+                            f.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
                         let tipoClase = '';
                         if (l.tipo_evento === 'INICIO_SESION' || l.tipo_evento === 'APROBACION_USUARIO' || l.tipo_evento === 'APROBACION_PAGO') tipoClase = 'color: #38a169;';
@@ -2539,11 +2716,76 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
                 });
         }
 
-        window.onload = () => { 
+        window.onload = () => {
             console.log('Panel administrativo cargado');
             mostrarTab('gestion');
             cargarGenerosSelectEsp();
         };
+        async function cargarTendencias() {
+            try {
+                // Artistas populares
+                const resArtistas = await fetch('/api/recomendaciones/artistas-populares');
+                if (resArtistas.ok) {
+                    const artistas = await resArtistas.json();
+                    const container = document.getElementById('pop-artistas');
+                    if (artistas.length === 0) {
+                        container.innerHTML = '<p style="color:#a0aec0;">Sin datos aún</p>';
+                    } else {
+                        container.innerHTML = artistas.slice(0, 5).map(a =>
+                            `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e2e8f0;">
+                        <span>${a.Artista}</span>
+                        <span style="color:#38a169;font-weight:bold;">${a.ObrasVendidas} ventas</span>
+                    </div>`
+                        ).join('');
+                    }
+                }
+
+                // Géneros populares
+                const resGeneros = await fetch('/api/recomendaciones/generos-populares');
+                if (resGeneros.ok) {
+                    const generos = await resGeneros.json();
+                    const container = document.getElementById('pop-generos');
+                    if (generos.length === 0) {
+                        container.innerHTML = '<p style="color:#a0aec0;">Sin datos aún</p>';
+                    } else {
+                        container.innerHTML = generos.slice(0, 5).map(g =>
+                            `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e2e8f0;">
+                        <span>${g.Genero}</span>
+                        <span style="color:#38a169;font-weight:bold;">${g.ObrasVendidas} vendidas</span>
+                    </div>`
+                        ).join('');
+                    }
+                }
+
+                // Estadísticas del grafo
+                const resStats = await fetch('/api/grafo/estadisticas');
+                if (resStats.ok) {
+                    const stats = await resStats.json();
+                    const container = document.getElementById('grafo-stats');
+                    let html = '';
+                    if (stats.nodos) {
+                        stats.nodos.forEach(n => {
+                            html += `<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:0.85rem;">
+                        <span>${n.tipo}</span>
+                        <span style="color:#3182ce;">${n.cantidad}</span>
+                    </div>`;
+                        });
+                    }
+                    if (stats.relaciones) {
+                        stats.relaciones.forEach(r => {
+                            html += `<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:0.85rem;">
+                        <span>${r.tipo}</span>
+                        <span style="color:#718096;">${r.cantidad}</span>
+                    </div>`;
+                        });
+                    }
+                    container.innerHTML = html || '<p style="color:#a0aec0;">Grafo vacío</p>';
+                }
+            } catch (e) {
+                console.error('Error cargando tendencias:', e);
+            }
+        }
     </script>
 </body>
+
 </html>

@@ -235,31 +235,32 @@ router.get('/grafo/estadisticas', async (req, res) => {
 // ==========================================
 
 router.post('/actividad/registrar', async (req, res) => {
-    const { idUsuario, idObra, tipo, duracion } = req.body;
+    const idUsuario = req.body.idUsuario || 9999;
+    const idObra = req.body.idObra;
+    const tipo = req.body.tipo || 'vista_detalle';
 
-    if (!idUsuario || !idObra || !tipo) {
-        return res.status(400).json({ error: 'Faltan datos requeridos' });
+    console.log('📥 Registrando actividad:', { idUsuario, idObra, tipo });
+
+    if (!idObra) {
+        console.log('❌ Falta idObra');
+        return res.status(400).json({ error: 'Falta idObra' });
     }
 
     const session = getSession();
     try {
-        await session.run(
+        const result = await session.run(
             `MATCH (c:Comprador {id_usuario: $idUsuario})
              MATCH (o:Obra {id_obra: $idObra})
-             MERGE (c)-[r:INTERACTUO {tipo: $tipo}]->(o)
-             SET r.timestamp = datetime(),
-                 r.duracion = $duracion,
-                 r.contador = COALESCE(r.contador, 0) + 1`,
-            {
-                idUsuario: parseInt(idUsuario),
-                idObra: parseInt(idObra),
-                tipo: tipo,
-                duracion: duracion || 0
-            }
+             MERGE (c)-[r:INTERACTUO]->(o)
+             SET r.tipo = $tipo, r.timestamp = datetime()
+             RETURN r`,
+            { idUsuario: toNum(idUsuario), idObra: toNum(idObra), tipo }
         );
+
+        console.log('✅ Relación creada:', result.records.length > 0 ? 'SÍ' : 'NO');
         res.json({ success: true });
     } catch (err) {
-        console.error('Error registrando actividad:', err);
+        console.error('❌ Error:', err.message);
         res.status(500).json({ error: err.message });
     } finally {
         await session.close();
@@ -625,8 +626,8 @@ router.get('/recomendaciones/para-ti/:idUsuario', async (req, res) => {
 // ==========================================
 // Escribir en consola
 // fetch('/api/auth/guest-login').then(r => r.json()).then(d => location.reload())
-/*
- router.get('/auth/guest-login', async (req, res) => {
+
+router.get('/auth/guest-login', async (req, res) => {
     const session = getSession();
     try {
         await session.run(
@@ -652,7 +653,7 @@ router.get('/recomendaciones/para-ti/:idUsuario', async (req, res) => {
         await session.close();
     }
 });
-*/
+
 
 // ==========================================
 // OBRAS DESTACADAS (MÁS CLICKEADAS POR TODOS LOS USUARIOS)
@@ -661,13 +662,12 @@ router.get('/recomendaciones/para-ti/:idUsuario', async (req, res) => {
 router.get('/recomendaciones/obras-destacadas', async (req, res) => {
     const session = getSession();
     try {
-        // Obras disponibles con más interacciones de usuarios
         const result = await session.run(`
-            MATCH (c:Comprador)-[r:INTERACTUO]->(o:Obra)
+            MATCH (o:Obra)
             WHERE o.estado = 'Disponible'
+            OPTIONAL MATCH (c:Comprador)-[r:INTERACTUO]->(o)
             WITH o, COUNT(r) AS clicks
             ORDER BY clicks DESC
-            LIMIT 3
             OPTIONAL MATCH (o)<-[:CREO]-(a:Artista)
             RETURN o.id_obra AS idObra,
                    o.nombre AS nombre,
@@ -687,6 +687,130 @@ router.get('/recomendaciones/obras-destacadas', async (req, res) => {
         })));
     } catch (err) {
         console.error('Error en obras destacadas:', err);
+        res.json([]);
+    } finally {
+        await session.close();
+    }
+});
+
+// ==========================================
+// BUSCADOR SEMÁNTICO
+// ==========================================
+
+router.get('/buscar', async (req, res) => {
+    const query = (req.query.q || '').trim();
+    if (!query || query.length < 2) return res.json([]);
+
+    const session = getSession();
+    try {
+        const palabras = query.split(/\s+/).filter(p => p.length > 0);
+        let cypherQuery;
+        let params;
+
+        if (palabras.length === 1) {
+            cypherQuery = `
+                MATCH (o:Obra)
+                WHERE o.estado = 'Disponible'
+                  AND (toLower(o.nombre) CONTAINS toLower($q)
+                       OR EXISTS {
+                           MATCH (o)<-[:CREO]-(a:Artista)
+                           WHERE toLower(a.nombre) CONTAINS toLower($q)
+                              OR toLower(a.apellido) CONTAINS toLower($q)
+                       })
+                OPTIONAL MATCH (o)<-[:CREO]-(a:Artista)
+                RETURN o.id_obra AS idObra,
+                       o.nombre AS nombre,
+                       o.precio AS precio,
+                       o.fotografia AS fotografia,
+                       a.nombre + ' ' + a.apellido AS autor
+                ORDER BY o.nombre
+                LIMIT 10`;
+            params = { q: query };
+        } else {
+            const condiciones = palabras.map((p, i) => `
+                (toLower(o.nombre) CONTAINS toLower($p${i})
+                 OR EXISTS {
+                     MATCH (o)<-[:CREO]-(a:Artista)
+                     WHERE toLower(a.nombre) CONTAINS toLower($p${i})
+                        OR toLower(a.apellido) CONTAINS toLower($p${i})
+                 })`).join(' AND ');
+
+            cypherQuery = `
+                MATCH (o:Obra)
+                WHERE o.estado = 'Disponible'
+                  AND (${condiciones})
+                OPTIONAL MATCH (o)<-[:CREO]-(a:Artista)
+                RETURN o.id_obra AS idObra,
+                       o.nombre AS nombre,
+                       o.precio AS precio,
+                       o.fotografia AS fotografia,
+                       a.nombre + ' ' + a.apellido AS autor
+                ORDER BY o.nombre
+                LIMIT 10`;
+
+            params = {};
+            palabras.forEach((p, i) => params[`p${i}`] = p);
+        }
+
+        const neoResult = await session.run(cypherQuery, params);
+
+        let resultados = neoResult.records.map(r => ({
+            id_Obra: toNum(r.get('idObra')),
+            Nombre: r.get('nombre'),
+            Precio: toNum(r.get('precio')),
+            imagen_url: r.get('fotografia') || '',
+            AutorNombre: r.get('autor') || '',
+            PrecioFormateado: '$' + Number(toNum(r.get('precio'))).toLocaleString(),
+            tipo: 'exacta'
+        }));
+
+        // Si no hay resultados exactos, buscar por similitud semántica
+        if (resultados.length === 0) {
+            const { pipeline } = require('@xenova/transformers');
+            const embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+            const embResult = await embedder(query, { pooling: 'mean', normalize: true });
+            const queryEmb = Array.from(embResult.data);
+
+            const obrasEmb = await session.run(
+                `MATCH (o:Obra)
+                 WHERE o.estado = 'Disponible' AND o.embedding IS NOT NULL
+                 RETURN o.id_obra AS idObra,
+                        o.nombre AS nombre,
+                        o.precio AS precio,
+                        o.fotografia AS fotografia,
+                        o.embedding AS embedding
+                 LIMIT 200`
+            );
+
+            function cosineSim(a, b) {
+                let d = 0, nA = 0, nB = 0;
+                for (let i = 0; i < a.length; i++) {
+                    d += a[i] * b[i];
+                    nA += a[i] * a[i];
+                    nB += b[i] * b[i];
+                }
+                return (nA === 0 || nB === 0) ? 0 : d / (Math.sqrt(nA) * Math.sqrt(nB));
+            }
+
+            resultados = obrasEmb.records
+                .map(r => ({
+                    id_Obra: toNum(r.get('idObra')),
+                    Nombre: r.get('nombre'),
+                    Precio: toNum(r.get('precio')),
+                    imagen_url: r.get('fotografia') || '',
+                    PrecioFormateado: '$' + Number(toNum(r.get('precio'))).toLocaleString(),
+                    similitud: Math.round(cosineSim(queryEmb, r.get('embedding')) * 100),
+                    tipo: 'semántica'
+                }))
+                .filter(r => r.similitud > 40)
+                .sort((a, b) => b.similitud - a.similitud)
+                .slice(0, 10);
+        }
+
+        res.json(resultados);
+
+    } catch (err) {
+        console.error('Error en buscador:', err);
         res.json([]);
     } finally {
         await session.close();

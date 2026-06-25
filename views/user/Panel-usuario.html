@@ -1,88 +1,284 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Premium - Museo de Arte</title>
     <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background-color: #050505; color: white; display: flex; min-height: 100vh; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
 
-        .sidebar { width: 280px; background: rgba(15, 15, 15, 0.95); border-right: 1px solid #222; padding: 30px; display: flex; flex-direction: column; }
-        .user-info { margin-bottom: 40px; display: flex; align-items: center; gap: 12px; }
-        
+        body {
+            background-color: #050505;
+            color: white;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: rgba(15, 15, 15, 0.95);
+            border-right: 1px solid #222;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-info {
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
         /* Foto de perfil circular */
-        .avatar { width: 50px; height: 50px; border-radius: 12px; border: 2px solid #00ff00; object-fit: cover; }
-        
-        .menu a { display: block; padding: 12px; color: #888; text-decoration: none; border-radius: 8px; margin-bottom: 5px; transition: 0.3s; }
-        .menu a.active, .menu a:hover { background: rgba(0, 255, 0, 0.1); color: #00ff00; }
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            border: 2px solid #00ff00;
+            object-fit: cover;
+        }
+
+        .menu a {
+            display: block;
+            padding: 12px;
+            color: #888;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            transition: 0.3s;
+        }
+
+        .menu a.active,
+        .menu a:hover {
+            background: rgba(0, 255, 0, 0.1);
+            color: #00ff00;
+        }
 
         /* Botón Volver al Inicio */
-        .btn-home { 
-            border: 1px solid #333; 
-            margin-bottom: 20px; 
-            text-align: center; 
-            background: #111; 
+        .btn-home {
+            border: 1px solid #333;
+            margin-bottom: 20px;
+            text-align: center;
+            background: #111;
             color: #fff !important;
             font-size: 14px;
             font-weight: 500;
         }
 
-        .logout-container { margin-top: auto; padding-top: 20px; }
-        .btn-logout { 
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            background: rgba(255, 50, 50, 0.1); color: #ff4d4d; border: 1px solid rgba(255, 77, 77, 0.3);
-            padding: 12px; border-radius: 10px; text-decoration: none; font-weight: 600; cursor: pointer; width: 100%;
+        .logout-container {
+            margin-top: auto;
+            padding-top: 20px;
         }
-        .btn-logout:hover { background: #ff4d4d; color: white; }
 
-        .main-content { flex: 1; padding: 50px; display: flex; flex-direction: column; align-items: center; }
+        .btn-logout {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: rgba(255, 50, 50, 0.1);
+            color: #ff4d4d;
+            border: 1px solid rgba(255, 77, 77, 0.3);
+            padding: 12px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+        }
 
-        .view { display: none; width: 100%; max-width: 800px; }
-        .active-view { display: block; animation: fadeIn 0.4s ease; }
-        
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
+        .btn-logout:hover {
+            background: #ff4d4d;
+            color: white;
+        }
 
-        .card { background: #111; border: 1px solid #222; padding: 40px; border-radius: 20px; width: 100%; }
-        
+        .main-content {
+            flex: 1;
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .view {
+            display: none;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .active-view {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .card {
+            background: #111;
+            border: 1px solid #222;
+            padding: 40px;
+            border-radius: 20px;
+            width: 100%;
+        }
+
         /* Estilo para las tarjetas de obras compradas */
         .obra-comprada-card {
-            background: #1a1a1a; padding: 20px; border-radius: 12px; 
-            border-left: 5px solid #00ff00; margin-bottom: 15px;
-            display: flex; justify-content: space-between; align-items: center;
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 5px solid #00ff00;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             transition: transform 0.2s;
         }
-        .obra-comprada-card:hover { transform: scale(1.02); background: #222; }
 
-        input, select { background: #1a1a1a; border: 1px solid #333; color: white; padding: 15px; border-radius: 10px; width: 100%; margin-top: 8px; }
-        .btn-main { background: #00ff00; color: black; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 20px; }
-        
-        .tabla-membresia { width: 100%; border-collapse: separate; border-spacing: 0 10px; margin-top: 10px; color: white; }
-        .tabla-membresia th { color: #00ff00; text-transform: uppercase; font-size: 12px; padding: 15px; border-bottom: 2px solid #222; text-align: left; }
-        .tabla-membresia td { padding: 18px; background: #111; border-top: 1px solid #222; border-bottom: 1px solid #222; }
+        .obra-comprada-card:hover {
+            transform: scale(1.02);
+            background: #222;
+        }
 
-        .rec-section { margin-bottom: 35px; }
-        .rec-section h3 { color: #00ff00; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; }
-        .rec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; }
-        .rec-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 18px; transition: 0.3s; }
-        .rec-card:hover { border-color: #00ff00; transform: translateY(-2px); }
-        .rec-card h4 { color: #fff; font-size: 0.95rem; margin-bottom: 6px; }
-        .rec-card .rec-meta { color: #888; font-size: 0.8rem; }
-        .rec-card .rec-price { color: #00ff00; font-weight: bold; font-size: 1rem; margin-top: 8px; }
-        .rec-stat { font-size: 0.85rem; color: #ccc; margin-top: 4px; }
-        .rec-stat span { color: #00ff00; font-weight: 600; }
-        .loading-rec { color: #555; font-size: 0.85rem; padding: 10px 0; }
+        input,
+        select {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .btn-main {
+            background: #00ff00;
+            color: black;
+            border: none;
+            padding: 15px;
+            width: 100%;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .tabla-membresia {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+            margin-top: 10px;
+            color: white;
+        }
+
+        .tabla-membresia th {
+            color: #00ff00;
+            text-transform: uppercase;
+            font-size: 12px;
+            padding: 15px;
+            border-bottom: 2px solid #222;
+            text-align: left;
+        }
+
+        .tabla-membresia td {
+            padding: 18px;
+            background: #111;
+            border-top: 1px solid #222;
+            border-bottom: 1px solid #222;
+        }
+
+        .rec-section {
+            margin-bottom: 35px;
+        }
+
+        .rec-section h3 {
+            color: #00ff00;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        .rec-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 15px;
+        }
+
+        .rec-card {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 18px;
+            transition: 0.3s;
+        }
+
+        .rec-card:hover {
+            border-color: #00ff00;
+            transform: translateY(-2px);
+        }
+
+        .rec-card h4 {
+            color: #fff;
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+        }
+
+        .rec-card .rec-meta {
+            color: #888;
+            font-size: 0.8rem;
+        }
+
+        .rec-card .rec-price {
+            color: #00ff00;
+            font-weight: bold;
+            font-size: 1rem;
+            margin-top: 8px;
+        }
+
+        .rec-stat {
+            font-size: 0.85rem;
+            color: #ccc;
+            margin-top: 4px;
+        }
+
+        .rec-stat span {
+            color: #00ff00;
+            font-weight: 600;
+        }
+
+        .loading-rec {
+            color: #555;
+            font-size: 0.85rem;
+            padding: 10px 0;
+        }
     </style>
 </head>
+
 <body>
 
     <aside class="sidebar">
         <div class="user-info">
-            <img id="user-avatar" src="https://ui-avatars.com/api/?name=U&background=00ff00&color=000&bold=true" class="avatar" alt="Avatar">
+            <img id="user-avatar" src="https://ui-avatars.com/api/?name=U&background=00ff00&color=000&bold=true"
+                class="avatar" alt="Avatar">
             <div>
                 <p style="font-size: 12px; color: #00ff00;">Premium</p>
-                <p id="sidebar-nombre" style="font-weight: 600;">Cargando...</p> 
+                <p id="sidebar-nombre" style="font-weight: 600;">Cargando...</p>
             </div>
         </div>
 
@@ -108,7 +304,7 @@
             <p style="color: #666; margin-top: 10px; font-size: 1.2rem;">Tu panel de control exclusivo está listo.</p>
             <div id="recomendaciones-container" style="width:100%; margin-top: 40px;"></div>
         </section>
-        
+
         <section id="view-compras" class="view">
             <div class="card">
                 <h2 style="margin-bottom: 20px; color: #00ff00;">Mis Obras Adquiridas</h2>
@@ -118,10 +314,11 @@
             </div>
         </section>
 
-           <section id="view-seguridad" class="view">
+        <section id="view-seguridad" class="view">
             <div class="card">
                 <h2 style="margin-bottom: 10px;">Configuración de Seguridad</h2>
-                <p id="status-msg" style="color: #666; font-size: 14px; margin-bottom: 30px;">Protege tu cuenta con estas 3 preguntas.</p>
+                <p id="status-msg" style="color: #666; font-size: 14px; margin-bottom: 30px;">Protege tu cuenta con
+                    estas 3 preguntas.</p>
                 <form id="form-seguridad">
                     <div class="question-block" style="margin-bottom: 20px;">
                         <h3 style="font-size: 16px;">Pregunta #1</h3>
@@ -144,43 +341,44 @@
                         </select>
                         <input type="text" name="resp3" placeholder="Tu respuesta" required>
                     </div>
-                    
+
                     <button type="submit" id="btn-save" class="btn-main">Guardar Configuración</button>
-                    <button type="button" id="btn-edit" class="btn-edit" onclick="toggleEdit(true)">Modificar Respuestas</button>
+                    <button type="button" id="btn-edit" class="btn-edit" onclick="toggleEdit(true)">Modificar
+                        Respuestas</button>
                 </form>
             </div>
         </section>
 
-          <section id="view-membresia" class="view">
-        <div class="card">
-            <h2 style="margin-bottom: 20px;">Mi Membresía</h2>
-           <table class="tabla-membresia">
-                <thead>
-                    <tr>
-                        <th>Concepto</th>
-                        <th>Fecha Pago</th>
-                        <th>Estado</th>
-                        <th>Días Restantes</th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-membresia-body">
+        <section id="view-membresia" class="view">
+            <div class="card">
+                <h2 style="margin-bottom: 20px;">Mi Membresía</h2>
+                <table class="tabla-membresia">
+                    <thead>
+                        <tr>
+                            <th>Concepto</th>
+                            <th>Fecha Pago</th>
+                            <th>Estado</th>
+                            <th>Días Restantes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-membresia-body">
                     </tbody>
-            </table>
-             <div style="margin-top: 30px; border-top: 1px solid #333; padding-top: 20px;">
-            <h3>Informar pago realizado</h3>
-            <div class="input-group">
-                <input type="text" id="card-number" maxlength="19" placeholder="Número de Tarjeta (Simulado)">
+                </table>
+                <div style="margin-top: 30px; border-top: 1px solid #333; padding-top: 20px;">
+                    <h3>Informar pago realizado</h3>
+                    <div class="input-group">
+                        <input type="text" id="card-number" maxlength="19" placeholder="Número de Tarjeta (Simulado)">
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <input type="text" id="expiry-date" maxlength="5" placeholder="MM/YY">
+                        <input type="password" maxlength="3" placeholder="CVV">
+                    </div>
+                    <button class="btn-main" onclick="enviarSolicitudPago()" style="background: #0088ff; color: white;">
+                        Enviar Pago para Revisión
+                    </button>
+                </div>
             </div>
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <input type="text" id="expiry-date" maxlength="5" placeholder="MM/YY">
-                <input type="password" maxlength="3" placeholder="CVV">
-            </div>
-            <button class="btn-main" onclick="enviarSolicitudPago()" style="background: #0088ff; color: white;">
-                Enviar Pago para Revisión
-            </button>
-            </div>
-        </div>
-    </section>
+        </section>
     </main>
 
     <script>
@@ -341,6 +539,26 @@
                 if (!html) {
                     html = '<p style="color: #666;">Aún no hay suficientes datos para generar recomendaciones. ¡Compra tu primera obra!</p>';
                 }
+                // 6. Recomendados para ti (nuevo sistema unificado)
+                try {
+                    const res6 = await fetch(`/api/recomendaciones/para-ti/${currentUserId}`);
+                    if (res6.ok) {
+                        const data = await res6.json();
+                        if (data.length > 0) {
+                            html += '<div class="rec-section"><h3>✦ Recomendados para ti</h3><div class="rec-grid">';
+                            data.forEach(r => {
+                                html += `<div class="rec-card" onclick="sessionStorage.setItem('abrirObra', ${r.idObra}); window.location.href='/public/Obras.html';" style="cursor:pointer;">
+                    <h4>${r.nombre}</h4>
+                    <div class="rec-meta">${r.motivo || 'Basado en tu actividad'}</div>
+                    <div class="rec-price">$${Number(r.precio).toLocaleString()}</div>
+                </div>`;
+                            });
+                            html += '</div></div>';
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error cargando para-ti:', e);
+                }
                 container.innerHTML = html;
 
             } catch (e) {
@@ -374,10 +592,10 @@
         }
 
         function logout() {
-            if(confirm("¿Deseas cerrar tu sesión?")) {
+            if (confirm("¿Deseas cerrar tu sesión?")) {
                 localStorage.clear();
                 sessionStorage.clear();
-                window.location.href = "/public/Inicio.html"; 
+                window.location.href = "/public/Inicio.html";
             }
         }
 
@@ -386,7 +604,7 @@
             // 1. Obtener valores
             const card = document.getElementById('card-number').value;
             const expiry = document.getElementById('expiry-date').value;
-            
+
             // 2. Validación básica
             if (card.length < 13) {
                 return alert("Por favor, ingresa un número de tarjeta válido.");
@@ -394,18 +612,18 @@
             if (expiry.length < 5) {
                 return alert("Ingresa una fecha de expiración válida (MM/YY).");
             }
-            
+
             // 3. Confirmación
-            if(!confirm("¿Confirmas que deseas enviar los datos para revisión del administrador?")) return;
-            
+            if (!confirm("¿Confirmas que deseas enviar los datos para revisión del administrador?")) return;
+
             try {
                 // 4. Enviar al servidor
-                const response = await fetch('/solicitar-pago', { 
+                const response = await fetch('/solicitar-pago', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
+                    body: JSON.stringify({
                         cardNumber: card, // Puedes enviar esto para que el admin lo vea en la base de datos
-                        expiry: expiry 
+                        expiry: expiry
                     })
                 });
 
@@ -423,7 +641,7 @@
             }
         }
 
-       // Asegúrate de que este evento esté correctamente asignado
+        // Asegúrate de que este evento esté correctamente asignado
         const form = document.getElementById('form-seguridad');
 
         form.addEventListener('submit', async (e) => {
@@ -454,4 +672,5 @@
         });
     </script>
 </body>
+
 </html>
