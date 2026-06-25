@@ -169,54 +169,14 @@
                 Museo</p>
         </div>
 
-        <div class="art-grid" id="db-art-grid"></div>
+        <div class="art-grid" id="db-art-grid"
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; padding: 0 8%;">
+            <p style="color: #444; text-align: center; width: 100%;">Cargando obras destacadas...</p>
+        </div>
+        <div id="loader-mas" style="text-align:center; padding:20px; display:none;">
+            <span style="color:#555; font-size:0.8rem;">Cargando más obras...</span>
+        </div>
 
-    </section>
-
-    <section class="market-section" id="recomendados" style="display: none;">
-        <div class="section-header">
-            <h2>Recomendados <span>Para Ti</span></h2>
-            <p style="color: #555; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;">Basado en tu
-                actividad</p>
-        </div>
-        <div class="art-grid" id="rec-art-grid"
-            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; padding: 0 8%;">
-        </div>
-    </section>
-
-    <section class="market-section" id="tendencias" style="padding-bottom: 80px;">
-        <div class="section-header">
-            <h2>Tendencias <span>del Museo</span></h2>
-            <p style="color: #555; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;">Datos en vivo
-                desde Neo4j</p>
-        </div>
-        <div id="tendencias-grid"
-            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; padding: 0 8%;">
-            <div style="background: #0a0a0a; border: 1px solid #111; padding: 30px; border-radius: 4px;">
-                <h3
-                    style="color: #00ff00; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px;">
-                    Artistas Populares</h3>
-                <div id="pop-artistas">
-                    <p style="color: #444; font-size: 0.8rem;">Cargando...</p>
-                </div>
-            </div>
-            <div style="background: #0a0a0a; border: 1px solid #111; padding: 30px; border-radius: 4px;">
-                <h3
-                    style="color: #00ff00; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px;">
-                    Géneros más vendidos</h3>
-                <div id="pop-generos">
-                    <p style="color: #444; font-size: 0.8rem;">Cargando...</p>
-                </div>
-            </div>
-            <div style="background: #0a0a0a; border: 1px solid #111; padding: 30px; border-radius: 4px;">
-                <h3
-                    style="color: #00ff00; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px;">
-                    Estadísticas del Grafo</h3>
-                <div id="grafo-stats">
-                    <p style="color: #444; font-size: 0.8rem;">Cargando...</p>
-                </div>
-            </div>
-        </div>
     </section>
 
     <footer>
@@ -224,32 +184,25 @@
     </footer>
 
     <script>
-        // Función para verificar si el usuario ha iniciado sesión
+        // Verificar sesión
         async function checkSession() {
             try {
                 const response = await fetch('/api/estado-usuario');
                 const data = await response.json();
-
                 if (data.autenticado) {
                     const authButtons = document.getElementById('auth-buttons');
                     const navContainer = document.querySelector('.nav-container');
-
-                    // 1. Ocultar botones de login/registro
                     if (authButtons) authButtons.style.display = 'none';
-
-                    // 2. Obtener datos del usuario
                     const resUser = await fetch('/api/usuario-actual');
                     const user = await resUser.json();
-
-                    // 3. Crear el contenedor de perfil si no existe
                     if (!document.querySelector('.user-profile')) {
                         const userDiv = document.createElement('div');
                         userDiv.className = 'user-profile';
                         userDiv.innerHTML = `
-                    <span style="margin-right: 15px; color: #eee; font-size: 0.75rem;">HOLA, ${user.Nombre}</span>
-                    <a href="/user/Panel-usuario.html" class="btn-panel">Panel de control</a>
-                    <a href="/logout" class="btn-logout" ; text-decoration: none; font-size: 0.7rem; margin-left: 10px;">Cerrar sesión</a>
-                `;
+                        <span style="margin-right: 15px; color: #eee; font-size: 0.75rem;">HOLA, ${user.Nombre}</span>
+                        <a href="/user/Panel-usuario.html" class="btn-panel">Mi Feed</a>
+                        <a href="/logout" class="btn-logout" style="text-decoration: none; font-size: 0.7rem; margin-left: 10px;">Cerrar sesión</a>
+                    `;
                         navContainer.appendChild(userDiv);
                     }
                 }
@@ -258,144 +211,80 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', checkSession);
-
-        // --- CARGAR TENDENCIAS DESDE NEO4J ---
-        async function cargarTendencias() {
-            try {
-                // Artistas populares
-                const resArtistas = await fetch('/api/recomendaciones/artistas-populares');
-                if (resArtistas.ok) {
-                    const artistas = await resArtistas.json();
-                    const container = document.getElementById('pop-artistas');
-                    if (artistas.length === 0) {
-                        container.innerHTML = '<p style="color: #444; font-size: 0.8rem;">Sin datos aún</p>';
-                    } else {
-                        container.innerHTML = artistas.slice(0, 5).map(a =>
-                            `<div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #111; font-size: 0.85rem;">
-                            <span style="color: #fff;">${a.Artista}</span>
-                            <span style="color: #00ff00;">${a.ObrasVendidas} ventas</span>
-                        </div>`
-                        ).join('');
-                    }
-                }
-
-                // Géneros populares
-                const resGeneros = await fetch('/api/recomendaciones/generos-populares');
-                if (resGeneros.ok) {
-                    const generos = await resGeneros.json();
-                    const container = document.getElementById('pop-generos');
-                    if (generos.length === 0) {
-                        container.innerHTML = '<p style="color: #444; font-size: 0.8rem;">Sin datos aún</p>';
-                    } else {
-                        container.innerHTML = generos.slice(0, 5).map(g =>
-                            `<div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #111; font-size: 0.85rem;">
-                            <span style="color: #fff;">${g.Genero}</span>
-                            <span style="color: #00ff00;">${g.ObrasVendidas} vendidas</span>
-                        </div>`
-                        ).join('');
-                    }
-                }
-
-                // Estadísticas del grafo
-                const resStats = await fetch('/api/grafo/estadisticas');
-                if (resStats.ok) {
-                    const stats = await resStats.json();
-                    const container = document.getElementById('grafo-stats');
-                    let html = '';
-                    if (stats.nodos) {
-                        stats.nodos.forEach(n => {
-                            html += `<div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem;">
-                            <span>${n.tipo}</span>
-                            <span style="color: #00ff00;">${n.cantidad} nodos</span>
-                        </div>`;
-                        });
-                    }
-                    if (stats.relaciones) {
-                        stats.relaciones.forEach(r => {
-                            html += `<div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem;">
-                            <span>${r.tipo}</span>
-                            <span style="color: #888;">${r.cantidad} relaciones</span>
-                        </div>`;
-                        });
-                    }
-                    container.innerHTML = html || '<p style="color: #444; font-size: 0.8rem;">Grafo vacío</p>';
-                }
-            } catch (e) {
-                console.error('Error cargando tendencias:', e);
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', cargarTendencias);
-
-        async function cargarRecomendados() {
-            try {
-                const resp = await fetch('/api/estado-usuario');
-                const data = await resp.json();
-                if (!data.autenticado) return;
-
-                const userResp = await fetch('/api/usuario-actual');
-                const user = await userResp.json();
-
-                const recResp = await fetch('/api/recomendaciones/para-ti/' + user.id_usuario);
-                const obras = await recResp.json();
-
-                if (obras.length === 0) return;
-
-                document.getElementById('recomendados').style.display = 'block';
-                const grid = document.getElementById('rec-art-grid');
-
-                grid.innerHTML = obras.map(o => `
-            <div class="art-card" onclick="guardarYAbrirObra(${o.idObra})" style="cursor:pointer;">
-                <div class="art-img" style="background-image: url('${o.fotografia || '/images/placeholder.jpg'}'); height: 300px; background-size: cover; background-position: center;"></div>
-                <div class="art-info">
-                    <span style="color: #888; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px;">${o.motivo || ''}</span>
-                    <h3 style="margin: 8px 0; color: #fff; font-size: 1rem;">${o.nombre}</h3>
-                    <span class="price">$${Number(o.precio).toLocaleString()}</span>
-                </div>
-            </div>
-        `).join('');
-
-            } catch (e) {
-                console.error('Error cargando recomendados:', e);
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', cargarRecomendados);
-
         async function guardarYAbrirObra(idObra) {
-            // Guardar el ID en sessionStorage para Obras.html
             sessionStorage.setItem('abrirObra', idObra);
             window.location.href = 'Obras.html';
         }
 
+        // CARGAR DESTACADAS: primero populares, luego el resto
         async function cargarDestacadas() {
+            const grid = document.getElementById('db-art-grid');
+            grid.innerHTML = '<p style="color:#444;text-align:center;width:100%;">Cargando obras destacadas...</p>';
+
             try {
-                const resp = await fetch('/api/recomendaciones/obras-destacadas');
-                const obras = await resp.json();
+                // 1. Obtener populares
+                const popResp = await fetch('/api/recomendaciones/obras-destacadas?_=' + Date.now());
+                const populares = await popResp.json();
 
-                if (obras.length === 0) return; // Si no hay datos, dejar las estáticas
+                // 2. Obtener todas las obras
+                const todasResp = await fetch('/api/obras-filtradas?genero=all&artista=all&orden=desc&_=' + Date.now());
+                const todas = await todasResp.json();
 
-                const grid = document.getElementById('db-art-grid');
-                grid.innerHTML = obras.map(o => `
-            <div class="art-card" onclick="guardarYAbrirObra(${o.idObra})" style="cursor:pointer;">
-                <div class="art-img" style="background-image: url('${o.fotografia || ''}'); height:300px; background-size:cover; background-position:center;"></div>
-                <div class="art-info">
-                    <span class="art-author" style="color:#00ff00; font-size:0.7rem; text-transform:uppercase; font-weight:bold;">${o.autor}</span>
-                    <h3 class="art-title" style="margin-top:5px; color:white; font-size:1.1rem;">${o.nombre}</h3>
-                </div>
-            </div>
-        `).join('');
+                // 3. Unir todo (populares primero)
+                let final = [...populares, ...todas];
+
+                // 4. Eliminar duplicados por ID
+                const visto = new Set();
+                final = final.filter(o => {
+                    const id = Number(o.id_Obra || o.idObra);
+                    if (visto.has(id)) return false;
+                    visto.add(id);
+                    return true;
+                });
+
+                console.log('✅ Total sin duplicados:', final.length);
+
+                // Verificar duplicados en final
+                const idsFinal = final.map(o => o.id_Obra || o.idObra);
+                const duplicados = idsFinal.filter((id, i) => idsFinal.indexOf(id) !== i);
+                console.log('🔍 IDs duplicados:', duplicados);
+
+                if (final.length === 0) {
+                    grid.innerHTML = '<p style="color:#444;text-align:center;width:100%;">No hay obras disponibles.</p>';
+                    return;
+                }
+
+                grid.innerHTML = final.map(o => {
+                    const img = o.imagen_url || o.fotografia || '';
+                    const nombre = o.Nombre || o.nombre || '';
+                    const autor = o.AutorNombre || o.autor || '';
+                    const precio = o.PrecioFormateado || (o.precio ? '$' + Number(o.precio).toLocaleString() : '');
+                    const id = Number(o.id_Obra || o.idObra);
+                    const clicks = o.clicks || 0;
+
+                    return `
+                <div class="art-card" onclick="guardarYAbrirObra(${id})" style="cursor:pointer; transition: transform 0.3s ease; position: relative;"
+                     onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <div class="art-img" style="background-image: url('${img}'); height:300px; background-size:cover; background-position:center; position: relative;">
+                        <span style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: ${clicks > 0 ? '#00ff00' : '#555'}; font-size: 0.65rem; padding: 3px 8px; border-radius: 10px;">
+                            👁 ${clicks}
+                        </span>
+                    </div>
+                    <div class="art-info">
+                        <span class="art-author" style="color:#00ff00; font-size:0.65rem; text-transform:uppercase; font-weight:bold;">${autor || 'Anónimo'}</span>
+                        <h3 class="art-title" style="margin:8px 0; color:white; font-size:1rem;">${nombre}</h3>
+                        <span class="price" style="color:#00ff00; font-weight:bold;">${precio}</span>
+                    </div>
+                </div>`;
+                }).join('');
+
             } catch (e) {
-                console.error('Error cargando destacadas:', e);
+                console.error('Error:', e);
+                grid.innerHTML = '<p style="color:#444;text-align:center;width:100%;">Error al cargar obras.</p>';
             }
         }
 
-        async function guardarYAbrirObra(idObra) {
-            sessionStorage.setItem('abrirObra', idObra);
-            window.location.href = 'Obras.html';
-        }
-
+        document.addEventListener('DOMContentLoaded', checkSession);
         document.addEventListener('DOMContentLoaded', cargarDestacadas);
     </script>
 </body>

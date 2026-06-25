@@ -19,12 +19,12 @@
     "dotenv": "^16.6.1",
     "express": "^4.21.0",
     "express-session": "^1.18.1",
+    "jimp": "^1.6.1",
     "mongodb": "^6.21.0",
     "mongoose": "^8.6.0",
     "mysql2": "^3.11.0",
     "neo4j-driver": "^5.28.3",
-    "nodemailer": "^6.9.15",
-    "sharp": "^0.34.5"
+    "nodemailer": "^6.9.15"
   },
   "keywords": [
     "art",

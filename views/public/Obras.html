@@ -346,6 +346,13 @@
             </h2>
         </header>
 
+        <div style="text-align: center; padding: 0 8% 20px;">
+            <input type="text" id="buscador"
+                placeholder="Buscar por nombre, artista o describir... ej: escultura abstracta naranja"
+                style="width: 60%; max-width: 600px; padding: 12px 20px; background: #111; border: 1px solid #333; color: white; font-size: 0.9rem; border-radius: 4px; outline: none;"
+                onkeyup="buscarObras(this.value)">
+        </div>
+
         <div class="filter-container">
             <div class="filter-group">
                 <label>Orden Precio</label>
@@ -414,29 +421,19 @@
             modal.style.display = 'flex';
             document.body.classList.add('modal-active');
 
-            // REGISTRAR ACTIVIDAD EN NEO4J
-            fetch('/api/estado-usuario')
-                .then(res => res.json())
-                .then(data => {
-                    if (data.autenticado) {
-                        fetch('/api/usuario-actual')
-                            .then(res => res.json())
-                            .then(user => {
-                                fetch('/api/actividad/registrar', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                        idUsuario: user.id_usuario || 9999,
-                                        idObra: idObra,
-                                        tipo: 'vista_detalle',
-                                        duracion: 0
-                                    })
-                                }).catch(() => { });
-                            }).catch(() => { });
-                    }
-                }).catch(() => { });
+            // REGISTRAR ACTIVIDAD SIEMPRE (con o sin sesión)
+            fetch('/api/actividad/registrar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    idUsuario: 9999,
+                    idObra: parseInt(idObra) || idObra,
+                    tipo: 'vista_detalle',
+                    duracion: 0
+                })
+            }).catch(() => { });
 
-            // CARGAR RECOMENDACIONES POR SIMILITUD IA (en lugar de solo mismo género)
+            // CARGAR RECOMENDACIONES
             cargarSimilaresIA(idObra);
         }
 
@@ -451,15 +448,28 @@
                     container.innerHTML = '<p style="color: #555;">No se encontraron obras similares.</p>';
                     return;
                 }
-                container.innerHTML = obras.map(o => {
-                    // Determinar el motivo de similitud
+
+                // Eliminar duplicados por ID y excluir la obra actual
+                const visto = new Set();
+                const unicas = obras.filter(o => {
+                    const id = Number(o.idObra);
+                    if (id === Number(idObra) || visto.has(id)) return false;
+                    visto.add(id);
+                    return true;
+                });
+
+                if (unicas.length === 0) {
+                    container.innerHTML = '<p style="color: #555;">No se encontraron obras similares.</p>';
+                    return;
+                }
+
+                container.innerHTML = unicas.map(o => {
                     let motivo = '';
                     const sim = o.similitud;
                     if (sim >= 90) motivo = 'Muy similar';
                     else if (sim >= 80) motivo = 'Estilo parecido';
                     else if (sim >= 70) motivo = 'Técnica similar';
-                    else if (sim >= 60) motivo = 'Composición afín';
-                    else motivo = 'Relacionada';
+                    else motivo = 'Composición afín';
 
                     return `<div style="padding: 10px 0; border-bottom: 1px solid #1a1a1a; display: flex; align-items: center; gap: 12px; cursor: pointer;" 
                   onclick="cerrarModal(); setTimeout(() => abrirObraPorId(${o.idObra}), 300);" 
@@ -705,7 +715,7 @@
                                 userDiv.className = 'user-profile';
                                 userDiv.innerHTML = `
                             <span style="margin-right: 15px; color: #eee; font-size: 0.75rem;">HOLA, ${user.Nombre}</span>
-                            <a href="/user/Panel-usuario.html" class="btn-panel">Panel de control</a>
+                            <a href="/user/Panel-usuario.html" class="btn-panel">Mi Feed</a>
                             <a href="/logout" class="btn-logout">Cerrar sesión</a>
                         `;
                                 navContainer.appendChild(userDiv);
@@ -719,6 +729,16 @@
             const idPendiente = sessionStorage.getItem('abrirObra');
             if (idPendiente) {
                 sessionStorage.removeItem('abrirObra');
+                // REGISTRAR ACTIVIDAD
+                fetch('/api/actividad/registrar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        idUsuario: 9999,
+                        idObra: parseInt(idPendiente),
+                        tipo: 'vista_detalle'
+                    })
+                }).catch(() => { });
                 // Esperar a que la galería se renderice
                 setTimeout(async () => {
                     try {
@@ -737,6 +757,55 @@
                 }, 1000);
             }
         });
+
+        let timeoutBuscador = null;
+
+        async function buscarObras(query) {
+            clearTimeout(timeoutBuscador);
+
+            if (!query || query.trim().length < 2) {
+                renderGallery(); // Volver al catálogo normal
+                return;
+            }
+
+            timeoutBuscador = setTimeout(async () => {
+                try {
+                    const resp = await fetch('/api/buscar?q=' + encodeURIComponent(query));
+                    const obras = await resp.json();
+
+                    gallery.innerHTML = '';
+
+                    if (obras.length === 0) {
+                        gallery.innerHTML = '<p style="text-align:center; width:100%; color:#444;">No se encontraron obras.</p>';
+                        return;
+                    }
+
+                    obras.forEach(obra => {
+                        const imgSource = obra.imagen_url || '/assets/images/placeholder.jpg';
+                        const autorNombreCompleto = `${obra.AutorNombre || ''} ${obra.AutorApellido || ''}`.trim();
+                        const detallesHTML = construirDetallesTecnicos(obra);
+
+                        const card = document.createElement('div');
+                        card.className = 'art-card';
+                        card.innerHTML = `
+                    <div class="art-img" style="background-image: url('${imgSource}'); background-size: cover; background-position: center;" 
+                         onclick="abrirModal('${imgSource}', '${(obra.Nombre || '').replace(/'/g, "\\'")}', '${autorNombreCompleto.replace(/'/g, "\\'")}', \`${detallesHTML}\`, '${obra.GeneroNombre || ''}', '${obra.id_Obra}')">
+                        ${obra.tipo === 'semántica' ? `<span style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); color: #00ff00; font-size: 0.6rem; padding: 3px 8px; border-radius: 10px;">${obra.similitud}% match</span>` : ''}
+                    </div>
+                    <div class="art-info">
+                        <span class="author-link">${autorNombreCompleto || 'Anónimo'}</span>
+                        <h3 class="art-title" style="margin: 10px 0;">${obra.Nombre || ''}</h3>
+                        <span class="price">${obra.PrecioFormateado || ''}</span>
+                    </div>
+                `;
+                        gallery.appendChild(card);
+                    });
+
+                } catch (e) {
+                    console.error('Error en búsqueda:', e);
+                }
+            }, 400); // Esperar 400ms después de dejar de escribir
+        }
     </script>
 </body>
 
