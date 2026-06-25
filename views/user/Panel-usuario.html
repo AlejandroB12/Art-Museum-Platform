@@ -61,6 +61,18 @@
         .tabla-membresia { width: 100%; border-collapse: separate; border-spacing: 0 10px; margin-top: 10px; color: white; }
         .tabla-membresia th { color: #00ff00; text-transform: uppercase; font-size: 12px; padding: 15px; border-bottom: 2px solid #222; text-align: left; }
         .tabla-membresia td { padding: 18px; background: #111; border-top: 1px solid #222; border-bottom: 1px solid #222; }
+
+        .rec-section { margin-bottom: 35px; }
+        .rec-section h3 { color: #00ff00; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; }
+        .rec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; }
+        .rec-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 18px; transition: 0.3s; }
+        .rec-card:hover { border-color: #00ff00; transform: translateY(-2px); }
+        .rec-card h4 { color: #fff; font-size: 0.95rem; margin-bottom: 6px; }
+        .rec-card .rec-meta { color: #888; font-size: 0.8rem; }
+        .rec-card .rec-price { color: #00ff00; font-weight: bold; font-size: 1rem; margin-top: 8px; }
+        .rec-stat { font-size: 0.85rem; color: #ccc; margin-top: 4px; }
+        .rec-stat span { color: #00ff00; font-weight: 600; }
+        .loading-rec { color: #555; font-size: 0.85rem; padding: 10px 0; }
     </style>
 </head>
 <body>
@@ -94,6 +106,7 @@
         <section id="view-dashboard" class="view active-view">
             <h1 id="welcome-msg" style="font-size: 3rem;">Bienvenido</h1>
             <p style="color: #666; margin-top: 10px; font-size: 1.2rem;">Tu panel de control exclusivo está listo.</p>
+            <div id="recomendaciones-container" style="width:100%; margin-top: 40px;"></div>
         </section>
         
         <section id="view-compras" class="view">
@@ -179,16 +192,20 @@
             element.classList.add('active');
         }
 
-        // CARGA INICIAL: Nombre y Foto personalizada
+        let currentUserId = null;
+
+        // CARGA INICIAL: Nombre, Foto y Recomendaciones
         document.addEventListener('DOMContentLoaded', () => {
             fetch('/api/usuario-actual')
                 .then(res => res.json())
                 .then(data => {
                     if (data.Nombre) {
+                        currentUserId = data.id_usuario;
                         document.getElementById('sidebar-nombre').innerText = data.Nombre;
                         document.getElementById('welcome-msg').innerText = `¡Bienvenido, ${data.Nombre}!`;
                         const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.Nombre)}&background=00ff00&color=000&bold=true&size=128`;
                         document.getElementById('user-avatar').src = avatarUrl;
+                        cargarRecomendaciones();
                     }
                 })
                 .catch(err => console.error("Error cargando sesión:", err));
@@ -208,6 +225,7 @@
                 }
 
                 obras.forEach(obra => {
+                    const estadoColor = obra.Estado === 'Pagado' ? '#00ff00' : '#ffaa00';
                     contenedor.innerHTML += `
                         <div class="obra-comprada-card">
                             <div>
@@ -215,8 +233,9 @@
                                 <p style="color: #888; font-size: 0.9rem;">Género: ${obra.Genero}</p>
                             </div>
                             <div style="text-align: right;">
-                                <p style="color: #00ff00; font-weight: bold; font-size: 1.2rem;">$${obra.Precio}</p>
+                                <p style="color: ${estadoColor}; font-weight: bold; font-size: 1.2rem;">$${obra.Precio}</p>
                                 <p style="color: #444; font-size: 0.8rem;">Fecha: ${new Date(obra.Fecha_emision).toLocaleDateString()}</p>
+                                <span style="color: ${estadoColor}; font-size: 0.7rem; border: 1px solid ${estadoColor}; padding: 2px 8px; border-radius: 2px;">${obra.Estado}</span>
                             </div>
                         </div>
                     `;
@@ -224,6 +243,109 @@
             } catch (error) {
                 console.error("Error al cargar obras:", error);
                 contenedor.innerHTML = '<p style="color: #ff4d4d;">Error al conectar con la base de datos.</p>';
+            }
+        }
+
+        // --- RECOMENDACIONES DESDE NEO4J ---
+        async function cargarRecomendaciones() {
+            const container = document.getElementById('recomendaciones-container');
+            container.innerHTML = '<div class="loading-rec">Cargando recomendaciones personalizadas...</div>';
+
+            try {
+                let html = '';
+
+                // 1. Mismo género
+                const res1 = await fetch(`/api/recomendaciones/mismo-genero/${currentUserId}`);
+                if (res1.ok) {
+                    const data = await res1.json();
+                    if (data.length > 0) {
+                        html += '<div class="rec-section"><h3>✦ Obras del mismo género que compraste</h3><div class="rec-grid">';
+                        data.forEach(r => {
+                            html += `<div class="rec-card">
+                                <h4>${r.Nombre}</h4>
+                                <div class="rec-meta">${r.Genero}</div>
+                                <div class="rec-price">$${r.Precio.toLocaleString()}</div>
+                            </div>`;
+                        });
+                        html += '</div></div>';
+                    }
+                }
+
+                // 2. Colaborativo
+                const res2 = await fetch(`/api/recomendaciones/colaborativo/${currentUserId}`);
+                if (res2.ok) {
+                    const data = await res2.json();
+                    if (data.length > 0) {
+                        html += '<div class="rec-section"><h3>✦ Otros compradores también compraron</h3><div class="rec-grid">';
+                        data.forEach(r => {
+                            html += `<div class="rec-card">
+                                <h4>${r.Nombre}</h4>
+                                <div class="rec-meta">Coincidencias: ${r.CantidadCoincidencias} compradores</div>
+                                <div class="rec-price">$${r.Precio.toLocaleString()}</div>
+                            </div>`;
+                        });
+                        html += '</div></div>';
+                    }
+                }
+
+                // 3. Personalizadas
+                const res3 = await fetch(`/api/recomendaciones/personalizadas/${currentUserId}`);
+                if (res3.ok) {
+                    const data = await res3.json();
+                    if (data.length > 0) {
+                        html += '<div class="rec-section"><h3>✦ Recomendado para ti</h3><div class="rec-grid">';
+                        data.forEach(r => {
+                            html += `<div class="rec-card">
+                                <h4>${r.Nombre}</h4>
+                                <div class="rec-meta">${r.Genero}</div>
+                                <div class="rec-price">$${r.Precio.toLocaleString()}</div>
+                            </div>`;
+                        });
+                        html += '</div></div>';
+                    }
+                }
+
+                // 4. Artistas populares
+                const res4 = await fetch('/api/recomendaciones/artistas-populares');
+                if (res4.ok) {
+                    const data = await res4.json();
+                    if (data.length > 0) {
+                        html += '<div class="rec-section"><h3>✦ Artistas más populares</h3><div class="rec-grid">';
+                        data.forEach(r => {
+                            html += `<div class="rec-card">
+                                <h4>${r.Artista}</h4>
+                                <div class="rec-stat"><span>${r.ObrasVendidas}</span> obras vendidas · <span>${r.CompradoresUnicos}</span> compradores</div>
+                            </div>`;
+                        });
+                        html += '</div></div>';
+                    }
+                }
+
+                // 5. Géneros populares
+                const res5 = await fetch('/api/recomendaciones/generos-populares');
+                if (res5.ok) {
+                    const data = await res5.json();
+                    if (data.length > 0) {
+                        html += '<div class="rec-section"><h3>✦ Géneros con más ventas</h3><div class="rec-grid">';
+                        data.forEach(r => {
+                            html += `<div class="rec-card">
+                                <h4>${r.Genero}</h4>
+                                <div class="rec-stat"><span>${r.ObrasVendidas}</span> vendidas · <span>$${r.IngresoTotal.toLocaleString()}</span> ingresos</div>
+                                <div class="rec-meta">Precio prom: $${r.PrecioPromedio.toLocaleString()}</div>
+                            </div>`;
+                        });
+                        html += '</div></div>';
+                    }
+                }
+
+                if (!html) {
+                    html = '<p style="color: #666;">Aún no hay suficientes datos para generar recomendaciones. ¡Compra tu primera obra!</p>';
+                }
+                container.innerHTML = html;
+
+            } catch (e) {
+                console.error('Error cargando recomendaciones:', e);
+                container.innerHTML = '<p style="color: #ff4d4d;">Error al cargar recomendaciones. Verifica conexión a Neo4j.</p>';
             }
         }
 
