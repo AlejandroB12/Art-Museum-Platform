@@ -132,7 +132,7 @@ router.get('/autor-detalle/:id', async (req, res) => {
 });
 
 router.get('/estado-usuario', (req, res) => {
-    res.json({ autenticado: !!req.session.usuario });
+    res.json({ autenticado: !!(req.session.usuario || req.session.id_usuario) });
 });
 
 router.get('/usuario-actual', (req, res) => {
@@ -143,7 +143,8 @@ router.get('/usuario-actual', (req, res) => {
         return res.json({
             id_usuario: req.session.id_usuario,
             Nombre: req.session.usuario?.Nombre || 'Invitado',
-            Email: req.session.usuario?.Email || 'guest@museo.com'
+            Email: req.session.usuario?.Email || 'guest@museo.com',
+            Rol: req.session.usuario?.Rol || null
         });
     }
     return res.status(401).json({ error: "No autenticado" });

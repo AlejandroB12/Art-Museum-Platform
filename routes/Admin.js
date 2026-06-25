@@ -63,6 +63,12 @@ router.post('/admin-auth', (req, res) => {
         if (err) return res.status(500).send("Error en el servidor");
         if (results.length > 0) {
             req.session.id_usuario = results[0].id_usuario;
+            req.session.usuario = {
+                id_usuario: results[0].id_usuario,
+                Nombre: results[0].Nombre,
+                Email: results[0].Email,
+                Rol: results[0].Rol
+            };
             try {
                 const { client } = require('../config/cassandra');
                 client.execute(

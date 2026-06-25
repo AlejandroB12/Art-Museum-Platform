@@ -2665,7 +2665,9 @@
 
         function cerrarSesion() {
             if (confirm("¿Cerrar sesión?")) {
-                window.location.href = 'Login-administrador.html';
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.href = '/logout';
             }
         }
 

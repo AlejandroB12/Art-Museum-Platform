@@ -67,11 +67,17 @@ router.post('/login-auth', (req, res) => {
                 }
 
                 req.session.id_usuario = usuario.id_usuario;
+                req.session.usuario = {
+                    id_usuario: usuario.id_usuario,
+                    Nombre: usuario.Nombre,
+                    Email: usuario.Email,
+                    Rol: usuario.Rol
+                };
 
                 registrarEventoSeguridad(usuario.id_usuario, 'INICIO_SESION', 'Inicio de sesión exitoso', req);
 
                 if (usuario.Rol === 'administrador') {
-                    res.redirect('/Admin.html');
+                    res.redirect('/admin/Panel-adminsitrador.html');
                 } else {
                     res.redirect(`/user/Panel-usuario.html?email=${usuario.Email}`);
                 }
@@ -199,7 +205,8 @@ router.get('/api/usuario-actual', (req, res) => {
         return res.json({
             id_usuario: req.session.id_usuario,
             Nombre: req.session.usuario?.Nombre || 'Invitado',
-            Email: req.session.usuario?.Email || 'guest@museo.com'
+            Email: req.session.usuario?.Email || 'guest@museo.com',
+            Rol: req.session.usuario?.Rol || null
         });
     }
     return res.status(401).json({ error: "No autenticado" });

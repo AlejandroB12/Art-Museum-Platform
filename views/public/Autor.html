@@ -578,9 +578,11 @@
                             .then(user => {
                                 const userDiv = document.createElement('div');
                                 userDiv.className = 'user-profile';
+                                const panelLink = user.Rol === 'administrador' ? '/admin/Panel-adminsitrador.html' : '/user/Panel-usuario.html';
+                                const panelLabel = user.Rol === 'administrador' ? 'PANEL ADMIN' : 'PANEL DE USUARIO';
                                 userDiv.innerHTML = `
                                     <span style="margin-right: 15px; color:white;">Hola, ${user.Nombre || user.email || 'Usuario'}</span>
-                                    <a href="/user/Panel-usuario.html" style="margin-right: 15px; color: #00ff00; text-decoration: none; border: 1px solid #00ff00; padding: 5px 10px; font-size: 0.7rem;">PANEL DE USUARIO</a>
+                                    <a href="${panelLink}" style="margin-right: 15px; color: #00ff00; text-decoration: none; border: 1px solid #00ff00; padding: 5px 10px; font-size: 0.7rem;">${panelLabel}</a>
                                     <a href="/logout" class="btn-logout" style="color:white; text-decoration:none;">Cerrar Sesión</a>
                                 `;
                                 if (navContainer) navContainer.appendChild(userDiv);
