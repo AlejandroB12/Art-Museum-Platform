@@ -48,7 +48,7 @@ body {
 /* --- GRUPOS DE INPUTS --- */
 .input-group {
     position: relative;
-    margin-bottom: 22px;
+    margin-bottom: 28px;
     flex: 1;
 }
 
@@ -86,6 +86,34 @@ body {
 .input-group input:focus {
     border-color: #00ff00;
     box-shadow: 0 0 10px rgba(0, 255, 0, 0.1);
+}
+
+.input-group select {
+    width: 100%;
+    padding: 12px 8px;
+    font-size: 15px;
+    border: 2px solid #333;
+    border-radius: 8px;
+    outline: none;
+    transition: all 0.2s ease-in-out;
+    background-color: #252525;
+    color: white;
+    cursor: pointer;
+    appearance: auto;
+}
+
+.input-group select:focus {
+    border-color: #00ff00;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.1);
+}
+
+.input-group select ~ label {
+    top: -17px;
+    left: 4px;
+    font-size: 11px;
+    color: #00ff00;
+    font-weight: 700;
+    text-transform: uppercase;
 }
 
 /* --- BOTÓN DE REGISTRO --- */

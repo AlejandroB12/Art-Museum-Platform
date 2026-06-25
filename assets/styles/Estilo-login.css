@@ -147,7 +147,36 @@ body {
     font-weight: 700;
 }
 
-/* Clase para ocultar el error */
+/* --- MENSAJE DE ERROR --- */
+.error-message {
+    background: rgba(255, 0, 0, 0.1);
+    border: 1px solid #ff3333;
+    color: #ff3333;
+    padding: 12px 14px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    text-align: center;
+    font-weight: 600;
+}
+
+/* --- ESTADO DE ERROR EN INPUTS --- */
+.input-group input.input-error {
+    border-color: #ff3333;
+    background-color: rgba(255, 0, 0, 0.05);
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.15);
+}
+
+.input-group input.input-error:focus {
+    border-color: #ff3333;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.2);
+}
+
+.input-group input.input-error ~ label {
+    color: #ff3333;
+}
+
+/* Clase para ocultar elementos */
 .hidden {
     display: none;
 }

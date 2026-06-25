@@ -53,23 +53,45 @@
             
             <div class="input-row">
                 <div class="input-group">
-                    <input type="text" name="nombre" required placeholder=" "> 
+                    <input type="text" name="nombre" maxlength="16" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñüÜ ]+" required placeholder=" "> 
                     <label>Nombre</label>
                 </div>
                 <div class="input-group">
-                    <input type="text" name="apellido" required placeholder=" "> 
+                    <input type="text" name="apellido" maxlength="16" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñüÜ ]+" required placeholder=" "> 
                     <label>Apellido</label>
                 </div>
             </div>
 
-            <div class="input-group">
-                <input type="text" name="cedula" maxlength="12" required placeholder=" "> 
-                <label>Cédula</label>
+            <div class="input-row">
+                <div class="input-group" style="flex: 0 0 75px;">
+                    <select name="tipo_cedula" id="tipo-cedula" required>
+                        <option value="V" selected>V</option>
+                        <option value="E">E</option>
+                    </select>
+                    <label for="tipo-cedula">Tipo</label>
+                </div>
+                <div class="input-group" style="flex: 1;">
+                    <input type="text" name="cedula" id="cedula" maxlength="10" required placeholder=" ">
+                    <label for="cedula">Cédula</label>
+                </div>
             </div>
 
-            <div class="input-group">
-                <input type="tel" name="telefono" required placeholder=" "> 
-                <label>Teléfono</label>
+            <div class="input-row">
+                <div class="input-group" style="flex: 0 0 100px;">
+                    <select name="prefijo_telefono" id="prefijo-telefono" required>
+                        <option value="0412">0412</option>
+                        <option value="0414">0414</option>
+                        <option value="0416">0416</option>
+                        <option value="0424">0424</option>
+                        <option value="0426">0426</option>
+                        <option value="0286">0286</option>
+                    </select>
+                    <label for="prefijo-telefono">Prefijo</label>
+                </div>
+                <div class="input-group" style="flex: 1;">
+                    <input type="text" name="telefono" id="telefono" maxlength="8" required placeholder=" ">
+                    <label for="telefono">Teléfono</label>
+                </div>
             </div>
 
             <div class="input-group">
@@ -78,7 +100,7 @@
             </div>
 
             <div class="input-group">
-                <input type="password" name="password" required placeholder=" "> 
+                <input type="password" name="password" minlength="6" required placeholder=" "> 
                 <label>Contraseña</label>
             </div>
 
@@ -124,12 +146,32 @@
                 </div>
 
                 <div class="input-row no-stack">
-                    <div class="input-group small">
-                        <input type="text" name="expiracion" id="expiry-date" maxlength="5" required placeholder=" ">
-                        <label>Vence (MM/YY)</label>
+                    <div class="input-group small" style="flex: 0 0 110px;">
+                        <select name="exp_mes" id="exp-mes" required>
+                            <option value="" disabled selected>Mes</option>
+                            <option value="01">01 - Enero</option>
+                            <option value="02">02 - Febrero</option>
+                            <option value="03">03 - Marzo</option>
+                            <option value="04">04 - Abril</option>
+                            <option value="05">05 - Mayo</option>
+                            <option value="06">06 - Junio</option>
+                            <option value="07">07 - Julio</option>
+                            <option value="08">08 - Agosto</option>
+                            <option value="09">09 - Septiembre</option>
+                            <option value="10">10 - Octubre</option>
+                            <option value="11">11 - Noviembre</option>
+                            <option value="12">12 - Diciembre</option>
+                        </select>
+                        <label for="exp-mes">Mes</label>
+                    </div>
+                    <div class="input-group small" style="flex: 0 0 90px;">
+                        <select name="exp_anio" id="exp-anio" required>
+                            <option value="" disabled selected>Año</option>
+                        </select>
+                        <label for="exp-anio">Año</label>
                     </div>
                     <div class="input-group small">
-                        <input type="password" name="cvv" maxlength="3" required placeholder=" ">
+                        <input type="password" name="cvv" id="cvv" maxlength="3" required placeholder=" ">
                         <label>CVV</label>
                     </div>
                 </div>
@@ -145,18 +187,191 @@
     </div>
 
     <script>
-        // --- FORMATEO DE INPUTS DE TARJETA ---
+        // --- VALIDACIONES EN ESPAÑOL ---
+        document.querySelector('input[name="nombre"]').addEventListener('invalid', function () {
+            if (this.validity.patternMismatch) {
+                this.setCustomValidity('Solo se permiten letras.');
+            }
+        });
+        document.querySelector('input[name="nombre"]').addEventListener('input', function () {
+            this.value = this.value.replace(/[0-9]/g, '');
+            this.setCustomValidity('');
+        });
+
+        document.querySelector('input[name="apellido"]').addEventListener('invalid', function () {
+            if (this.validity.patternMismatch) {
+                this.setCustomValidity('Solo se permiten letras.');
+            }
+        });
+        document.querySelector('input[name="apellido"]').addEventListener('input', function () {
+            this.value = this.value.replace(/[0-9]/g, '');
+            this.setCustomValidity('');
+        });
+
+        document.querySelector('input[name="correo"]').addEventListener('invalid', function () {
+            this.setCustomValidity('Ingrese un correo electrónico válido.');
+        });
+        document.querySelector('input[name="correo"]').addEventListener('input', function () {
+            this.setCustomValidity('');
+        });
+
+        document.querySelector('input[name="password"]').addEventListener('invalid', function () {
+            if (this.value.length === 0) {
+                this.setCustomValidity('La contraseña es obligatoria.');
+            } else if (this.value.length < 6) {
+                this.setCustomValidity('La contraseña debe tener al menos 6 caracteres.');
+            }
+        });
+        document.querySelector('input[name="password"]').addEventListener('input', function () {
+            this.setCustomValidity('');
+        });
+
+        // --- CÉDULA: SOLO NÚMEROS Y PUNTOS ---
+        const cedulaInput = document.getElementById('cedula');
+        cedulaInput.addEventListener('input', (e) => {
+            let digits = e.target.value.replace(/\D/g, '').slice(0, 8);
+            if (digits.length <= 3) {
+                e.target.value = digits;
+            } else {
+                let last3 = digits.slice(-3);
+                let rest = digits.slice(0, -3);
+                if (rest.length <= 3) {
+                    e.target.value = rest + '.' + last3;
+                } else {
+                    let restLast3 = rest.slice(-3);
+                    let restFirst = rest.slice(0, -3);
+                    e.target.value = restFirst + '.' + restLast3 + '.' + last3;
+                }
+            }
+        });
+        cedulaInput.addEventListener('invalid', function () {
+            if (this.value.length === 0) {
+                this.setCustomValidity('La cédula es obligatoria.');
+            }
+        });
+        cedulaInput.addEventListener('input', function () {
+            this.setCustomValidity('');
+        });
+
+        // --- TELÉFONO: SOLO NÚMEROS Y GUION ---
+        const telefonoInput = document.getElementById('telefono');
+        telefonoInput.addEventListener('input', (e) => {
+            let digits = e.target.value.replace(/\D/g, '').slice(0, 7);
+            if (digits.length <= 3) {
+                e.target.value = digits;
+            } else {
+                e.target.value = digits.slice(0, 3) + '-' + digits.slice(3);
+            }
+        });
+        telefonoInput.addEventListener('invalid', function () {
+            if (this.value.length === 0) {
+                this.setCustomValidity('El teléfono es obligatorio.');
+            }
+        });
+        telefonoInput.addEventListener('input', function () {
+            this.setCustomValidity('');
+        });
+
+        // --- COMBINAR PREFIJOS Y NÚMEROS AL ENVIAR ---
+        document.querySelector('.login-form').addEventListener('submit', function (e) {
+            const tipo = document.getElementById('tipo-cedula').value;
+            const cedula = document.getElementById('cedula');
+            const cedDigits = cedula.value.replace(/\D/g, '');
+            if (cedDigits.length === 0) {
+                e.preventDefault();
+                cedula.setCustomValidity('La cédula es obligatoria.');
+                cedula.reportValidity();
+                return;
+            }
+            cedula.value = cedDigits;
+
+            const prefijo = document.getElementById('prefijo-telefono').value;
+            const telefono = document.getElementById('telefono');
+            const telDigits = telefono.value.replace(/\D/g, '');
+            if (telDigits.length === 0) {
+                e.preventDefault();
+                telefono.setCustomValidity('El teléfono es obligatorio.');
+                telefono.reportValidity();
+                return;
+            }
+            telefono.value = prefijo + '-' + telDigits;
+
+            // --- VALIDAR PAGO ---
+            const tarjeta = document.getElementById('card-number');
+            const cardDigits = tarjeta.value.replace(/\s/g, '');
+            if (cardDigits.length === 0) {
+                e.preventDefault();
+                tarjeta.setCustomValidity('El número de tarjeta es obligatorio.');
+                tarjeta.reportValidity();
+                return;
+            }
+            if (cardDigits.length !== 16 || /[^0-9]/.test(cardDigits)) {
+                e.preventDefault();
+                tarjeta.setCustomValidity('La tarjeta debe tener 16 dígitos.');
+                tarjeta.reportValidity();
+                return;
+            }
+
+            const expMes = document.getElementById('exp-mes');
+            const expAnio = document.getElementById('exp-anio');
+            if (!expMes.value || !expAnio.value) {
+                e.preventDefault();
+                (expMes.value ? expAnio : expMes).setCustomValidity('Seleccione mes y año de vencimiento.');
+                (expMes.value ? expAnio : expMes).reportValidity();
+                return;
+            }
+            const mes = parseInt(expMes.value, 10);
+            const anio = parseInt(expAnio.value, 10) + 2000;
+            const vence = new Date(anio, mes, 0);
+            if (vence < new Date()) {
+                e.preventDefault();
+                expAnio.setCustomValidity('La tarjeta está vencida.');
+                expAnio.reportValidity();
+                return;
+            }
+
+            const cvv = document.querySelector('input[name="cvv"]');
+            if (cvv.value.length === 0) {
+                e.preventDefault();
+                cvv.setCustomValidity('El CVV es obligatorio.');
+                cvv.reportValidity();
+                return;
+            }
+            if (cvv.value.length !== 3) {
+                e.preventDefault();
+                cvv.setCustomValidity('El CVV debe tener 3 dígitos.');
+                cvv.reportValidity();
+                return;
+            }
+        });
+
+        // --- AÑOS PARA VENCIMIENTO ---
+        const selectAnio = document.getElementById('exp-anio');
+        const anioActual = new Date().getFullYear();
+        for (let i = anioActual; i <= 2100; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            selectAnio.appendChild(option);
+        }
+
+        document.getElementById('exp-mes').addEventListener('change', function () {
+            this.setCustomValidity('');
+        });
+        document.getElementById('exp-anio').addEventListener('change', function () {
+            this.setCustomValidity('');
+        });
+
+        // --- FORMATEO DE TARJETA Y CVV ---
         const cardInput = document.getElementById('card-number');
         cardInput.addEventListener('input', (e) => {
-            let value = e.target.value.replace(/\D/g, '');
+            let value = e.target.value.replace(/\D/g, '').slice(0, 16);
             e.target.value = value.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
         });
 
-        const expiryInput = document.getElementById('expiry-date');
-        expiryInput.addEventListener('input', (e) => {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value.length >= 2) e.target.value = value.slice(0, 2) + '/' + value.slice(2, 4);
-            else e.target.value = value;
+        const cvvInput = document.querySelector('input[name="cvv"]');
+        cvvInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 3);
         });
 
         // --- LÓGICA DE UBICACIÓN (API) ---

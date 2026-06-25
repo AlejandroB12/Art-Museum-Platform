@@ -60,10 +60,10 @@ router.post('/login-auth', (req, res) => {
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
                     if (diffDays > 30) {
-                        return res.send("<h1>Acceso Denegado</h1><p>Tu membresía ha vencido. Contacta al administrador.</p>");
+                        return res.redirect('/user/Login.html?error=vencida');
                     }
                 } else if (usuario.Rol !== 'administrador') {
-                    return res.send("<h1>Acceso Denegado</h1><p>No se encontró registro de pago.</p>");
+                    return res.redirect('/user/Login.html?error=pago');
                 }
 
                 req.session.id_usuario = usuario.id_usuario;
@@ -77,7 +77,7 @@ router.post('/login-auth', (req, res) => {
                 }
             });
         } else {
-            res.redirect('/user/Credenciales-incorrectas.html');
+            res.redirect('/user/Login.html?error=credenciales');
         }
     });
 });
@@ -170,21 +170,21 @@ router.post('/registrar', (req, res) => {
 });
 // --- API PARA UBICACIÓN ---
 router.get('/api/estados', (req, res) => {
-    db.query("SELECT id_estado, nombre FROM estado", (err, results) => {
+    db.query("SELECT id_estado, nombre FROM Estado", (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(results);
     });
 });
 
 router.get('/api/municipios/:id_estado', (req, res) => {
-    db.query("SELECT id_municipio, nombre FROM municipio WHERE id_estado = ?", [req.params.id_estado], (err, results) => {
+    db.query("SELECT id_municipio, nombre FROM Municipio WHERE id_estado = ?", [req.params.id_estado], (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(results);
     });
 });
 
 router.get('/api/parroquias/:id_municipio', (req, res) => {
-    db.query("SELECT id_parroquia, nombre FROM parroquia WHERE id_municipio = ?", [req.params.id_municipio], (err, results) => {
+    db.query("SELECT id_parroquia, nombre FROM Parroquia WHERE id_municipio = ?", [req.params.id_municipio], (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(results);
     });
