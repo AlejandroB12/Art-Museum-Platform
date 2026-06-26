@@ -278,6 +278,8 @@
                             <th>Email</th>
                             <th>Rol</th>
                             <th>Estatus</th>
+                            <th>Membresía</th>
+                            <th>Puede Adquirir</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -866,12 +868,16 @@
             }
         }
 
-        // --- CRUD USUARIOS (CON OPCIÓN DE BORRAR) ---
+        // --- CRUD USUARIOS (CON OPCIÓN DE BORRAR + MEMBRESÍA + PUEDE ADQUIRIR) ---
         async function cargarUsuariosGestion() {
             try {
                 const res = await fetch('/api/todos-los-usuarios');
                 const data = await res.json();
-                document.getElementById('body-gestion-usuarios').innerHTML = data.map(u => `
+                document.getElementById('body-gestion-usuarios').innerHTML = data.map(u => {
+                    const esComprador = u.Rol === 'comprador';
+                    const puedeAdquirir = u.PuedeAdquirir == 1;
+                    const membresiaActiva = u.MembresiaActiva == 1;
+                    return `
                     <tr id="usuario-fila-${u.id_usuario}">
                         <td>${u.id_usuario}</td>
                         <td>${u.Email || ''}</td>
@@ -883,13 +889,50 @@
                             </select>
                         </td>
                         <td>
+                            <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:0.75rem;font-weight:bold;${membresiaActiva ? 'background:#c6f6d5;color:#22543d;' : 'background:#fed7d7;color:#742a2a;'}">
+                                ${membresiaActiva ? '✅ Activa' : '❌ Vencida'}
+                            </span>
+                        </td>
+                        <td>
+                            ${esComprador ? `
+                                <button class="btn ${puedeAdquirir ? 'btn-green' : 'btn-red'}" id="btn-adquirir-${u.id_usuario}" onclick="toggleAdquirir(${u.id_usuario}, ${puedeAdquirir ? 0 : 1}, this)" style="padding:5px 12px;font-size:0.75rem;">
+                                    ${puedeAdquirir ? '✅ Habilitado' : '🚫 Deshabilitado'}
+                                </button>
+                            ` : '<span style="color:#718096;">—</span>'}
+                        </td>
+                        <td>
                             <button class="btn btn-blue" onclick="actualizarUsuario(${u.id_usuario}, this)">💾 Actualizar</button>
                             <button class="btn btn-red" onclick="borrarUsuario(${u.id_usuario}, this)">🗑️ Borrar</button>
                         </td>
                     </tr>
-                `).join('');
+                `}).join('');
             } catch (error) {
                 console.error('Error cargando usuarios:', error);
+            }
+        }
+
+        async function toggleAdquirir(id, nuevoValor, btn) {
+            if (!confirm(`¿${nuevoValor == 1 ? 'Habilitar' : 'Deshabilitar'} la compra para este usuario?`)) return;
+            btn.disabled = true;
+            btn.innerHTML = '⏳...';
+            try {
+                const res = await fetch(`/api/usuarios/${id}/toggle-adquirir`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ PuedeAdquirir: nuevoValor })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    mostrarNotificacion(result.message, 'success');
+                    cargarUsuariosGestion();
+                } else {
+                    mostrarNotificacion('❌ ' + (result.message || 'Error'), 'error');
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error toggling adquirir:', error);
+                mostrarNotificacion('❌ Error al cambiar estado', 'error');
+                btn.disabled = false;
             }
         }
 

@@ -92,8 +92,30 @@ router.post('/admin-auth', (req, res) => {
 // ==========================================
 
 router.get('/api/todos-los-usuarios', (req, res) => {
-    db.query("SELECT id_usuario, Email, Rol, Estatus FROM Usuario", (err, results) => {
+    const sql = `
+        SELECT u.id_usuario, u.Email, u.Rol, u.Estatus,
+               c.PuedeAdquirir,
+               CASE
+                   WHEN EXISTS (
+                       SELECT 1 FROM Membresia m
+                       WHERE m.id_usuario = u.id_usuario
+                       AND NOW() <= DATE_ADD(m.FechaPago, INTERVAL (m.MontoPagado / 10 * 30) DAY)
+                   ) THEN 1
+                   ELSE 0
+               END AS MembresiaActiva
+        FROM Usuario u
+        LEFT JOIN Comprador c ON u.id_usuario = c.id_usuario
+    `;
+    db.query(sql, (err, results) => {
         if (err) return res.status(500).json([]);
+        // Auto-desactivar si la membresía venció (respeta toggle manual del admin para activar)
+        for (const u of results) {
+            if (u.Rol !== 'comprador') continue;
+            if (u.MembresiaActiva == 0 && u.PuedeAdquirir == 1) {
+                db.query("UPDATE Comprador SET PuedeAdquirir = 0 WHERE id_usuario = ?", [u.id_usuario]);
+                u.PuedeAdquirir = 0;
+            }
+        }
         res.json(results);
     });
 });
@@ -235,6 +257,42 @@ router.put('/api/usuarios/:id', (req, res) => {
         res.json({ 
             success: true, 
             message: `Usuario ${Estatus == 1 ? 'activado' : 'desactivado'} correctamente` 
+        });
+    });
+});
+
+router.put('/api/usuarios/:id/toggle-adquirir', (req, res) => {
+    const { id } = req.params;
+    const { PuedeAdquirir } = req.body;
+
+    if (PuedeAdquirir === undefined || (PuedeAdquirir != 0 && PuedeAdquirir != 1)) {
+        return res.status(400).json({
+            success: false,
+            message: "Valor inválido. Debe ser 0 o 1"
+        });
+    }
+
+    const sql = "UPDATE Comprador SET PuedeAdquirir = ? WHERE id_usuario = ?";
+    db.query(sql, [PuedeAdquirir, id], (err, result) => {
+        if (err) {
+            console.error('Error actualizando PuedeAdquirir:', err);
+            return res.status(500).json({
+                success: false,
+                message: "Error al actualizar: " + err.message
+            });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Comprador no encontrado"
+            });
+        }
+
+        const estado = PuedeAdquirir == 1 ? 'habilitada' : 'deshabilitada';
+        res.json({
+            success: true,
+            message: `Compra ${estado} para este usuario`
         });
     });
 });
@@ -565,31 +623,50 @@ router.get('/api/solicitudes-pago', (req, res) => {
 router.post('/aprobar-pago', (req, res) => {
     const { id_solicitud, id_usuario } = req.body;
 
-    db.beginTransaction((err) => {
-        if (err) return res.status(500).send("Error");
+    const sqlExpiry = `
+        SELECT MAX(DATE_ADD(FechaPago, INTERVAL (MontoPagado / 10 * 30) DAY)) AS vencimiento_actual
+        FROM Membresia WHERE id_usuario = ?
+    `;
 
-        const sqlSolicitud = "UPDATE SolicitudPago SET Estatus = 'Aprobado' WHERE id_solicitud = ?";
-        const sqlMembresia = "INSERT INTO Membresia (FechaPago, MontoPagado, id_usuario) VALUES (CURDATE(), 10.00, ?)";
+    db.query(sqlExpiry, [id_usuario], (err, result) => {
+        if (err) return res.status(500).send("Error al consultar vencimiento");
 
-        db.query(sqlSolicitud, [id_solicitud], (err) => {
-            if (err) return db.rollback(() => res.status(500).send("Error en solicitud"));
+        const vencimientoActual = result[0]?.vencimiento_actual;
+        const ahora = new Date();
+        const inicioEfectivo = vencimientoActual && new Date(vencimientoActual) > ahora
+            ? vencimientoActual
+            : ahora;
 
-            db.query(sqlMembresia, [id_usuario], (err) => {
-                if (err) return db.rollback(() => res.status(500).send("Error en membresía"));
-                
-                db.commit((err) => {
-                    if (err) return db.rollback(() => res.status(500).send("Error"));
-                    try {
-                        client.execute(
-                            `INSERT INTO bitacora_seguridad (id_usuario, fecha_evento, tipo_evento, descripcion, ip_origen, dispositivo)
-                             VALUES (?, toTimestamp(now()), ?, ?, ?, ?)`,
-                            [id_usuario, 'APROBACION_PAGO', 'Solicitud de pago aprobada por administrador', req.ip || '', req.headers['user-agent'] || ''],
-                            { prepare: true }
-                        ).catch(e => console.error('Error audit log:', e.message));
-                    } catch (e) {
-                        console.error('Error Cassandra:', e.message);
-                    }
-                    res.send("Membresía activada y días sumados");
+        db.beginTransaction((err) => {
+            if (err) return res.status(500).send("Error");
+
+            const sqlSolicitud = "UPDATE SolicitudPago SET Estatus = 'Aprobado' WHERE id_solicitud = ?";
+            const sqlMembresia = "INSERT INTO Membresia (FechaPago, MontoPagado, id_usuario) VALUES (?, 10.00, ?)";
+
+            db.query(sqlSolicitud, [id_solicitud], (err) => {
+                if (err) return db.rollback(() => res.status(500).send("Error en solicitud"));
+
+                db.query(sqlMembresia, [inicioEfectivo, id_usuario], (err) => {
+                    if (err) return db.rollback(() => res.status(500).send("Error en membresía"));
+
+                    db.query("UPDATE Comprador SET PuedeAdquirir = 1 WHERE id_usuario = ?", [id_usuario], (err) => {
+                        if (err) console.error('Error activando PuedeAdquirir:', err.message);
+
+                        db.commit((err) => {
+                            if (err) return db.rollback(() => res.status(500).send("Error"));
+                            try {
+                                client.execute(
+                                    `INSERT INTO bitacora_seguridad (id_usuario, fecha_evento, tipo_evento, descripcion, ip_origen, dispositivo)
+                                     VALUES (?, toTimestamp(now()), ?, ?, ?, ?)`,
+                                    [id_usuario, 'APROBACION_PAGO', 'Solicitud de pago aprobada por administrador', req.ip || '', req.headers['user-agent'] || ''],
+                                    { prepare: true }
+                                ).catch(e => console.error('Error audit log:', e.message));
+                            } catch (e) {
+                                console.error('Error Cassandra:', e.message);
+                            }
+                            res.send("Membresía activada y días sumados");
+                        });
+                    });
                 });
             });
         });
@@ -598,10 +675,29 @@ router.post('/aprobar-pago', (req, res) => {
 
 router.post('/registrar-nuevo-pago', (req, res) => {
     const { id_usuario } = req.body;
-    const sql = "INSERT INTO Membresia (FechaPago, MontoPagado, id_usuario) VALUES (CURDATE(), 10.00, ?)";
-    db.query(sql, [id_usuario], (err) => {
-        if (err) return res.status(500).send("Error al registrar pago");
-        res.send("Membresía renovada.");
+
+    const sqlExpiry = `
+        SELECT MAX(DATE_ADD(FechaPago, INTERVAL (MontoPagado / 10 * 30) DAY)) AS vencimiento_actual
+        FROM Membresia WHERE id_usuario = ?
+    `;
+
+    db.query(sqlExpiry, [id_usuario], (err, result) => {
+        if (err) return res.status(500).send("Error al consultar vencimiento");
+
+        const vencimientoActual = result[0]?.vencimiento_actual;
+        const ahora = new Date();
+        const inicioEfectivo = vencimientoActual && new Date(vencimientoActual) > ahora
+            ? vencimientoActual
+            : ahora;
+
+        const sql = "INSERT INTO Membresia (FechaPago, MontoPagado, id_usuario) VALUES (?, 10.00, ?)";
+        db.query(sql, [inicioEfectivo, id_usuario], (err) => {
+            if (err) return res.status(500).send("Error al registrar pago");
+            db.query("UPDATE Comprador SET PuedeAdquirir = 1 WHERE id_usuario = ?", [id_usuario], (err) => {
+                if (err) console.error('Error activando PuedeAdquirir:', err.message);
+                res.send("Membresía renovada.");
+            });
+        });
     });
 });
 

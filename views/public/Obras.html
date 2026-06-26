@@ -660,7 +660,7 @@
             }
         }
 
-        // FUNCIÓN CON VERIFICACIÓN DE SESIÓN
+        // FUNCIÓN CON VERIFICACIÓN DE SESIÓN Y PERMISO DE COMPRA
         async function adquirirObra(id, nombre, autor, precio, imagen) {
             try {
                 const resp = await fetch('/api/estado-usuario');
@@ -668,6 +668,10 @@
                 if (!data.autenticado) {
                     alert("Debes iniciar sesión para adquirir una obra.");
                     window.location.href = "/user/Login.html";
+                    return;
+                }
+                if (!data.puedeAdquirir) {
+                    alert("Tu cuenta no tiene permitido adquirir obras en este momento. Contacta al administrador.");
                     return;
                 }
             } catch (e) {

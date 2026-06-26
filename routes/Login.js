@@ -48,22 +48,23 @@ router.post('/login-auth', (req, res) => {
                 return res.sendFile(path.join(__dirname, '..', 'views', 'user', 'Cuenta-pendiente.html'));
             }
 
-            const sqlPago = "SELECT FechaPago FROM Membresia WHERE id_usuario = ? ORDER BY FechaPago DESC LIMIT 1";
+            const sqlPago = "SELECT FechaPago, MontoPagado FROM Membresia WHERE id_usuario = ? ORDER BY FechaPago DESC LIMIT 1";
 
             db.query(sqlPago, [usuario.id_usuario], (err, pagos) => {
                 if (err) return res.status(500).send("Error al verificar membresía");
 
                 if (pagos.length > 0) {
-                    const fechaPago = new Date(pagos[0].FechaPago);
-                    const hoy = new Date();
-                    const diffTime = Math.abs(hoy - fechaPago);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    const pago = pagos[0];
+                    const fechaPago = new Date(pago.FechaPago);
+                    const dias = (parseFloat(pago.MontoPagado) / 10) * 30;
+                    const expiracion = new Date(fechaPago.getTime() + dias * 86400000);
+                    const ahora = new Date();
 
-                    if (diffDays > 30) {
-                        return res.redirect('/user/Login.html?error=vencida');
+                    if (ahora > expiracion) {
+                        db.query("UPDATE Comprador SET PuedeAdquirir = 0 WHERE id_usuario = ?", [usuario.id_usuario]);
                     }
                 } else if (usuario.Rol !== 'administrador') {
-                    return res.redirect('/user/Login.html?error=pago');
+                    db.query("UPDATE Comprador SET PuedeAdquirir = 0 WHERE id_usuario = ?", [usuario.id_usuario]);
                 }
 
                 req.session.id_usuario = usuario.id_usuario;
@@ -160,7 +161,7 @@ router.post('/registrar', (req, res) => {
                     });
                 }
 
-                const sqlMembresia = "INSERT INTO Membresia (FechaPago, MontoPagado, id_usuario) VALUES (CURDATE(), 10.00, ?)";
+                const sqlMembresia = "INSERT INTO Membresia (FechaPago, MontoPagado, id_usuario) VALUES (NOW(), 10.00, ?)";
                 db.query(sqlMembresia, [idUsuario], (errMem) => {
                     if (errMem) return db.rollback(() => res.status(500).send("Error en Membresía"));
 
@@ -243,30 +244,64 @@ router.get('/api/membresia-usuario', (req, res) => {
     const idUsuario = req.session.id_usuario;
     if (!idUsuario) return res.status(401).json({ error: "Sesión no iniciada" });
 
-    const sql = `
+    const sqlMembresia = `
         SELECT 
-            'Membresía Premium' AS Concepto,
-            MIN(FechaPago) AS FechaInicio,
-            SUM(MontoPagado) AS TotalPagado,
-            DATE_ADD(MIN(FechaPago), INTERVAL (SUM(MontoPagado) / 10 * 30) DAY) AS FechaVencimiento,
-            CASE 
-                WHEN CURDATE() <= DATE_ADD(MIN(FechaPago), INTERVAL (SUM(MontoPagado) / 10 * 30) DAY) THEN 'Activa'
-                ELSE 'Vencida'
-            END AS EstadoPago,
-            GREATEST(0, DATEDIFF(DATE_ADD(MIN(FechaPago), INTERVAL (SUM(MontoPagado) / 10 * 30) DAY), CURDATE())) AS DiasRestantes
+            CONCAT('Pago $', MontoPagado) AS Concepto,
+            FechaPago AS FechaInicio,
+            MontoPagado AS TotalPagado,
+            DATE_ADD(FechaPago, INTERVAL (MontoPagado / 10 * 30) DAY) AS FechaVencimiento,
+            'Aprobado' AS EstadoPago,
+            CAST(MontoPagado / 10 * 30 AS UNSIGNED) AS DiasRestantes,
+            'detalle' AS Tipo
         FROM Membresia 
         WHERE id_usuario = ?
-        GROUP BY id_usuario`;
 
-    db.query(sql, [idUsuario], (err, results) => {
+        UNION ALL
+
+        SELECT 
+            'Total Acumulado' AS Concepto,
+            MIN(FechaPago) AS FechaInicio,
+            SUM(MontoPagado) AS TotalPagado,
+            MAX(DATE_ADD(FechaPago, INTERVAL (MontoPagado / 10 * 30) DAY)) AS FechaVencimiento,
+            CASE 
+                WHEN NOW() <= MAX(DATE_ADD(FechaPago, INTERVAL (MontoPagado / 10 * 30) DAY)) THEN 'Activa'
+                ELSE 'Vencida'
+            END AS EstadoPago,
+            GREATEST(0, TIMESTAMPDIFF(DAY, NOW(), MAX(DATE_ADD(FechaPago, INTERVAL (MontoPagado / 10 * 30) DAY)))) AS DiasRestantes,
+            'total' AS Tipo
+        FROM Membresia 
+        WHERE id_usuario = ?
+
+        ORDER BY CASE Tipo WHEN 'total' THEN 2 WHEN 'detalle' THEN 1 ELSE 0 END, FechaInicio ASC`;
+
+    const sqlSolicitudes = `
+        SELECT 
+            'Solicitud de Pago' AS Concepto,
+            FechaSolicitud AS FechaInicio,
+            Monto AS TotalPagado,
+            NULL AS FechaVencimiento,
+            Estatus AS EstadoPago,
+            NULL AS DiasRestantes,
+            'solicitud' AS Tipo
+        FROM SolicitudPago 
+        WHERE id_usuario = ? AND Estatus = 'Pendiente'
+        ORDER BY FechaSolicitud DESC`;
+
+    db.query(sqlMembresia, [idUsuario, idUsuario], (err, membresiaResults) => {
         if (err) return res.status(500).json({ error: "Error de base de datos" });
-        res.json(results);
+        
+        db.query(sqlSolicitudes, [idUsuario], (err, solicitudResults) => {
+            if (err) return res.status(500).json({ error: "Error de base de datos" });
+            
+            const combined = [...solicitudResults, ...membresiaResults];
+            res.json(combined);
+        });
     });
 });
 
 router.post('/solicitar-pago', (req, res) => {
     if (!req.session.id_usuario) return res.status(401).send("No autorizado");
-    const sql = "INSERT INTO SolicitudPago (id_usuario, Estatus) VALUES (?, 'Pendiente')";
+    const sql = "INSERT INTO SolicitudPago (id_usuario, FechaSolicitud, Monto, Estatus) VALUES (?, NOW(), 10.00, 'Pendiente')";
     db.query(sql, [req.session.id_usuario], (err) => {
         if (err) return res.status(500).send("Error al registrar");
         registrarEventoSeguridad(req.session.id_usuario, 'SOLICITUD_PAGO', 'Solicitud de pago de membresía enviada', req);
@@ -335,6 +370,34 @@ router.post('/confirmar-reserva', async (req, res) => {
     if (!Number.isInteger(id_obra) || id_obra <= 0) return res.status(400).json({ error: "ID de obra inválido" });
 
     try {
+        // 0. Verificar membresía activa y sincronizar PuedeAdquirir
+        const puedeAdquirir = await new Promise((resolve, reject) => {
+            const sqlCheck = `
+                SELECT c.PuedeAdquirir,
+                       CASE WHEN EXISTS (
+                           SELECT 1 FROM Membresia m
+                           WHERE m.id_usuario = c.id_usuario
+                           AND NOW() <= DATE_ADD(m.FechaPago, INTERVAL (m.MontoPagado / 10 * 30) DAY)
+                       ) THEN 1 ELSE 0 END AS MembresiaActiva
+                FROM Comprador c WHERE c.id_usuario = ?
+            `;
+            db.query(sqlCheck, [id_usuario], (err, results) => {
+                if (err) return reject(err);
+                if (results.length === 0) return resolve(true);
+                const r = results[0];
+                const membresiaActiva = r.MembresiaActiva == 1;
+                if (!membresiaActiva) {
+                    db.query("UPDATE Comprador SET PuedeAdquirir = 0 WHERE id_usuario = ?", [id_usuario]);
+                    resolve(false);
+                } else {
+                    resolve(r.PuedeAdquirir == 1);
+                }
+            });
+        });
+        if (!puedeAdquirir) {
+            return res.status(403).json({ error: "No tienes permiso para adquirir obras. Contacta al administrador." });
+        }
+
         // 1. Verificar obra en MongoDB (fuente de verdad del catálogo)
         const obraMongo = await ObraMongo.findById(id_obra).lean();
         if (!obraMongo) return res.status(404).json({ error: "La obra no existe" });
@@ -415,10 +478,39 @@ router.post('/confirmar-reserva', async (req, res) => {
 
 router.get('/api/estado-usuario', (req, res) => {
     if (req.session && req.session.id_usuario) {
-        // Si hay sesión, devolvemos el estado de "autenticado"
-        res.json({ autenticado: true });
+        const sql = `
+            SELECT u.Rol, c.PuedeAdquirir,
+                   CASE WHEN EXISTS (
+                       SELECT 1 FROM Membresia m
+                       WHERE m.id_usuario = u.id_usuario
+                       AND NOW() <= DATE_ADD(m.FechaPago, INTERVAL (m.MontoPagado / 10 * 30) DAY)
+                   ) THEN 1 ELSE 0 END AS MembresiaActiva
+            FROM Usuario u
+            LEFT JOIN Comprador c ON u.id_usuario = c.id_usuario
+            WHERE u.id_usuario = ?
+        `;
+        db.query(sql, [req.session.id_usuario], (err, results) => {
+            if (err || results.length === 0) {
+                return res.json({ autenticado: true, puedeAdquirir: true });
+            }
+            const r = results[0];
+            let puedeAdquirir = r.PuedeAdquirir == 1;
+            const membresiaActiva = r.MembresiaActiva == 1;
+
+            if (!membresiaActiva && puedeAdquirir) {
+                db.query("UPDATE Comprador SET PuedeAdquirir = 0 WHERE id_usuario = ?", [req.session.id_usuario]);
+                puedeAdquirir = false;
+            }
+
+            res.json({
+                autenticado: true,
+                puedeAdquirir,
+                id_usuario: req.session.id_usuario,
+                rol: r.Rol || 'comprador'
+            });
+        });
     } else {
-        res.json({ autenticado: false });
+        res.json({ autenticado: false, puedeAdquirir: false });
     }
 });
 

@@ -18,6 +18,7 @@ CREATE TABLE `Comprador` (
   `CodigoVerificacion` int,
   `id_parroquia` int,
   `Calle` varchar(100),
+  `PuedeAdquirir` tinyint(1) DEFAULT 1,
   FOREIGN KEY (`id_usuario`) REFERENCES `Usuario` (`id_usuario`) ON DELETE CASCADE
 );
 
@@ -2198,3 +2199,9 @@ INSERT INTO Parroquia (id_parroquia, id_municipio, nombre) VALUES
 (1136, 462, 'Santa Teresa'),
 (1137, 462, 'Sucre (Catia)'),
 (1138, 462, '23 de enero');
+
+-- ==========================================
+-- MIGRACIÓN: Agregar columna PuedeAdquirir a Comprador
+-- ==========================================
+-- ALTER TABLE Comprador ADD COLUMN PuedeAdquirir tinyint(1) DEFAULT 1;
+--

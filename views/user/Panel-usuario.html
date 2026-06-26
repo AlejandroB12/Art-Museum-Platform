@@ -156,7 +156,8 @@
         }
 
         input,
-        select {
+        select,
+        .input-select {
             background: #1a1a1a;
             border: 1px solid #333;
             color: white;
@@ -164,6 +165,11 @@
             border-radius: 10px;
             width: 100%;
             margin-top: 8px;
+        }
+
+        select.input-select option {
+            background: #1a1a1a;
+            color: white;
         }
 
         .btn-main {
@@ -267,6 +273,23 @@
             font-size: 0.85rem;
             padding: 10px 0;
         }
+
+        .error-msg {
+            color: #ff4444;
+            font-size: 12px;
+            display: block;
+            margin-top: 4px;
+            min-height: 16px;
+        }
+
+        .input-error {
+            border-color: #ff4444 !important;
+            box-shadow: 0 0 0 1px #ff4444;
+        }
+
+        .input-valid {
+            border-color: #00ff00 !important;
+        }
     </style>
 </head>
 
@@ -367,11 +390,38 @@
                 <div style="margin-top: 30px; border-top: 1px solid #333; padding-top: 20px;">
                     <h3>Informar pago realizado</h3>
                     <div class="input-group">
-                        <input type="text" id="card-number" maxlength="19" placeholder="Número de Tarjeta (Simulado)">
+                        <input type="text" id="card-number" maxlength="19" placeholder="4444-4444-4444-4444" oninput="formatearTarjeta(); limpiarError('card-number')">
+                        <span id="error-card-number" class="error-msg"></span>
                     </div>
                     <div style="display: flex; gap: 10px; margin-top: 10px;">
-                        <input type="text" id="expiry-date" maxlength="5" placeholder="MM/YY">
-                        <input type="password" maxlength="3" placeholder="CVV">
+                        <div style="flex:0.5;">
+                            <select id="expiry-month" class="input-select" onchange="limpiarError('expiry-month')">
+                                <option value="">Mes</option>
+                                <option value="01">01 - Enero</option>
+                                <option value="02">02 - Febrero</option>
+                                <option value="03">03 - Marzo</option>
+                                <option value="04">04 - Abril</option>
+                                <option value="05">05 - Mayo</option>
+                                <option value="06">06 - Junio</option>
+                                <option value="07">07 - Julio</option>
+                                <option value="08">08 - Agosto</option>
+                                <option value="09">09 - Septiembre</option>
+                                <option value="10">10 - Octubre</option>
+                                <option value="11">11 - Noviembre</option>
+                                <option value="12">12 - Diciembre</option>
+                            </select>
+                            <span id="error-expiry-month" class="error-msg"></span>
+                        </div>
+                        <div style="flex:0.5;">
+                            <select id="expiry-year" class="input-select" onchange="limpiarError('expiry-year')">
+                                <option value="">Año</option>
+                            </select>
+                            <span id="error-expiry-year" class="error-msg"></span>
+                        </div>
+                        <div style="flex:0.4;">
+                            <input type="text" id="cvv" maxlength="3" placeholder="CVV" oninput="limpiarError('cvv')">
+                            <span id="error-cvv" class="error-msg"></span>
+                        </div>
                     </div>
                     <button class="btn-main" onclick="enviarSolicitudPago()" style="background: #0088ff; color: white;">
                         Enviar Pago para Revisión
@@ -382,18 +432,35 @@
     </main>
 
     <script>
+        let currentUserId = null;
+        let intervaloMembresia = null;
+
         // Lógica para cambiar entre vistas
         function showView(viewId, element) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
             document.querySelectorAll('.menu a').forEach(a => a.classList.remove('active'));
             document.getElementById(viewId).classList.add('active-view');
             element.classList.add('active');
+
+            // Auto-refresh cada 3s en la vista Membresía
+            if (intervaloMembresia) { clearInterval(intervaloMembresia); intervaloMembresia = null; }
+            if (viewId === 'view-membresia') {
+                intervaloMembresia = setInterval(cargarMembresia, 3000);
+            }
         }
 
-        let currentUserId = null;
+
 
         // CARGA INICIAL: Nombre, Foto y Recomendaciones
         document.addEventListener('DOMContentLoaded', () => {
+            const anioSelect = document.getElementById('expiry-year');
+            const anioActual = new Date().getFullYear();
+            for (let a = anioActual; a <= 2100; a++) {
+                const opt = document.createElement('option');
+                opt.value = a;
+                opt.textContent = a;
+                anioSelect.appendChild(opt);
+            }
             fetch('/api/usuario-actual')
                 .then(res => res.json())
                 .then(data => {
@@ -579,14 +646,52 @@
                     return;
                 }
                 datos.forEach(pago => {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${pago.Concepto}</td>
-                            <td>${new Date(pago.FechaInicio).toLocaleDateString()}</td>
-                            <td style="color: ${pago.EstadoPago === 'Activa' ? '#00ff00' : '#ff0000'}">${pago.EstadoPago}</td>
-                            <td>${pago.DiasRestantes > 0 ? pago.DiasRestantes : 0} días</td>
-                        </tr>
-                    `;
+                    let estadoColor = '#ff0000';
+                    let estadoTexto = pago.EstadoPago;
+                    let diasRestantes = '-';
+                    let estiloFila = '';
+
+                    if (pago.Tipo === 'solicitud') {
+                        if (pago.EstadoPago === 'Pendiente') {
+                            estadoColor = '#ffaa00';
+                        } else if (pago.EstadoPago === 'Aprobado') {
+                            estadoColor = '#00ff00';
+                        }
+                    } else if (pago.Tipo === 'total') {
+                        estiloFila = 'font-weight: bold; border-top: 2px solid #333;';
+                        estadoColor = pago.EstadoPago === 'Activa' ? '#00ff00' : '#ff0000';
+                        diasRestantes = (pago.DiasRestantes > 0 ? pago.DiasRestantes : 0) + ' días';
+                    } else if (pago.Tipo === 'detalle') {
+                        estadoColor = '#00ff00';
+                        diasRestantes = pago.DiasRestantes + ' días';
+                    }
+
+                    if (pago.Tipo === 'total') {
+                        tbody.innerHTML += `
+                            <tr style="${estiloFila}">
+                                <td colspan="3" style="text-align: right; padding-right: 20px;">${pago.Concepto}:</td>
+                                <td style="color: ${estadoColor}; font-size: 1.1rem; font-weight: bold;">${diasRestantes}</td>
+                            </tr>
+                        `;
+                    } else if (pago.Tipo === 'detalle') {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${pago.Concepto}</td>
+                                <td>${pago.FechaInicio ? new Date(pago.FechaInicio).toLocaleDateString() : '-'}</td>
+                                <td style="color: #00ff00;">${estadoTexto}</td>
+                                <td>${diasRestantes}</td>
+                            </tr>
+                        `;
+                    } else {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${pago.Concepto}</td>
+                                <td>${pago.FechaInicio ? new Date(pago.FechaInicio).toLocaleDateString() : '-'}</td>
+                                <td style="color: ${estadoColor}">${estadoTexto}</td>
+                                <td>-</td>
+                            </tr>
+                        `;
+                    }
                 });
             } catch (error) { console.error(error); }
         }
@@ -599,39 +704,103 @@
             }
         }
 
+        // --- VALIDACIONES ---
+        function limpiarError(id) {
+            const input = document.getElementById(id);
+            const error = document.getElementById('error-' + id);
+            if (error) error.textContent = '';
+            input.classList.remove('input-error');
+        }
+
+        function marcarError(id, mensaje) {
+            const input = document.getElementById(id);
+            const error = document.getElementById('error-' + id);
+            if (error) error.textContent = mensaje;
+            input.classList.add('input-error');
+        }
+
+        function formatearTarjeta() {
+            const input = document.getElementById('card-number');
+            let valor = input.value.replace(/[^0-9]/g, '').slice(0, 16);
+            let formateado = '';
+            for (let i = 0; i < valor.length; i++) {
+                if (i > 0 && i % 4 === 0) formateado += '-';
+                formateado += valor[i];
+            }
+            input.value = formateado;
+        }
+
+        function validarTarjeta(numero) {
+            const limpio = numero.replace(/-/g, '');
+            if (!/^\d{16}$/.test(limpio)) return 'Deben ser 16 dígitos (4444-4444-4444-4444)';
+            return '';
+        }
+
+        function validarFechaExpiracion(mes, anio) {
+            if (!mes) return 'Selecciona el mes';
+            if (!anio) return 'Selecciona el año';
+            const ahora = new Date();
+            const expira = new Date(parseInt(anio), parseInt(mes), 0);
+            if (expira < ahora) return 'Tarjeta vencida';
+            return '';
+        }
+
+        function validarCVV(cvv) {
+            if (!/^\d{3}$/.test(cvv)) return 'Debe ser 3 dígitos';
+            return '';
+        }
+
         // --- LÓGICA DE GESTIÓN DE PAGOS ---
         async function enviarSolicitudPago() {
-            // 1. Obtener valores
-            const card = document.getElementById('card-number').value;
-            const expiry = document.getElementById('expiry-date').value;
+            const card = document.getElementById('card-number').value.trim();
+            const mes = document.getElementById('expiry-month').value;
+            const anio = document.getElementById('expiry-year').value;
+            const cvv = document.getElementById('cvv').value.trim();
 
-            // 2. Validación básica
-            if (card.length < 13) {
-                return alert("Por favor, ingresa un número de tarjeta válido.");
-            }
-            if (expiry.length < 5) {
-                return alert("Ingresa una fecha de expiración válida (MM/YY).");
+            let valido = true;
+
+            const errCard = validarTarjeta(card);
+            if (errCard) { marcarError('card-number', errCard); valido = false; }
+
+            const errExpiry = validarFechaExpiracion(mes, anio);
+            if (errExpiry) {
+                if (!mes) marcarError('expiry-month', errExpiry);
+                if (!anio) marcarError('expiry-year', 'Selecciona el año');
+                if (mes && anio) {
+                    marcarError('expiry-month', errExpiry);
+                    marcarError('expiry-year', errExpiry);
+                }
+                valido = false;
             }
 
-            // 3. Confirmación
+            const errCvv = validarCVV(cvv);
+            if (errCvv) { marcarError('cvv', errCvv); valido = false; }
+
+            if (!valido) return;
+
+            document.getElementById('card-number').classList.add('input-valid');
+            document.getElementById('expiry-month').classList.add('input-valid');
+            document.getElementById('expiry-year').classList.add('input-valid');
+            document.getElementById('cvv').classList.add('input-valid');
+
+            const expiry = mes + '/' + anio.slice(-2);
+
             if (!confirm("¿Confirmas que deseas enviar los datos para revisión del administrador?")) return;
 
             try {
-                // 4. Enviar al servidor
                 const response = await fetch('/solicitar-pago', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        cardNumber: card, // Puedes enviar esto para que el admin lo vea en la base de datos
-                        expiry: expiry
-                    })
+                    body: JSON.stringify({ cardNumber: card, expiry: expiry, cvv: cvv })
                 });
 
                 if (response.ok) {
                     alert("Solicitud enviada con éxito. El administrador revisará tu información pronto.");
-                    // Limpiar campos tras éxito
                     document.getElementById('card-number').value = '';
-                    document.getElementById('expiry-date').value = '';
+                    document.getElementById('expiry-month').value = '';
+                    document.getElementById('expiry-year').value = '';
+                    document.getElementById('cvv').value = '';
+                    document.querySelectorAll('.input-valid').forEach(e => e.classList.remove('input-valid'));
                 } else {
                     alert("Error al enviar la solicitud al servidor.");
                 }
