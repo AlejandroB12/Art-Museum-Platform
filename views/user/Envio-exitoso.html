@@ -3,334 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registrar Envío | Museo</title>
+    <title>Envío Registrado | Museo</title>
     <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #121212;
-            padding: 20px;
-            color: white;
-        }
-
-        .register-container {
-            background: #1e1e1e;
-            padding: 50px 40px 40px 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            border: 1px solid #333;
-            width: 100%;
-            max-width: 500px;
-            margin: 0 auto;
-        }
-
-        .login-form {
-            width: 100%;
-        }
-
-        .login-form h2 {
-            text-align: center;
-            color: #00ff00;
-            font-size: 30px;
-            font-weight: 800;
-            margin-bottom: 8px;
-            letter-spacing: -1px;
-        }
-
-        .login-form p {
-            text-align: center;
-            color: #888;
-            font-size: 15px;
-            margin-bottom: 30px;
-        }
-
-        .order-summary {
-            background: #252525;
-            border-left: 4px solid #00ff00;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-            width: 100%;
-        }
-
-        .order-summary p {
-            text-align: left;
-            margin: 8px 0;
-            color: #ccc;
-            font-size: 0.95rem;
-        }
-
-        .order-summary strong {
-            color: #00ff00;
-        }
-
-        .address-card {
-            background: #1a1a1a;
-            border: 2px solid #333;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 30px;
-            width: 100%;
-        }
-
-        .address-card h3 {
-            color: #00ff00;
-            font-size: 16px;
-            text-transform: uppercase;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #333;
-            padding-bottom: 8px;
-        }
-
-        .address-card .address-label {
-            color: #888;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            margin-bottom: 2px;
-        }
-
-        .address-card input {
-            width: 100%;
-            background: #333;
-            border: 1px solid #555;
-            color: white;
-            padding: 8px;
-            border-radius: 4px;
-            margin-bottom: 12px;
-            font-size: 1rem;
-        }
-
-        .address-card input:focus {
-            outline: none;
-            border-color: #00ff00;
-            box-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 16px;
-            margin: 10px 0 10px 0;
-            background: #00ff00;
-            border: none;
-            border-radius: 5px;
-            color: #121212;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .login-btn:hover {
-            background: #00cc00;
-            transform: translateY(-2px);
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
-        }
-
-        .back-link {
-            display: block;
-            text-align: center;
-            margin-top: 25px;
-            color: #888;
-            text-decoration: none;
-            font-size: 0.9rem;
-            transition: 0.3s;
-        }
-
-        .back-link:hover {
-            color: #00ff00;
-        }
-
-        .guia-field {
-            margin-bottom: 15px;
-            text-align: left;
-        }
-
-        .guia-field label {
-            color: #888;
-            font-size: 0.9rem;
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .guia-field input {
-            width: 100%;
-            background: #333;
-            border: 1px solid #555;
-            color: white;
-            padding: 8px;
-            border-radius: 4px;
-        }
-
-        .loading {
-            display: none;
-            color: #00ff00;
-            text-align: center;
-            margin-top: 10px;
-        }
-
-        .error-message {
-            color: #ff4444;
-            text-align: center;
-            margin-top: 10px;
-            display: none;
-        }
-
-        @media (max-width: 480px) {
-            .register-container {
-                padding: 30px 20px;
-            }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { min-height: 100vh; display: flex; justify-content: center; align-items: center; background-color: #121212; padding: 20px; color: white; }
+        .register-container { background: #1e1e1e; padding: 50px 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #333; width: 100%; max-width: 520px; text-align: center; }
+        .check-icon { font-size: 64px; margin-bottom: 16px; }
+        h2 { color: #00ff00; font-size: 28px; font-weight: 800; margin-bottom: 8px; letter-spacing: -1px; }
+        p.sub { color: #888; font-size: 15px; margin-bottom: 30px; }
+        .order-summary { background: #252525; border-left: 4px solid #00ff00; padding: 20px; border-radius: 8px; margin-bottom: 30px; text-align: left; }
+        .order-summary p { margin: 8px 0; color: #ccc; font-size: 0.95rem; text-align: left; }
+        .order-summary strong { color: #00ff00; }
+        .back-link { display: inline-block; margin-top: 20px; padding: 12px 32px; background: #00ff00; border: none; border-radius: 5px; color: #121212; font-size: 16px; font-weight: 700; cursor: pointer; text-decoration: none; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; }
+        .back-link:hover { background: #00cc00; transform: translateY(-2px); box-shadow: 0 0 20px rgba(0,255,0,0.3); }
+        .loading { color: #00ff00; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
     <div class="register-container">
-        <!-- FORMULARIO CON JAVASCRIPT -->
-        <form class="login-form" id="envioForm">
-            <h2>ENVÍO INMEDIATO</h2>
-            <p>Confirmar datos para el envío de la obra</p>
-
-            <!-- Resumen de la factura (se llenará con JS) -->
-            <div class="order-summary" id="facturaSummary">
-                <p><strong>#Factura:</strong> <span id="facturaId">Cargando...</span></p>
-                <p><strong>Cliente:</strong> <span id="clienteNombre">Cargando...</span></p>
-                <p><strong>Cédula:</strong> <span id="clienteCedula">Cargando...</span></p>
-                <p><strong>Obra:</strong> <span id="obraDetalle">Cargando...</span></p>
-                <p><strong>Total pagado:</strong> <span id="totalPagado">Cargando...</span>€</p>
-            </div>
-
-            <!-- Dirección de envío -->
-            <div class="address-card">
-                <h3>📍 DIRECCIÓN DE ENVÍO</h3>
-
-                <div class="address-label">Municipio</div>
-                <input type="text" id="municipio" name="municipio" required>
-
-                <div class="address-label">Parroquia</div>
-                <input type="text" id="parroquia" name="parroquia" required>
-
-                <div class="address-label">Dirección completa</div>
-                <input type="text" id="direccion" name="direccion_detallada" required>
-            </div>
-
-            <!-- Número de guía (opcional) -->
-            <div class="guia-field">
-                <label>📦 Número de guía (opcional):</label>
-                <input type="text" id="numeroGuia" name="numero_guia" placeholder="Ej: 1234-5678-90">
-            </div>
-
-            <button type="submit" class="login-btn" id="submitBtn">CONFIRMAR ENVÍO INMEDIATO</button>
-            
-            <!-- Mensajes de estado -->
-            <div class="loading" id="loading">Procesando...</div>
-            <div class="error-message" id="error"></div>
-        </form>
-
+        <div class="check-icon">✅</div>
+        <h2>ENVIO REGISTRADO</h2>
+        <p class="sub">El envío de la obra ha sido registrado exitosamente</p>
+        <div class="order-summary" id="facturaSummary">
+            <p><strong>#Factura:</strong> <span id="facturaNumero">Cargando...</span></p>
+            <p><strong>Cliente:</strong> <span id="clienteNombre">Cargando...</span></p>
+            <p><strong>Destino:</strong> <span id="destino">Cargando...</span></p>
+            <p><strong>Dirección:</strong> <span id="direccion">Cargando...</span></p>
+            <p><strong>Número de guía:</strong> <span id="numeroGuia">N/A</span></p>
+        </div>
         <a href="/admin/Panel-adminsitrador.html" class="back-link">← Volver al panel</a>
+        <div class="loading" id="loading">Redirigiendo al panel...</div>
     </div>
 
     <script>
-        // Obtener ID de factura de la URL
         const urlParams = new URLSearchParams(window.location.search);
         const idFactura = urlParams.get('id_factura');
 
-        // Si no hay ID de factura, redirigir
-        if (!idFactura) {
-            window.location.href = 'Panel-administrador.html';
-        }
-
-        // Cargar datos de la factura al cargar la página
-        document.addEventListener('DOMContentLoaded', async function() {
-            try {
-                const response = await fetch(`/api/factura/${idFactura}`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    // Llenar el resumen de factura
-                    document.getElementById('facturaId').textContent = data.factura.id_factura.toString().padStart(8, '0');
-                    document.getElementById('clienteNombre').textContent = `${data.factura.Nombre} ${data.factura.Apellido}`;
-                    document.getElementById('clienteCedula').textContent = data.factura.Cedula;
-                    document.getElementById('obraDetalle').textContent = `${data.factura.nombre_obra} - ${data.factura.Precio}€`;
-                    document.getElementById('totalPagado').textContent = data.factura.Total_Pagado;
-                    
-                    // Si hay dirección guardada, llenar los campos
-                    if (data.direccion) {
-                        document.getElementById('municipio').value = data.direccion.municipio || 'Caroni';
-                        document.getElementById('parroquia').value = data.direccion.parroquia || 'Unare';
-                        document.getElementById('direccion').value = data.direccion.direccion || 'Calle 3, atlántico. Los Mangos';
+        if (idFactura) {
+            document.addEventListener('DOMContentLoaded', async () => {
+                try {
+                    const res = await fetch(`/api/factura/${idFactura}`);
+                    const data = await res.json();
+                    if (data.success && data.factura) {
+                        const f = data.factura;
+                        document.getElementById('facturaNumero').textContent = f.id_factura.toString().padStart(8, '0');
+                        document.getElementById('clienteNombre').textContent = f.CompradorNombre || `${f.Nombre || ''} ${f.Apellido || ''}`.trim() || 'No disponible';
+                        if (data.direccion) {
+                            document.getElementById('destino').textContent = `${data.direccion.municipio || ''}, ${data.direccion.parroquia || ''}`.replace(/^, /, '').replace(/, $/, '') || 'No especificado';
+                            document.getElementById('direccion').textContent = data.direccion.direccion || 'No especificada';
+                        }
                     }
-                } else {
-                    showError('Error al cargar los datos de la factura');
+                } catch (e) {
+                    console.error(e);
                 }
-            } catch (error) {
-                showError('Error de conexión con el servidor');
-            }
-        });
-
-        // Manejar envío del formulario
-        document.getElementById('envioForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            // Mostrar loading y ocultar errores
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('error').style.display = 'none';
-            document.getElementById('submitBtn').disabled = true;
-
-            // Recoger datos del formulario
-            const formData = {
-                id_factura: idFactura,
-                municipio: document.getElementById('municipio').value.trim(),
-                parroquia: document.getElementById('parroquia').value.trim(),
-                direccion_detallada: document.getElementById('direccion').value.trim(),
-                numero_guia: document.getElementById('numeroGuia').value.trim() || null
-            };
-
-            // Validación básica
-            if (!formData.municipio || !formData.parroquia || !formData.direccion_detallada) {
-                showError('Todos los campos de dirección son obligatorios');
-                return;
-            }
-
-            try {
-                // Enviar al servidor
-                const response = await fetch('/api/registrar-envio', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    // Redirigir a página de éxito
-                    window.location.href = 'Envio-exitoso.html';
-                } else {
-                    showError(result.message || 'Error al registrar el envío');
-                }
-            } catch (error) {
-                showError('Error de conexión con el servidor');
-            }
-        });
-
-        function showError(message) {
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('error').style.display = 'block';
-            document.getElementById('error').textContent = message;
-            document.getElementById('submitBtn').disabled = false;
+            });
         }
+
+        setTimeout(() => {
+            document.getElementById('loading').style.display = 'block';
+            window.location.href = '/admin/Panel-adminsitrador.html';
+        }, 5000);
     </script>
 </body>
 </html>

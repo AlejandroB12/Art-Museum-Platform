@@ -8,196 +8,49 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
+    <link rel="stylesheet" href="/styles/pages/panel-admin.css">
     <style>
-        :root {
-            --sidebar-bg: #1a202c;
-            --active-color: #48bb78;
-            --text-light: #edf2f7;
-            --danger: #e53e3e;
-            --accent: #3182ce;
-        }
-
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            background: #f4f6f9;
             display: flex;
+            background: #0a0a0a;
         }
-
-        .sidebar {
-            width: 280px;
-            background: var(--sidebar-bg);
-            color: white;
-            height: 100vh;
-            position: fixed;
-            padding: 20px;
-            box-sizing: border-box;
-            overflow-y: auto;
-        }
-
-        .sidebar h2 {
-            color: var(--active-color);
-            text-align: center;
-            border-bottom: 1px solid #2d3748;
-            padding-bottom: 10px;
-            margin-top: 0;
-        }
-
-        .nav-group {
-            margin-top: 25px;
-        }
-
+        .sidebar h2 { cursor: default; }
+        .nav-group { margin-top: 25px; }
         .nav-label {
-            font-size: 0.75rem;
-            color: #718096;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
             display: block;
+            font-size: 0.65rem;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            padding: 0 20px;
         }
-
-        .nav-item {
-            padding: 12px 15px;
-            cursor: pointer;
-            border-radius: 8px;
-            margin-bottom: 5px;
-            transition: 0.3s;
-            color: #cbd5e0;
-        }
-
-        .nav-item:hover {
-            background: #2d3748;
-            color: white;
-        }
-
-        .nav-item.active {
-            background: #2d3748;
-            color: var(--active-color);
-            font-weight: bold;
-        }
-
-        .main {
-            margin-left: 280px;
-            padding: 40px;
-            width: calc(100% - 280px);
-            box-sizing: border-box;
-        }
-
-        .card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            margin-bottom: 20px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            background: white;
-        }
-
-        th,
-        td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #edf2f7;
-        }
-
-        th {
-            background: #f7fafc;
-            color: #4a5568;
-            font-weight: 600;
-        }
-
-        .btn {
-            border: none;
-            padding: 10px 18px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.2s;
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .btn-blue {
-            background: var(--accent);
-            color: white;
-        }
-
-        .btn-green {
-            background: #38a169;
-            color: white;
-        }
-
-        .btn-pdf {
-            background: var(--danger);
-            color: white;
-            margin-top: 10px;
-        }
-
-        .btn-red {
-            background: #e53e3e;
-            color: white;
-        }
-
-        .edit-input {
-            padding: 5px;
-            border: 1px solid #cbd5e0;
-            border-radius: 4px;
-            width: 90%;
-        }
-
-        .report-filter {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
-            align-items: flex-end;
-            background: #edf2f7;
-            padding: 15px;
-            border-radius: 8px;
-        }
-
-        .report-filter input {
-            padding: 8px;
-            border: 1px solid #cbd5e0;
-            border-radius: 4px;
-        }
-
-        header h1 {
-            margin: 0;
-            font-size: 1.8rem;
-            color: #2d3748;
-        }
-
+        .main { width: calc(100% - 210px); box-sizing: border-box; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn { border: 1px solid; background: transparent; }
+        .btn-green { color: #00ff00; border-color: #00ff00; }
+        .btn-green:hover { background: #00ff00; color: #000; }
+        .btn-blue { color: #00ff00; border-color: #00ff00; }
+        .btn-blue:hover { background: #00ff00; color: #000; }
+        .btn-red { color: #ff4444; border-color: #ff4444; }
+        .btn-red:hover { background: #ff4444; color: #000; }
+        .btn-pdf { color: #ff4444; border-color: #ff4444; margin-top: 10px; }
+        .btn-pdf:hover { background: #ff4444; color: #000; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .report-filter { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 25px; }
         .badge-pending {
-            background: #fef3c7;
-            color: #92400e;
-            padding: 4px 8px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: bold;
+            background: rgba(255,170,0,0.15); color: #ffaa00;
+            padding: 4px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;
         }
-
-        .status-disponible {
-            color: #2b6cb0;
-            font-weight: bold;
-        }
-
-        .status-reservado {
-            color: #dd6b20;
-            font-weight: bold;
-        }
-
-        .status-vendida {
-            color: #c53030;
-            font-weight: bold;
-        }
+        .status-disponible { color: #00ff00; font-weight: bold; }
+        .status-reservado { color: #ffaa00; font-weight: bold; }
+        .status-vendida { color: #ff4444; font-weight: bold; }
+        header h1 { margin: 0; font-size: 1.5rem; color: #e0e0e0; }
+        .edit-input { padding: 5px; border: 1px solid #333; border-radius: 4px; background: #111; color: #ccc; }
+        /* Labels consistent with panel-admin.css */
+        label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: #888; }
     </style>
 </head>
 
@@ -208,7 +61,8 @@
 
         <div class="nav-group">
             <span class="nav-label">Gestión Maestra</span>
-            <div class="nav-item active" id="btn-gestion" onclick="mostrarTab('gestion')">📦 Inventario y Usuarios</div>
+            <div class="nav-item active" id="btn-gestion" onclick="mostrarTab('gestion')">📦 Inventario</div>
+            <div class="nav-item" id="btn-usuarios" onclick="mostrarTab('usuarios')">👥 Usuarios</div>
             <div class="nav-item" id="btn-facturacion" onclick="mostrarTab('facturacion')">🧾 Facturar Reservas</div>
             <div class="nav-item" id="btn-usuarios-pagos" onclick="mostrarTab('usuarios-pagos')">💳 Validar Pagos
                 Membresía</div>
@@ -217,8 +71,6 @@
             <div class="nav-item" id="btn-generos" onclick="mostrarTab('generos')">🎭 Gestionar Géneros</div>
             <div class="nav-item" id="btn-autores" onclick="mostrarTab('autores')">✍️ Gestionar Autores</div>
             <div class="nav-item" id="btn-obras" onclick="mostrarTab('obras')">🖼️ Gestionar Obras</div>
-            <div class="nav-item" id="btn-especializaciones" onclick="mostrarTab('especializaciones')">🏷️
-                Especializaciones</div>
         </div>
 
         <div class="nav-group">
@@ -243,7 +95,7 @@
         </div>
 
         <div class="nav-group" style="margin-top: 50px;">
-            <div class="nav-item" style="color: #feb2b2;" onclick="cerrarSesion()">🚪 Cerrar Sesión</div>
+            <div class="nav-item" style="color: #ff4444;" onclick="cerrarSesion()">🚪 Cerrar Sesión</div>
         </div>
     </div>
 
@@ -256,6 +108,9 @@
         <div id="tab-gestion" class="tab-content">
             <div class="card">
                 <h3>📦 Modificar Obras Registradas</h3>
+                <div style="margin-bottom:10px;">
+                    <input type="text" id="buscador-inventario" placeholder="🔍 Buscar por ID o nombre..." oninput="filtrarInventario()" style="width:100%;padding:8px 12px;border:1px solid #2d3748;border-radius:6px;background:#1a202c;color:#e2e8f0;font-size:14px;box-sizing:border-box;">
+                </div>
                 <table>
                     <thead>
                         <tr>
@@ -269,21 +124,37 @@
                     <tbody id="body-gestion-obras"></tbody>
                 </table>
             </div>
+        </div>
+
+        <div id="tab-usuarios" class="tab-content" style="display:none">
             <div class="card">
-                <h3>👥 Modificar Usuarios del Sistema</h3>
+                <h3>👥 Administradores</h3>
                 <table>
                     <thead>
                         <tr>
                             <th>ID</th>
                             <th>Email</th>
-                            <th>Rol</th>
+                            <th>Estatus</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="body-gestion-admins"></tbody>
+                </table>
+            </div>
+            <div class="card">
+                <h3>👤 Compradores</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Email</th>
                             <th>Estatus</th>
                             <th>Membresía</th>
                             <th>Puede Adquirir</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
-                    <tbody id="body-gestion-usuarios"></tbody>
+                    <tbody id="body-gestion-compradores"></tbody>
                 </table>
             </div>
         </div>
@@ -326,6 +197,9 @@
         <div id="tab-facturacion" class="tab-content" style="display:none">
             <div class="card">
                 <h3>🧾 Emitir Factura Oficial</h3>
+                <div style="margin-bottom:10px;">
+                    <input type="text" id="buscador-facturacion" placeholder="🔍 Buscar obra reservada por ID o nombre..." oninput="filtrarFacturacion()" style="width:100%;padding:8px 12px;border:1px solid #2d3748;border-radius:6px;background:#1a202c;color:#e2e8f0;font-size:14px;box-sizing:border-box;">
+                </div>
                 <table>
                     <thead>
                         <tr>
@@ -397,163 +271,17 @@
         <div id="tab-generos" class="tab-content" style="display:none">
             <div class="card">
                 <h3>🎭 Agregar Nuevo Género</h3>
-                <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+                <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:15px;">
                     <div>
                         <label>Nombre del género:</label>
-                        <input type="text" id="input-genero-nombre" class="edit-input" placeholder="Ej: Acuarela"
-                            style="width:200px;">
+                        <input type="text" id="input-genero-nombre" class="edit-input" placeholder="Ej: Acuarela" style="width:200px;">
                     </div>
                     <button class="btn btn-green" onclick="agregarGenero()">➕ Agregar Género</button>
                 </div>
-            </div>
-            <div class="card">
-                <h3>📋 Géneros Existentes</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody id="body-generos"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Tab: Gestionar Autores -->
-        <div id="tab-autores" class="tab-content" style="display:none">
-            <div class="card">
-                <h3>✍️ Agregar Nuevo Autor</h3>
-                <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
-                    <div>
-                        <label>Nombre:</label>
-                        <input type="text" id="input-autor-nombre" class="edit-input" placeholder="Nombre"
-                            style="width:180px;">
-                    </div>
-                    <div>
-                        <label>Apellido:</label>
-                        <input type="text" id="input-autor-apellido" class="edit-input" placeholder="Apellido"
-                            style="width:180px;">
-                    </div>
-                    <div>
-                        <label>Nacionalidad (opcional):</label>
-                        <select id="input-autor-nacionalidad" class="edit-input" style="width:180px;">
-                            <option value="">— Seleccione —</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label>Biografía (opcional):</label>
-                        <textarea id="input-autor-biografia" class="edit-input" placeholder="Breve biografía"
-                            style="width:300px; height:80px; resize:vertical;"></textarea>
-                    </div>
-                    <div>
-                        <label>Foto (opcional):</label>
-                        <input type="file" id="input-autor-foto" accept="image/*" style="width:220px;">
-                    </div>
-                    <button class="btn btn-green" onclick="agregarAutor()">➕ Agregar Autor</button>
-                </div>
-            </div>
-            <div class="card">
-                <h3>📋 Autores Existentes</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Foto</th>
-                            <th>Nombre</th>
-                            <th>Apellido</th>
-                            <th>Nacionalidad</th>
-                            <th>Biografía</th>
-                            <th>Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody id="body-autores"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Tab: Gestionar Obras -->
-        <div id="tab-obras" class="tab-content" style="display:none">
-            <div class="card">
-                <h3>🖼️ Agregar Nueva Obra</h3>
-                <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
-                    <div>
-                        <label>Nombre:</label>
-                        <input type="text" id="input-obra-nombre" class="edit-input" placeholder="Nombre de la obra"
-                            style="width:200px;">
-                    </div>
-                    <div>
-                        <label>Fecha creación:</label>
-                        <input type="date" id="input-obra-fecha" class="edit-input" style="width:150px;">
-                    </div>
-                    <div>
-                        <label>Precio ($):</label>
-                        <input type="number" id="input-obra-precio" class="edit-input" placeholder="0.00" step="0.01"
-                            style="width:120px;">
-                    </div>
-                    <div>
-                        <label>Estado:</label>
-                        <select id="input-obra-estado" class="edit-input" style="width:140px;">
-                            <option value="Disponible">Disponible</option>
-                            <option value="Reservado">Reservado</option>
-                            <option value="Vendida">Vendida</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label>Género:</label>
-                        <select id="input-obra-genero" class="edit-input" style="width:160px;">
-                            <option value="">— Seleccione —</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label>Autor(es):</label>
-                        <select id="input-obra-autores" class="edit-input" multiple style="width:200px;height:80px;">
-                        </select>
-                    </div>
-                    <div>
-                        <label>Foto:</label>
-                        <input type="file" id="input-obra-foto" accept="image/*" style="width:220px;">
-                    </div>
-                    <button class="btn btn-green" onclick="agregarObra()">➕ Agregar Obra</button>
-                </div>
-            </div>
-            <div class="card">
-                <h3>📋 Obras Registradas</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Precio</th>
-                            <th>Estado</th>
-                            <th>Género</th>
-                            <th>Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody id="body-obras"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Tab: Gestionar Especializaciones -->
-        <div id="tab-especializaciones" class="tab-content" style="display:none">
-            <div class="card">
-                <h3>🏷️ Agregar Especialización por Género</h3>
-                <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:15px;">
-                    <div>
-                        <label>Género:</label>
-                        <select id="input-esp-genero" class="edit-input" style="width:220px;"
-                            onchange="onGeneroEspChange()">
-                            <option value="">— Seleccione un género —</option>
-                        </select>
-                    </div>
-                </div>
-                <div id="esp-atributos-section" style="display:none;">
+                <div style="border-top:1px solid #2d3748;padding-top:15px;">
                     <div style="margin-bottom:10px;">
-                        <strong>Atributos:</strong>
-                        <button class="btn btn-blue" onclick="agregarFilaAtributo()"
-                            style="margin-left:10px;padding:4px 12px;">➕ Agregar atributo</button>
+                        <strong>Atributos del género:</strong>
+                        <button class="btn btn-blue" onclick="agregarFilaAtributo()" style="margin-left:10px;padding:4px 12px;">➕ Agregar atributo</button>
                     </div>
                     <table id="tabla-atributos" style="width:100%;margin-bottom:15px;">
                         <thead>
@@ -566,27 +294,155 @@
                         </thead>
                         <tbody id="body-atributos"></tbody>
                     </table>
-                    <button class="btn btn-green" onclick="agregarEspecializacion()">💾 Guardar Especialización</button>
-                    <button class="btn btn-gray" id="btn-cancelar-editar-esp" onclick="resetFormEspecializacion()"
-                        style="display:none;margin-left:8px;padding:8px 20px;">❌ Cancelar edición</button>
                 </div>
             </div>
             <div class="card">
-                <h3>📋 Especializaciones Existentes</h3>
+                <h3>📋 Géneros Existentes</h3>
                 <table>
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Género</th>
+                            <th>Nombre</th>
                             <th>Atributos</th>
-                            <th>Obras</th>
                             <th>Acción</th>
                         </tr>
                     </thead>
-                    <tbody id="body-especializaciones"></tbody>
+                    <tbody id="body-generos"></tbody>
                 </table>
             </div>
         </div>
+
+        <!-- Tab: Gestionar Autores -->
+        <div id="tab-autores" class="tab-content" style="display:none">
+            <div class="card">
+                <h3 style="margin-bottom:15px;">✍️ Agregar Nuevo Autor</h3>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:700px;">
+                    <div>
+                        <label style="display:block;margin-bottom:4px;color:#a0aec0;font-size:0.85rem;">Nombre *</label>
+                        <input type="text" id="input-autor-nombre" class="edit-input" placeholder="Nombre" style="width:100%;box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="display:block;margin-bottom:4px;color:#a0aec0;font-size:0.85rem;">Apellido *</label>
+                        <input type="text" id="input-autor-apellido" class="edit-input" placeholder="Apellido" style="width:100%;box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="display:block;margin-bottom:4px;color:#a0aec0;font-size:0.85rem;">Nacionalidad</label>
+                        <select id="input-autor-nacionalidad" class="edit-input" style="width:100%;box-sizing:border-box;">
+                            <option value="">— Seleccione —</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block;margin-bottom:4px;color:#a0aec0;font-size:0.85rem;">Foto</label>
+                        <input type="file" id="input-autor-foto" accept="image/*" style="width:100%;box-sizing:border-box;padding:6px;background:#0d1117;border:1px solid #2d3748;border-radius:6px;color:#e2e8f0;">
+                    </div>
+                    <div style="grid-column:1/-1;">
+                        <label style="display:block;margin-bottom:4px;color:#a0aec0;font-size:0.85rem;">Biografía</label>
+                        <textarea id="input-autor-biografia" class="edit-input" placeholder="Breve biografía del autor..." style="width:100%;height:80px;resize:vertical;box-sizing:border-box;"></textarea>
+                    </div>
+                    <div style="grid-column:1/-1;display:flex;gap:10px;margin-top:4px;">
+                        <button class="btn btn-green" onclick="agregarAutor()" style="padding:10px 24px;">➕ Agregar Autor</button>
+                        <button class="btn" onclick="limpiarFormAutor()" style="color:#888;border-color:#444;padding:10px 24px;">🔄 Limpiar</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <h3 style="margin-bottom:15px;">📋 Autores Existentes</h3>
+                <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;">
+                    <input type="text" id="buscador-autores" placeholder="🔍 Buscar autor por nombre, apellido o nacionalidad..." oninput="filtrarAutores()" style="flex:1;max-width:400px;padding:10px 14px;background:#0d1117;border:1px solid #2d3748;border-radius:8px;color:#e2e8f0;font-size:0.95rem;">
+                    <span id="autores-count" style="color:#718096;font-size:0.85rem;"></span>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Foto</th>
+                                <th>Nombre</th>
+                                <th>Apellido</th>
+                                <th>Nacionalidad</th>
+                                <th>Biografía</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="body-autores"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Gestionar Obras -->
+        <div id="tab-obras" class="tab-content" style="display:none">
+            <div class="card">
+                <h3 style="margin-bottom:15px;">🖼️ Agregar Nueva Obra</h3>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;max-width:800px;">
+                    <div>
+                        <label style="display:block;margin-bottom:4px;color:#a0aec0;font-size:0.85rem;">Nombre *</label>
+                        <input type="text" id="input-obra-nombre" class="edit-input" placeholder="Nombre de la obra" style="width:100%;box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="display:block;margin-bottom:4px;color:#a0aec0;font-size:0.85rem;">Fecha creación</label>
+                        <input type="date" id="input-obra-fecha" class="edit-input" style="width:100%;box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="display:block;margin-bottom:4px;color:#a0aec0;font-size:0.85rem;">Precio ($) *</label>
+                        <input type="number" id="input-obra-precio" class="edit-input" placeholder="0.00" step="0.01" style="width:100%;box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="display:block;margin-bottom:4px;color:#a0aec0;font-size:0.85rem;">Estado</label>
+                        <select id="input-obra-estado" class="edit-input" style="width:100%;box-sizing:border-box;">
+                            <option value="Disponible">Disponible</option>
+                            <option value="Reservado">Reservado</option>
+                            <option value="Vendida">Vendida</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block;margin-bottom:4px;color:#a0aec0;font-size:0.85rem;">Género</label>
+                        <select id="input-obra-genero" class="edit-input" style="width:100%;box-sizing:border-box;">
+                            <option value="">— Seleccione —</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block;margin-bottom:4px;color:#a0aec0;font-size:0.85rem;">Foto</label>
+                        <input type="file" id="input-obra-foto" accept="image/*" style="width:100%;box-sizing:border-box;padding:6px;background:#0d1117;border:1px solid #2d3748;border-radius:6px;color:#e2e8f0;">
+                    </div>
+                    <div style="grid-column:1/-1;">
+                        <label style="display:block;margin-bottom:4px;color:#a0aec0;font-size:0.85rem;">Autor(es)</label>
+                        <div id="autor-selector-container" style="position:relative;width:100%;">
+                            <input type="text" id="input-buscar-autor" placeholder="Escriba para buscar autor..." autocomplete="off" style="width:100%;padding:10px 12px;background:#0d1117;border:1px solid #2d3748;border-radius:8px;color:#e2e8f0;font-size:0.9rem;box-sizing:border-box;" onfocus="abrirDropdownAutores()" oninput="filtrarDropdownAutores()" onkeydown="if(event.key==='Escape')cerrarDropdownAutores()">
+                            <div id="autor-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;max-height:200px;overflow-y:auto;background:#161b22;border:1px solid #2d3748;border-radius:0 0 8px 8px;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,0.4);"></div>
+                        </div>
+                        <div id="autores-seleccionados" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;min-height:28px;"></div>
+                    </div>
+                    <div style="grid-column:1/-1;display:flex;gap:10px;margin-top:4px;">
+                        <button class="btn btn-green" onclick="agregarObra()" style="padding:10px 24px;">➕ Agregar Obra</button>
+                        <button class="btn" onclick="limpiarFormObra()" style="color:#888;border-color:#444;padding:10px 24px;">🔄 Limpiar</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <h3 style="margin-bottom:15px;">📋 Obras Registradas</h3>
+                <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;">
+                    <input type="text" id="buscador-obras" placeholder="🔍 Buscar obra por nombre, género o estado..." oninput="filtrarObras()" style="flex:1;max-width:400px;padding:10px 14px;background:#0d1117;border:1px solid #2d3748;border-radius:8px;color:#e2e8f0;font-size:0.95rem;">
+                    <span id="obras-count" style="color:#718096;font-size:0.85rem;"></span>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Precio</th>
+                                <th>Estado</th>
+                                <th>Género</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="body-obras"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
 
         <!-- Tab: Reporte Membresías -->
         <div id="tab-rep-membresias" class="tab-content" style="display:none">
@@ -670,7 +526,7 @@
                         <option value="CODIGO_RECUPERACION">Recuperación</option>
                     </select>
                 </div>
-                <div style="max-height:600px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px;">
+                <div style="max-height:600px; overflow-y:auto; border:1px solid #222; border-radius:8px;">
                     <table>
                         <thead>
                             <tr>
@@ -699,9 +555,9 @@
 
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px;">
                     <!-- Artistas Populares -->
-                    <div style="background:#f7fafc; border:1px solid #e2e8f0; padding:20px; border-radius:8px;">
+                    <div style="background:#0f0f0f; border:1px solid #1a1a1a; padding:20px; border-radius:8px;">
                         <h4
-                            style="color:#2d3748; margin-top:0; font-size:0.9rem; text-transform:uppercase; letter-spacing:1px;">
+                            style="color:#00ff00; margin-top:0; font-size:0.9rem; text-transform:uppercase; letter-spacing:1px;">
                             🎨 Artistas Populares</h4>
                         <div id="pop-artistas">
                             <p style="color:#a0aec0;">Cargando...</p>
@@ -709,9 +565,9 @@
                     </div>
 
                     <!-- Géneros más vendidos -->
-                    <div style="background:#f7fafc; border:1px solid #e2e8f0; padding:20px; border-radius:8px;">
+                    <div style="background:#0f0f0f; border:1px solid #1a1a1a; padding:20px; border-radius:8px;">
                         <h4
-                            style="color:#2d3748; margin-top:0; font-size:0.9rem; text-transform:uppercase; letter-spacing:1px;">
+                            style="color:#00ff00; margin-top:0; font-size:0.9rem; text-transform:uppercase; letter-spacing:1px;">
                             🎭 Géneros más vendidos</h4>
                         <div id="pop-generos">
                             <p style="color:#a0aec0;">Cargando...</p>
@@ -719,9 +575,9 @@
                     </div>
 
                     <!-- Estadísticas del Grafo -->
-                    <div style="background:#f7fafc; border:1px solid #e2e8f0; padding:20px; border-radius:8px;">
+                    <div style="background:#0f0f0f; border:1px solid #1a1a1a; padding:20px; border-radius:8px;">
                         <h4
-                            style="color:#2d3748; margin-top:0; font-size:0.9rem; text-transform:uppercase; letter-spacing:1px;">
+                            style="color:#00ff00; margin-top:0; font-size:0.9rem; text-transform:uppercase; letter-spacing:1px;">
                             🔗 Estadísticas del Grafo</h4>
                         <div id="grafo-stats">
                             <p style="color:#a0aec0;">Cargando...</p>
@@ -751,7 +607,8 @@
 
             // Actualizar título
             const titulos = {
-                'gestion': 'Gestión de Inventario y Usuarios',
+                'gestion': 'Gestión de Inventario',
+                'usuarios': 'Gestión de Usuarios del Sistema',
                 'facturacion': 'Facturación de Reservas',
                 'usuarios-pagos': 'Validar Pagos de Membresía',
                 'validar-usuarios': 'Validar Registro de Usuarios',
@@ -771,6 +628,8 @@
             // Cargar datos según el tab
             if (tab === 'gestion') {
                 cargarObrasGestion();
+            }
+            if (tab === 'usuarios') {
                 cargarUsuariosGestion();
             }
             if (tab === 'usuarios-pagos') cargarPagos();
@@ -780,7 +639,6 @@
             if (tab === 'generos') cargarGeneros();
             if (tab === 'autores') { cargarAutores(); cargarNacionalidades(); }
             if (tab === 'obras') { cargarObrasAdmin(); cargarGenerosSelect(); cargarAutoresSelect(); }
-            if (tab === 'especializaciones') { cargarEspecializaciones(); cargarGenerosSelectEsp(); }
             if (tab === 'rep-obras') {
                 // Establecer fechas por defecto (últimos 30 días)
                 const hoy = new Date();
@@ -812,28 +670,44 @@
 
             if (tab === 'tendencias') cargarTendencias();
         }
+        let inventarioData = [];
+        let facturacionData = [];
+
+        function filtrarInventario() {
+            const q = document.getElementById('buscador-inventario').value.toLowerCase();
+            const filtradas = inventarioData.filter(o =>
+                String(o.id).includes(q) || (o.nombre || '').toLowerCase().includes(q)
+            );
+            renderizarInventario(filtradas);
+        }
+
+        function renderizarInventario(data) {
+            document.getElementById('body-gestion-obras').innerHTML = data.map(o => `
+                <tr id="obra-fila-${o.id}">
+                    <td>${o.id}</td>
+                    <td><input type="text" id="obra-nom-${o.id}" value="${(o.nombre || '').replace(/"/g, '&quot;')}" class="edit-input"></td>
+                    <td><input type="number" id="obra-pre-${o.id}" value="${o.precio || 0}" class="edit-input" style="width:80px"></td>
+                    <td>
+                        <select id="obra-est-${o.id}" class="edit-input">
+                            <option value="Disponible" ${o.estado_obra === 'Disponible' ? 'selected' : ''}>Disponible</option>
+                            <option value="Reservado" ${o.estado_obra === 'Reservado' ? 'selected' : ''}>Reservado</option>
+                            <option value="Vendida" ${o.estado_obra === 'Vendida' ? 'selected' : ''}>Vendida</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button class="btn btn-blue" onclick="actualizarObra(${o.id}, this)">💾 Actualizar</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
         // --- CRUD OBRAS (MongoDB) ---
         async function cargarObrasGestion() {
             try {
                 const res = await fetch('/api/obras-admin');
-                const data = await res.json();
-                document.getElementById('body-gestion-obras').innerHTML = data.map(o => `
-                    <tr id="obra-fila-${o.id}">
-                        <td>${o.id}</td>
-                        <td><input type="text" id="obra-nom-${o.id}" value="${(o.nombre || '').replace(/"/g, '&quot;')}" class="edit-input"></td>
-                        <td><input type="number" id="obra-pre-${o.id}" value="${o.precio || 0}" class="edit-input" style="width:80px"></td>
-                        <td>
-                            <select id="obra-est-${o.id}" class="edit-input">
-                                <option value="Disponible" ${o.estado_obra === 'Disponible' ? 'selected' : ''}>Disponible</option>
-                                <option value="Reservado" ${o.estado_obra === 'Reservado' ? 'selected' : ''}>Reservado</option>
-                                <option value="Vendida" ${o.estado_obra === 'Vendida' ? 'selected' : ''}>Vendida</option>
-                            </select>
-                        </td>
-                        <td>
-                            <button class="btn btn-blue" onclick="actualizarObra(${o.id}, this)">💾 Actualizar</button>
-                        </td>
-                    </tr>
-                `).join('');
+                inventarioData = await res.json();
+                renderizarInventario(inventarioData);
+                document.getElementById('buscador-inventario').value = '';
             } catch (error) {
                 console.error('Error cargando obras:', error);
             }
@@ -868,20 +742,18 @@
             }
         }
 
-        // --- CRUD USUARIOS (CON OPCIÓN DE BORRAR + MEMBRESÍA + PUEDE ADQUIRIR) ---
+        // --- CRUD USUARIOS (SEPARADOS: ADMINISTRADORES Y COMPRADORES) ---
         async function cargarUsuariosGestion() {
             try {
                 const res = await fetch('/api/todos-los-usuarios');
                 const data = await res.json();
-                document.getElementById('body-gestion-usuarios').innerHTML = data.map(u => {
-                    const esComprador = u.Rol === 'comprador';
-                    const puedeAdquirir = u.PuedeAdquirir == 1;
-                    const membresiaActiva = u.MembresiaActiva == 1;
-                    return `
+                const admins = data.filter(u => u.Rol === 'administrador');
+                const compradores = data.filter(u => u.Rol === 'comprador');
+
+                document.getElementById('body-gestion-admins').innerHTML = admins.map(u => `
                     <tr id="usuario-fila-${u.id_usuario}">
                         <td>${u.id_usuario}</td>
                         <td>${u.Email || ''}</td>
-                        <td>${u.Rol || ''}</td>
                         <td>
                             <select id="user-est-${u.id_usuario}" class="edit-input">
                                 <option value="1" ${u.Estatus == 1 ? 'selected' : ''}>Activo</option>
@@ -889,16 +761,34 @@
                             </select>
                         </td>
                         <td>
-                            <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:0.75rem;font-weight:bold;${membresiaActiva ? 'background:#c6f6d5;color:#22543d;' : 'background:#fed7d7;color:#742a2a;'}">
+                            <button class="btn btn-blue" onclick="actualizarUsuario(${u.id_usuario}, this)">💾 Actualizar</button>
+                            <button class="btn btn-red" onclick="borrarUsuario(${u.id_usuario}, this)">🗑️ Borrar</button>
+                        </td>
+                    </tr>
+                `).join('');
+
+                document.getElementById('body-gestion-compradores').innerHTML = compradores.map(u => {
+                    const puedeAdquirir = u.PuedeAdquirir == 1;
+                    const membresiaActiva = u.MembresiaActiva == 1;
+                    return `
+                    <tr id="usuario-fila-${u.id_usuario}">
+                        <td>${u.id_usuario}</td>
+                        <td>${u.Email || ''}</td>
+                        <td>
+                            <select id="user-est-${u.id_usuario}" class="edit-input">
+                                <option value="1" ${u.Estatus == 1 ? 'selected' : ''}>Activo</option>
+                                <option value="0" ${u.Estatus == 0 ? 'selected' : ''}>Inactivo</option>
+                            </select>
+                        </td>
+                        <td>
+                            <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:0.75rem;font-weight:bold;${membresiaActiva ? 'background:rgba(0,255,0,0.2);color:#00ff00;' : 'background:rgba(255,68,68,0.2);color:#ff4444;'}">
                                 ${membresiaActiva ? '✅ Activa' : '❌ Vencida'}
                             </span>
                         </td>
                         <td>
-                            ${esComprador ? `
-                                <button class="btn ${puedeAdquirir ? 'btn-green' : 'btn-red'}" id="btn-adquirir-${u.id_usuario}" onclick="toggleAdquirir(${u.id_usuario}, ${puedeAdquirir ? 0 : 1}, this)" style="padding:5px 12px;font-size:0.75rem;">
-                                    ${puedeAdquirir ? '✅ Habilitado' : '🚫 Deshabilitado'}
-                                </button>
-                            ` : '<span style="color:#718096;">—</span>'}
+                            <button class="btn ${puedeAdquirir ? 'btn-green' : 'btn-red'}" id="btn-adquirir-${u.id_usuario}" onclick="toggleAdquirir(${u.id_usuario}, ${puedeAdquirir ? 0 : 1}, this)" style="padding:5px 12px;font-size:0.75rem;">
+                                ${puedeAdquirir ? '✅ Habilitado' : '🚫 Deshabilitado'}
+                            </button>
                         </td>
                         <td>
                             <button class="btn btn-blue" onclick="actualizarUsuario(${u.id_usuario}, this)">💾 Actualizar</button>
@@ -981,7 +871,7 @@
                     const fila = document.getElementById(`usuario-fila-${id}`);
                     if (fila) {
                         fila.style.transition = "background-color 0.5s ease";
-                        fila.style.backgroundColor = nuevoEstatus == 1 ? '#c6f6d5' : '#fed7d7'; // Verde claro / Rojo claro
+                        fila.style.backgroundColor = nuevoEstatus == 1 ? 'rgba(0,255,0,0.1)' : 'rgba(255,68,68,0.1)';
                         setTimeout(() => {
                             fila.style.backgroundColor = '';
                         }, 2000);
@@ -1167,6 +1057,45 @@
             }
         }
 
+        function filtrarFacturacion() {
+            const q = document.getElementById('buscador-facturacion').value.toLowerCase();
+            const filtradas = facturacionData.filter(o =>
+                String(o.id_Obra).includes(q) || (o.Nombre || '').toLowerCase().includes(q)
+            );
+            renderizarFacturacion(filtradas);
+        }
+
+        function renderizarFacturacion(data) {
+            if (data.length === 0) {
+                document.getElementById('lista-reservadas').innerHTML = `
+                    <tr>
+                        <td colspan="4" style="text-align:center; padding:30px;">
+                            No hay obras reservadas en este momento
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            document.getElementById('lista-reservadas').innerHTML = data.map(obra => {
+                const nombreObraEscapado = (obra.Nombre || '').replace(/'/g, "\\'");
+                return `
+                    <tr>
+                        <td>${obra.id_Obra}</td>
+                        <td>${obra.Nombre || 'Sin nombre'}</td>
+                        <td>$${(obra.Precio || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td>
+                            <button class="btn btn-green" onclick="prepararFactura(
+                                ${obra.id_Obra}, 
+                                ${obra.Precio || 0}, 
+                                '${nombreObraEscapado}', 
+                                this
+                            )">🧾 Facturar</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
         // --- FACTURACIÓN DE RESERVAS ---
         async function cargarReservadas() {
             try {
@@ -1177,40 +1106,11 @@
                     throw new Error(`Error HTTP: ${res.status}`);
                 }
 
-                const obrasReservadas = await res.json();
-                console.log('Obras reservadas obtenidas:', obrasReservadas);
+                facturacionData = await res.json();
+                console.log('Obras reservadas obtenidas:', facturacionData);
 
-                if (obrasReservadas.length === 0) {
-                    document.getElementById('lista-reservadas').innerHTML = `
-                        <tr>
-                            <td colspan="4" style="text-align:center; padding:30px;">
-                                No hay obras reservadas en este momento
-                            </td>
-                        </tr>
-                    `;
-                    return;
-                }
-
-                // Renderizar tabla simplificada (solo obra y precio)
-                document.getElementById('lista-reservadas').innerHTML = obrasReservadas.map(obra => {
-                    const nombreObraEscapado = (obra.Nombre || '').replace(/'/g, "\\'");
-
-                    return `
-                        <tr>
-                            <td>${obra.id_Obra}</td>
-                            <td>${obra.Nombre || 'Sin nombre'}</td>
-                            <td>$${(obra.Precio || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                            <td>
-                                <button class="btn btn-green" onclick="prepararFactura(
-                                    ${obra.id_Obra}, 
-                                    ${obra.Precio || 0}, 
-                                    '${nombreObraEscapado}', 
-                                    this
-                                )">🧾 Facturar</button>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
+                document.getElementById('buscador-facturacion').value = '';
+                renderizarFacturacion(facturacionData);
 
             } catch (error) {
                 console.error('Error cargando reservas:', error);
@@ -1235,9 +1135,9 @@
                 // Configuración de colores
                 const colors = {
                     primary: [26, 32, 44], // #1a202c
-                    secondary: [74, 85, 104], // #4a5568
-                    accent: [49, 130, 206], // #3182ce
-                    border: [226, 232, 240] // #e2e8f0
+                    secondary: [85, 85, 85], // #555
+                    accent: [0, 255, 0], // #00ff00
+                    border: [34, 34, 34] // #222
                 };
 
                 // Encabezado
@@ -1333,11 +1233,6 @@
             }
         }
 
-        // Función simplificada para preparar factura (solo obra y precio)
-
-        // Función simplificada para preparar factura (solo obra y precio)
-        // Función simplificada para preparar factura (solo obra y precio)
-        // Función simplificada para preparar factura (solo obra y precio)
         async function prepararFactura(id_obra, precio, nombreObra, btn) {
             const admin_id = prompt("Ingrese su ID de Administrador:");
             if (!admin_id || admin_id.trim() === '') {
@@ -1357,31 +1252,40 @@
             try {
                 const precioNum = parseFloat(precio) || 0;
 
-                const body = {
-                    id_obra,
-                    id_admin: parseInt(admin_id),
-                    precio_neto: precioNum,
-                    porcentaje_comision: comision
+                const enviarFactura = async (datosExtra) => {
+                    const body = {
+                        id_obra,
+                        id_admin: parseInt(admin_id),
+                        precio_neto: precioNum,
+                        porcentaje_comision: comision,
+                        ...datosExtra
+                    };
+
+                    const response = await fetch('/generar-factura', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(errorText || `Error HTTP: ${response.status}`);
+                    }
+
+                    return await response.json();
                 };
 
-                const response = await fetch('/generar-factura', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
+                let result = await enviarFactura({});
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(errorText || `Error HTTP: ${response.status}`);
+                if (result.needsBuyerData) {
+                    datosFacturaPendiente = { btn, enviarFactura };
+                    abrirModalComprador();
+                    return;
                 }
 
-                const result = await response.json();
-
                 if (result.success) {
-                    // Generar PDF con los datos de la factura
                     generarPDFFactura(result.datos);
 
-                    // ===== NUEVO: USAR EL FLAG mostrarEnvio =====
                     if (result.mostrarEnvio) {
                         const registrarEnvio = confirm(
                             `✅ Factura #${result.id_factura} generada con éxito.\n\n` +
@@ -1389,15 +1293,12 @@
                         );
 
                         if (registrarEnvio) {
-                            // Abrir ventana de envío en nueva pestaña
-                            window.open(`Registrar-envio.html?id_factura=${result.id_factura}`, '_blank');
+                            window.open(`/user/Registrar-envio.html?id_factura=${result.id_factura}`, '_blank');
                         }
                     } else {
-                        // Si no hay flag, solo mostrar mensaje simple
                         alert(`✅ Factura #${result.id_factura} generada con éxito`);
                     }
 
-                    // Recargar la lista de obras reservadas
                     setTimeout(() => cargarReservadas(), 500);
                 } else {
                     throw new Error(result.message || "Error al generar factura");
@@ -1553,10 +1454,10 @@
 
             // Configurar color según tipo
             const colores = {
-                success: '#48bb78',
+                success: '#00ff00',
                 error: '#e53e3e',
                 warning: '#ecc94b',
-                info: '#3182ce'
+                info: '#00ff00'
             };
 
             notificacion.style.backgroundColor = colores[tipo] || colores.info;
@@ -1575,21 +1476,27 @@
         async function cargarGeneros() {
             try {
                 const res = await fetch('/api/generos');
-                const data = await res.json();
+                const generos = await res.json();
                 const tbody = document.getElementById('body-generos');
-                if (data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:30px;">No hay géneros registrados</td></tr>';
+                if (generos.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:30px;">No hay géneros registrados</td></tr>';
                     return;
                 }
-                tbody.innerHTML = data.map(g => `
+                tbody.innerHTML = generos.map(g => `
                     <tr id="genero-fila-${g.id}">
                         <td>${g.id}</td>
                         <td>${g.nombre}</td>
+                        <td>${g.atributos && g.atributos.length
+                            ? g.atributos.map(a => `<span style="display:inline-block;background:#222;color:#ccc;padding:2px 8px;border-radius:10px;margin:2px;font-size:0.8rem;">${a.nombre} (${a.tipo}${a.requerido ? ', req' : ''})</span>`).join(' ')
+                            : '<span style="color:#a0aec0;">—</span>'}
+                        </td>
                         <td>
                             <button class="btn btn-red" onclick="eliminarGenero(${g.id}, this)">🗑️ Eliminar</button>
                         </td>
                     </tr>
                 `).join('');
+                // Reset atributos form for new genre
+                document.getElementById('body-atributos').innerHTML = '';
             } catch (error) {
                 console.error('Error cargando géneros:', error);
             }
@@ -1597,23 +1504,31 @@
 
         async function agregarGenero() {
             const nombre = document.getElementById('input-genero-nombre').value.trim();
+            if (!nombre) { alert('Por favor ingrese un nombre para el género'); return; }
 
-            if (!nombre) {
-                alert('Por favor ingrese un nombre para el género');
-                return;
-            }
+            const filas = document.querySelectorAll('#body-atributos tr');
+            const atributos = [];
+            filas.forEach(fila => {
+                const input = fila.querySelector('input[id^="attr-nombre-"]');
+                const select = fila.querySelector('select[id^="attr-tipo-"]');
+                const checkbox = fila.querySelector('input[id^="attr-req-"]');
+                if (input && select) {
+                    const val = input.value.trim();
+                    if (val) atributos.push({ nombre: val, tipo: select.value, requerido: checkbox ? checkbox.checked : false });
+                }
+            });
 
             try {
                 const res = await fetch('/api/generos', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nombre })
+                    body: JSON.stringify({ nombre, atributos: atributos.length ? atributos : undefined })
                 });
                 const result = await res.json();
                 if (result.success) {
-                    alert('✅ Género agregado correctamente');
                     document.getElementById('input-genero-nombre').value = '';
-                    cargarGeneros();
+                    document.getElementById('body-atributos').innerHTML = '';
+                    await cargarGeneros();
                 } else {
                     alert('❌ ' + (result.message || 'Error al agregar género'));
                 }
@@ -1626,7 +1541,6 @@
         async function eliminarGenero(id, btn) {
             if (!confirm('¿Eliminar este género?')) return;
             btn.disabled = true;
-
             try {
                 const res = await fetch(`/api/generos/${id}`, { method: 'DELETE' });
                 const result = await res.json();
@@ -1644,37 +1558,64 @@
             } catch (error) {
                 console.error('Error eliminando género:', error);
                 alert('❌ Error al eliminar género');
-            } finally {
-                btn.disabled = false;
-            }
+            } finally { btn.disabled = false; }
         }
 
         // --- CRUD AUTORES (MongoDB) ---
+        let todosLosAutores = [];
+
         async function cargarAutores() {
             try {
                 const res = await fetch('/api/autores-admin');
                 const data = await res.json();
+                todosLosAutores = data;
                 const tbody = document.getElementById('body-autores');
                 if (data.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;">No hay autores registrados</td></tr>';
+                    document.getElementById('autores-count').textContent = '';
                     return;
                 }
-                tbody.innerHTML = data.map(a => `
-                    <tr id="autor-fila-${a.id}">
-                        <td>${a.id}</td>
-                        <td>${a.fotografia ? `<img src="${a.fotografia}" alt="Foto" style="width:50px;height:50px;object-fit:cover;border-radius:4px;">` : '—'}</td>
-                        <td>${a.nombre}</td>
-                        <td>${a.apellido}</td>
-                        <td>${a.nacionalidad || '—'}</td>
-                        <td>${a.biografia || '—'}</td>
-                        <td>
-                            <button class="btn btn-red" onclick="eliminarAutor(${a.id}, this)">🗑️ Eliminar</button>
-                        </td>
-                    </tr>
-                `).join('');
+                renderizarAutores(data);
             } catch (error) {
                 console.error('Error cargando autores:', error);
             }
+        }
+
+        function renderizarAutores(lista) {
+            const tbody = document.getElementById('body-autores');
+            tbody.innerHTML = lista.map(a => `
+                <tr>
+                    <td>${a.id}</td>
+                    <td>${a.fotografia ? `<img src="${a.fotografia}" alt="Foto" style="width:50px;height:50px;object-fit:cover;border-radius:4px;">` : '—'}</td>
+                    <td>${a.nombre}</td>
+                    <td>${a.apellido}</td>
+                    <td>${a.nacionalidad || '—'}</td>
+                    <td>${a.biografia || '—'}</td>
+                    <td>
+                        <button class="btn btn-red" onclick="eliminarAutor(${a.id}, this)">🗑️ Eliminar</button>
+                    </td>
+                </tr>
+            `).join('');
+            document.getElementById('autores-count').textContent = `${lista.length} de ${todosLosAutores.length} autor(es)`;
+        }
+
+        function filtrarAutores() {
+            const q = document.getElementById('buscador-autores').value.toLowerCase();
+            if (!q) return renderizarAutores(todosLosAutores);
+            const filtrados = todosLosAutores.filter(a =>
+                (a.nombre + ' ' + a.apellido).toLowerCase().includes(q) ||
+                (a.nacionalidad || '').toLowerCase().includes(q)
+            );
+            renderizarAutores(filtrados);
+        }
+
+        function limpiarFormAutor() {
+            document.getElementById('input-autor-nombre').value = '';
+            document.getElementById('input-autor-apellido').value = '';
+            document.getElementById('input-autor-nacionalidad').value = '';
+            document.getElementById('input-autor-biografia').value = '';
+            const fi = document.getElementById('input-autor-foto');
+            if (fi) fi.value = '';
         }
 
         async function agregarAutor() {
@@ -1782,44 +1723,134 @@
             }
         }
 
+        let autoresDropdownData = [];
+        let autoresSeleccionados = [];
+
         async function cargarAutoresSelect() {
             try {
                 const res = await fetch('/api/autores-admin');
                 const data = await res.json();
-                const sel = document.getElementById('input-obra-autores');
-                sel.innerHTML = data.map(a =>
-                    `<option value="${a.id}">${a.nombre} ${a.apellido}</option>`
-                ).join('');
+                autoresDropdownData = data;
             } catch (error) {
                 console.error('Error cargando autores:', error);
             }
         }
 
+        function abrirDropdownAutores() {
+            const dd = document.getElementById('autor-dropdown');
+            if (autoresDropdownData.length === 0) return;
+            filtrarDropdownAutores();
+            dd.style.display = 'block';
+        }
+
+        function cerrarDropdownAutores() {
+            document.getElementById('autor-dropdown').style.display = 'none';
+        }
+
+        function filtrarDropdownAutores() {
+            const q = document.getElementById('input-buscar-autor').value.toLowerCase();
+            const dd = document.getElementById('autor-dropdown');
+            const idsSel = new Set(autoresSeleccionados.map(a => a.id));
+            const filtrados = autoresDropdownData.filter(a =>
+                !idsSel.has(a.id) &&
+                (!q || (a.nombre + ' ' + a.apellido).toLowerCase().includes(q))
+            );
+            if (filtrados.length === 0) {
+                dd.innerHTML = '<div style="padding:10px;color:#718096;">Sin resultados</div>';
+            } else {
+                dd.innerHTML = filtrados.map(a =>
+                    `<div onclick="seleccionarAutor(${a.id},'${a.nombre.replace(/'/g,"\\'")}','${a.apellido.replace(/'/g,"\\'")}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid #2d3748;transition:background 0.15s;" onmouseover="this.style.background='#1f2937'" onmouseout="this.style.background='transparent'">${a.nombre} ${a.apellido}</div>`
+                ).join('');
+            }
+            dd.style.display = 'block';
+        }
+
+        function seleccionarAutor(id, nombre, apellido) {
+            const a = autoresDropdownData.find(x => x.id === id);
+            if (!a) return;
+            if (autoresSeleccionados.some(x => x.id === id)) return;
+            autoresSeleccionados.push(a);
+            document.getElementById('input-buscar-autor').value = '';
+            renderizarTagsAutores();
+            cerrarDropdownAutores();
+            document.getElementById('input-buscar-autor').focus();
+        }
+
+        function removerAutorSeleccionado(id) {
+            autoresSeleccionados = autoresSeleccionados.filter(a => a.id !== id);
+            renderizarTagsAutores();
+        }
+
+        function renderizarTagsAutores() {
+            const container = document.getElementById('autores-seleccionados');
+            container.innerHTML = autoresSeleccionados.map(a =>
+                `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#1f2937;border:1px solid #374151;border-radius:20px;font-size:0.85rem;color:#e2e8f0;">${a.nombre} ${a.apellido} <span onclick="removerAutorSeleccionado(${a.id})" style="cursor:pointer;color:#ef4444;font-weight:bold;margin-left:2px;">&times;</span></span>`
+            ).join('');
+        }
+
+        function obtenerIdsAutoresSeleccionados() {
+            return autoresSeleccionados.map(a => a.id);
+        }
+
         // --- CRUD OBRAS (MongoDB) ---
+        let todasLasObras = [];
+
         async function cargarObrasAdmin() {
             try {
                 const res = await fetch('/api/obras-admin');
                 const data = await res.json();
+                todasLasObras = data;
                 const tbody = document.getElementById('body-obras');
                 if (data.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;">No hay obras registradas</td></tr>';
+                    document.getElementById('obras-count').textContent = '';
                     return;
                 }
-                tbody.innerHTML = data.map(o => `
-                    <tr id="obra-fila-${o.id}">
-                        <td>${o.id}</td>
-                        <td>${o.nombre}</td>
-                        <td>$${o.precio?.toLocaleString() || '0'}</td>
-                        <td>${o.estado_obra}</td>
-                        <td>${o.genero_nombre || '—'}</td>
-                        <td>
-                            <button class="btn btn-red" onclick="eliminarObra(${o.id}, this)">🗑️ Eliminar</button>
-                        </td>
-                    </tr>
-                `).join('');
+                renderizarObras(data);
             } catch (error) {
                 console.error('Error cargando obras:', error);
             }
+        }
+
+        function renderizarObras(lista) {
+            const tbody = document.getElementById('body-obras');
+            tbody.innerHTML = lista.map(o => `
+                <tr>
+                    <td>${o.id}</td>
+                    <td>${o.nombre}</td>
+                    <td>$${o.precio?.toLocaleString() || '0'}</td>
+                    <td>${o.estado_obra}</td>
+                    <td>${o.genero_nombre || '—'}</td>
+                    <td>
+                        <button class="btn btn-red" onclick="eliminarObra(${o.id}, this)">🗑️ Eliminar</button>
+                    </td>
+                </tr>
+            `).join('');
+            document.getElementById('obras-count').textContent = `${lista.length} de ${todasLasObras.length} obra(s)`;
+        }
+
+        function filtrarObras() {
+            const q = document.getElementById('buscador-obras').value.toLowerCase();
+            if (!q) return renderizarObras(todasLasObras);
+            const filtrados = todasLasObras.filter(o =>
+                o.nombre.toLowerCase().includes(q) ||
+                (o.genero_nombre || '').toLowerCase().includes(q) ||
+                (o.estado_obra || '').toLowerCase().includes(q)
+            );
+            renderizarObras(filtrados);
+        }
+
+        function limpiarFormObra() {
+            document.getElementById('input-obra-nombre').value = '';
+            document.getElementById('input-obra-fecha').value = '';
+            document.getElementById('input-obra-precio').value = '';
+            document.getElementById('input-obra-estado').value = 'Disponible';
+            document.getElementById('input-obra-genero').value = '';
+            document.getElementById('input-buscar-autor').value = '';
+            autoresSeleccionados = [];
+            renderizarTagsAutores();
+            const fi = document.getElementById('input-obra-foto');
+            if (fi) fi.value = '';
         }
 
         async function agregarObra() {
@@ -1829,8 +1860,7 @@
             const estado_obra = document.getElementById('input-obra-estado').value;
             const genero_nombre = document.getElementById('input-obra-genero').value;
             const fotoInput = document.getElementById('input-obra-foto');
-            const autoresSelect = document.getElementById('input-obra-autores');
-            const autores_ids = Array.from(autoresSelect.selectedOptions).map(o => parseInt(o.value));
+            const autores_ids = obtenerIdsAutoresSeleccionados();
 
             if (!nombre) {
                 alert('Por favor ingrese el nombre de la obra');
@@ -1941,62 +1971,6 @@
             ]
         };
 
-        async function cargarGenerosSelectEsp() {
-            try {
-                const res = await fetch('/api/generos');
-                const data = await res.json();
-                const sel = document.getElementById('input-esp-genero');
-                sel.innerHTML = '<option value="">— Seleccione un género —</option>' +
-                    data.map(g => `<option value="${g.nombre}">${g.nombre}</option>`).join('');
-            } catch (error) {
-                console.error('Error cargando géneros:', error);
-            }
-        }
-
-        function onGeneroEspChange() {
-            const sel = document.getElementById('input-esp-genero');
-            const genero = sel.value;
-            const section = document.getElementById('esp-atributos-section');
-            const tbody = document.getElementById('body-atributos');
-
-            if (!genero) {
-                section.style.display = 'none';
-                return;
-            }
-
-            // If in edit mode, skip duplicate check
-            if (espEditandoId) {
-                section.style.display = 'block';
-                return;
-            }
-
-            // Check if this género already has a specialization saved
-            const filas = document.querySelectorAll('#body-especializaciones tr');
-            let yaExiste = false;
-            filas.forEach(tr => {
-                const celdas = tr.querySelectorAll('td');
-                if (celdas.length >= 2 && celdas[1].textContent.trim() === genero) {
-                    yaExiste = true;
-                }
-            });
-
-            if (yaExiste) {
-                section.style.display = 'none';
-                alert('ℹ️ Ya existe una especialización para este género. Puede verla en la tabla de abajo.');
-                return;
-            }
-
-            // Pre-cargar atributos conocidos del género
-            tbody.innerHTML = '';
-            contadorAtributos = 0;
-            const predef = PRECARGAS_ATRIBUTOS[genero] || [];
-            predef.forEach(attr => {
-                agregarFilaAtributo(attr.nombre, attr.tipo, attr.requerido);
-            });
-
-            section.style.display = 'block';
-        }
-
         function agregarFilaAtributo(nombre, tipo, requerido) {
             contadorAtributos++;
             const idx = contadorAtributos;
@@ -2025,309 +1999,6 @@
             if (fila) fila.remove();
         }
 
-        async function cargarEspecializaciones() {
-            try {
-                const res = await fetch('/api/especializaciones');
-                const data = await res.json();
-                const tbody = document.getElementById('body-especializaciones');
-                if (data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;">No hay especializaciones registradas</td></tr>';
-                    return;
-                }
-                tbody.innerHTML = data.map(e => `
-                    <tr id="esp-fila-${e.id}">
-                        <td>${e.id}</td>
-                        <td>${e.nombre}</td>
-                        <td>${e.atributos.map(a => `<span style="display:inline-block;background:#e2e8f0;padding:2px 8px;border-radius:10px;margin:2px;font-size:0.8rem;">${a.nombre} (${a.tipo}${a.requerido ? ', req' : ''})</span>`).join(' ') || '—'}</td>
-                        <td>
-                            <button class="btn btn-blue" onclick="toggleObrasEspecializacion(${e.id}, true)" style="padding:4px 10px;font-size:0.75rem;">📂 Ver Obras</button>
-                        </td>
-                        <td style="display:flex;gap:5px;">
-                            <button class="btn btn-green" onclick="editarEspecializacion(${e.id})" style="padding:4px 10px;font-size:0.75rem;">✏️ Editar</button>
-                            <button class="btn btn-red" onclick="eliminarEspecializacion(${e.id}, this)" style="padding:4px 10px;font-size:0.75rem;">🗑️</button>
-                        </td>
-                    </tr>
-                    <tr id="esp-obras-${e.id}" style="display:none;">
-                        <td colspan="5" style="padding:0;background:#f8fafc;">
-                            <div id="esp-obras-content-${e.id}" style="padding:15px;">
-                                <p style="text-align:center;color:#888;">Cargando obras...</p>
-                            </div>
-                        </td>
-                    </tr>
-                `).join('');
-            } catch (error) {
-                console.error('Error cargando especializaciones:', error);
-            }
-        }
-
-        let espObrasFilterSinDetalles = {};
-
-        async function toggleObrasEspecializacion(espId, soloSinDetalles) {
-            const fila = document.getElementById(`esp-obras-${espId}`);
-            const content = document.getElementById(`esp-obras-content-${espId}`);
-            if (fila.style.display !== 'none' && soloSinDetalles === undefined) {
-                fila.style.display = 'none';
-                return;
-            }
-            fila.style.display = 'table-row';
-            content.innerHTML = '<p style="text-align:center;color:#888;">Cargando obras...</p>';
-
-            try {
-                const [espRes, data] = await Promise.all([
-                    fetch('/api/especializaciones'),
-                    fetch(`/api/especializaciones/${espId}/obras?solo_sin_detalles=${soloSinDetalles === true}`).then(r => r.json())
-                ]);
-                const espList = await espRes.json();
-                const esp = espList.find(e => e.id === espId);
-                const obras = data.obras || [];
-                const totalObras = data.totalObras || 0;
-                const obrasSinDetalles = data.obrasSinDetalles || 0;
-                const idsSinDetalles = data.idsSinDetalles || [];
-
-                espObrasFilterSinDetalles[espId] = soloSinDetalles === true;
-
-                // Get the attribute definitions from the existing table row
-                const espRow = document.getElementById(`esp-fila-${espId}`);
-                const attrBadges = espRow.querySelectorAll('td:nth-child(3) span');
-                const attrDefs = Array.from(attrBadges).map(b => {
-                    const text = b.textContent;
-                    const name = text.split(' (')[0];
-                    const req = text.includes(', req');
-                    return { nombre: name, requerido: req };
-                });
-                const attrNames = attrDefs.map(a => a.nombre);
-
-                let html = '';
-
-                // Summary bar
-                html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
-                    <div style="font-size:0.85rem;color:#475569;">
-                        <strong>Total:</strong> ${totalObras} obras |
-                        <strong style="color:${obrasSinDetalles > 0 ? '#dc2626' : '#16a34a'};">${obrasSinDetalles} sin atributos</strong>
-                    </div>
-                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                        <label style="font-size:0.85rem;cursor:pointer;display:flex;align-items:center;gap:4px;">
-                            <input type="checkbox" id="filtro-sin-detalles-${espId}" ${soloSinDetalles ? 'checked' : ''} onchange="toggleObrasEspecializacion(${espId}, this.checked)">
-                            Solo obras sin atributos
-                        </label>
-                        ${obrasSinDetalles > 0 && attrNames.length > 0 ? `
-                        <button class="btn btn-blue" onclick="abrirFormAsignacionMasiva(${espId})" style="padding:4px 12px;font-size:0.8rem;">
-                            📝 Asignar a ${obrasSinDetalles} obra(s) sin atributos
-                        </button>
-                        ` : ''}
-                    </div>
-                </div>`;
-
-                if (!obras.length) {
-                    if (soloSinDetalles) {
-                        html += '<p style="text-align:center;color:#16a34a;padding:20px;font-weight:bold;">✅ Todas las obras tienen atributos asignados</p>';
-                    } else {
-                        html += '<p style="text-align:center;color:#999;padding:20px;">No hay obras con este género</p>';
-                    }
-                    content.innerHTML = html;
-                    return;
-                }
-
-                html += `<table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
-                    <thead>
-                        <tr style="background:#e2e8f0;">
-                            <th style="padding:6px 8px;border:1px solid #cbd5e1;text-align:left;">ID</th>
-                            <th style="padding:6px 8px;border:1px solid #cbd5e1;text-align:left;">Obra</th>
-                            ${attrDefs.map(ad => `<th style="padding:6px 8px;border:1px solid #cbd5e1;text-align:left;">${ad.nombre}${ad.requerido ? ' <span style="color:#dc2626;">*</span>' : ''}</th>`).join('')}
-                            <th style="padding:6px 8px;border:1px solid #cbd5e1;text-align:center;">Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody>`;
-                obras.forEach(o => {
-                    const sinDetalles = idsSinDetalles.includes(o.id);
-                    html += `<tr id="obra-detalle-fila-${o.id}" style="${sinDetalles ? 'background:#fff7ed;' : ''}">
-                        <td style="padding:6px 8px;border:1px solid #e2e8f0;">${o.id}</td>
-                        <td style="padding:6px 8px;border:1px solid #e2e8f0;">
-                            ${o.nombre}
-                            ${sinDetalles ? '<span style="display:inline-block;background:#f97316;color:white;font-size:0.7rem;padding:1px 6px;border-radius:8px;margin-left:4px;">Sin atributos</span>' : ''}
-                        </td>`;
-                    attrDefs.forEach(ad => {
-                        const a = ad.nombre;
-                        const val = o.detalles?.[a] !== undefined ? o.detalles[a] : '';
-                        const attrDef = esp?.atributos?.find(at => at.nombre === a);
-                        const tipo = attrDef?.tipo || 'string';
-                        const isReq = ad.requerido;
-                        const isEmpty = val === '' || val === undefined || val === null;
-                        const tdStyle = 'padding:6px 8px;border:1px solid #e2e8f0;';
-                        const inputStyle = isReq && isEmpty ? 'border:2px solid #dc2626;background:#fef2f2;' : '';
-                        if (tipo === 'boolean') {
-                            html += `<td style="${tdStyle}text-align:center;">
-                                <select id="det-${o.id}-${a}" class="edit-input" style="width:100px;${inputStyle}" onchange="marcarCampoCompleto(this)">
-                                    <option value="" ${val === '' || val === undefined ? 'selected' : ''}>—</option>
-                                    <option value="true" ${val === true || val === 'true' ? 'selected' : ''}>Sí</option>
-                                    <option value="false" ${val === false || val === 'false' ? 'selected' : ''}>No</option>
-                                </select>
-                            </td>`;
-                        } else if (tipo === 'number') {
-                            html += `<td style="${tdStyle}">
-                                <input type="number" step="any" id="det-${o.id}-${a}" class="edit-input" value="${val !== '' ? val : ''}" style="width:90%;${inputStyle}" oninput="marcarCampoCompleto(this)">
-                            </td>`;
-                        } else {
-                            html += `<td style="${tdStyle}">
-                                <input type="text" id="det-${o.id}-${a}" class="edit-input" value="${escHtml(String(val))}" style="width:90%;${inputStyle}" oninput="marcarCampoCompleto(this)">
-                            </td>`;
-                        }
-                    });
-                    html += `<td style="padding:6px 8px;border:1px solid #e2e8f0;text-align:center;">
-                        <button class="btn btn-green" onclick="guardarDetallesObra(${o.id}, ${espId})" style="padding:4px 10px;font-size:0.75rem;">💾</button>
-                    </td></tr>`;
-                });
-                html += '</tbody></table>';
-                content.innerHTML = html;
-            } catch (error) {
-                console.error('Error cargando obras de especialización:', error);
-                content.innerHTML = '<p style="text-align:center;color:red;padding:20px;">Error al cargar obras</p>';
-            }
-        }
-
-        function abrirFormAsignacionMasiva(espId) {
-            const content = document.getElementById(`esp-obras-content-${espId}`);
-            // Get attribute definitions from the table header
-            const espRow = document.getElementById(`esp-fila-${espId}`);
-            const attrBadges = espRow.querySelectorAll('td:nth-child(3) span');
-            const attrNames = Array.from(attrBadges).map(b => b.textContent.split(' (')[0]);
-
-            const espList = document.querySelectorAll('#body-especializaciones tr[id^="esp-fila-"]');
-            let espData = null;
-            fetch('/api/especializaciones')
-                .then(r => r.json())
-                .then(list => {
-                    espData = list.find(e => e.id === espId);
-                    if (!espData) return;
-
-                    let html = `<div style="background:#fef9c3;border:2px solid #eab308;border-radius:8px;padding:15px;margin-bottom:15px;">
-                        <h4 style="margin:0 0 10px 0;color:#854d0e;">📝 Asignación Masiva - ${espData.nombre}</h4>
-                        <p style="margin:0 0 10px 0;font-size:0.85rem;color:#854d0e;">
-                            Asigna valores a todas las obras de este género que aún no tienen atributos.
-                        </p>`;
-                    attrNames.forEach(a => {
-                        const attrDef = espData.atributos?.find(at => at.nombre === a);
-                        const tipo = attrDef?.tipo || 'string';
-                        const req = attrDef?.requerido ? ' <span style="color:#dc2626;">*</span>' : '';
-                        html += `<div style="margin-bottom:8px;">
-                            <label style="font-size:0.85rem;font-weight:bold;display:block;margin-bottom:2px;">${a}${req}</label>`;
-                        if (tipo === 'boolean') {
-                            html += `<select id="batch-val-${a}" class="edit-input" style="width:200px;">
-                                <option value="">—</option>
-                                <option value="true">Sí</option>
-                                <option value="false">No</option>
-                            </select>`;
-                        } else if (tipo === 'number') {
-                            html += `<input type="number" step="any" id="batch-val-${a}" class="edit-input" placeholder="Valor numérico" style="width:200px;">`;
-                        } else {
-                            html += `<input type="text" id="batch-val-${a}" class="edit-input" placeholder="Valor" style="width:200px;">`;
-                        }
-                        html += `</div>`;
-                    });
-                    html += `
-                        <div style="margin-top:12px;display:flex;gap:8px;">
-                            <button class="btn btn-green" onclick="ejecutarAsignacionMasiva(${espId})" style="padding:8px 20px;">✅ Asignar a todas</button>
-                            <button class="btn btn-gray" onclick="cerrarFormAsignacionMasiva(${espId})" style="padding:8px 20px;">❌ Cancelar</button>
-                        </div>
-                    </div>`;
-
-                    // Insert at top of content
-                    const existingForm = content.querySelector('.asignacion-masiva-form');
-                    if (existingForm) existingForm.remove();
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'asignacion-masiva-form';
-                    wrapper.innerHTML = html;
-                    content.insertBefore(wrapper, content.firstChild);
-                })
-                .catch(err => console.error('Error cargando especialización:', err));
-        }
-
-        function cerrarFormAsignacionMasiva(espId) {
-            const content = document.getElementById(`esp-obras-content-${espId}`);
-            const form = content.querySelector('.asignacion-masiva-form');
-            if (form) form.remove();
-        }
-
-        async function ejecutarAsignacionMasiva(espId) {
-            const btn = document.querySelector('.asignacion-masiva-form .btn-green');
-            if (!btn) return;
-
-            // Get attribute names and defs from the table header
-            const content = document.getElementById(`esp-obras-content-${espId}`);
-            const headers = content.querySelectorAll('thead th');
-            const attrDefs = [];
-            for (let i = 2; i < headers.length - 1; i++) {
-                const text = headers[i].textContent.trim();
-                const name = text.replace(/\s*\*$/, '');
-                const req = text.includes('*');
-                attrDefs.push({ nombre: name, requerido: req });
-            }
-
-            // Validate required fields in batch form
-            const faltantes = [];
-            attrDefs.forEach(ad => {
-                if (ad.requerido) {
-                    const el = document.getElementById(`batch-val-${ad.nombre}`);
-                    if (el) {
-                        const val = el.type === 'number' ? el.value : (el.tagName === 'SELECT' ? el.value : el.value.trim());
-                        if (val === '' || val === undefined || val === null) {
-                            faltantes.push(ad.nombre);
-                            el.style.border = '2px solid #dc2626';
-                            el.style.background = '#fef2f2';
-                        }
-                    }
-                }
-            });
-
-            if (faltantes.length > 0) {
-                alert(`⚠️ Los siguientes campos requeridos están vacíos:\n\n  • ${faltantes.join('\n  • ')}\n\nCompleta todos los campos requeridos antes de asignar.`);
-                return;
-            }
-
-            btn.disabled = true;
-            btn.textContent = '⏳ Asignando...';
-
-            const detalles = {};
-            attrDefs.forEach(ad => {
-                const a = ad.nombre;
-                const el = document.getElementById(`batch-val-${a}`);
-                if (el) {
-                    if (el.type === 'number') {
-                        detalles[a] = el.value !== '' ? parseFloat(el.value) : '';
-                    } else if (el.tagName === 'SELECT') {
-                        if (el.value === 'true') detalles[a] = true;
-                        else if (el.value === 'false') detalles[a] = false;
-                        else detalles[a] = '';
-                    } else {
-                        detalles[a] = el.value;
-                    }
-                }
-            });
-
-            try {
-                const res = await fetch(`/api/especializaciones/${espId}/obras/batch-detalles`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ detalles })
-                });
-                const result = await res.json();
-                if (result.success) {
-                    alert(`✅ ${result.message}`);
-                    cerrarFormAsignacionMasiva(espId);
-                    toggleObrasEspecializacion(espId, espObrasFilterSinDetalles[espId] || false);
-                } else {
-                    alert('❌ ' + (result.message || 'Error en la asignación masiva'));
-                    btn.disabled = false;
-                    btn.textContent = '✅ Asignar a todas';
-                }
-            } catch (error) {
-                console.error('Error en asignación masiva:', error);
-                alert('❌ Error en la asignación masiva');
-                btn.disabled = false;
-                btn.textContent = '✅ Asignar a todas';
-            }
-        }
-
         function marcarCampoCompleto(el) {
             const val = el.type === 'checkbox' ? el.checked : el.value;
             if (val !== '' && val !== undefined && val !== null) {
@@ -2336,316 +2007,10 @@
             }
         }
 
-        function validarRequeridos(obraId, espId) {
-            const obrasRow = document.getElementById(`esp-obras-${espId}`);
-            const headers = obrasRow.querySelectorAll('thead th');
-            const attrDefs = [];
-            for (let i = 2; i < headers.length - 1; i++) {
-                const text = headers[i].textContent.trim();
-                const name = text.replace(/\s*\*$/, '');
-                const req = text.includes('*');
-                attrDefs.push({ nombre: name, requerido: req });
-            }
-
-            const faltantes = [];
-            attrDefs.forEach(ad => {
-                if (ad.requerido) {
-                    const el = document.getElementById(`det-${obraId}-${ad.nombre}`);
-                    if (el) {
-                        const val = el.type === 'number' ? el.value : (el.tagName === 'SELECT' ? el.value : el.value.trim());
-                        if (val === '' || val === undefined || val === null) {
-                            faltantes.push(ad.nombre);
-                            el.style.border = '2px solid #dc2626';
-                            el.style.background = '#fef2f2';
-                        } else {
-                            el.style.border = '';
-                            el.style.background = '';
-                        }
-                    }
-                }
-            });
-
-            return faltantes;
-        }
-
         function escHtml(str) {
             const div = document.createElement('div');
             div.textContent = str;
             return div.innerHTML;
-        }
-
-        async function guardarDetallesObra(obraId, espId) {
-            const btn = document.querySelector(`#obra-detalle-fila-${obraId} .btn-green`);
-            if (!btn) return;
-
-            // Validate required fields first
-            const faltantes = validarRequeridos(obraId, espId);
-            if (faltantes.length > 0) {
-                alert(`⚠️ Los siguientes campos requeridos están vacíos:\n\n  • ${faltantes.join('\n  • ')}\n\nCompleta todos los campos requeridos antes de guardar.`);
-                return;
-            }
-
-            btn.disabled = true;
-            btn.textContent = '⏳';
-
-            // Get attribute names from the obras table header
-            const obrasRow = document.getElementById(`esp-obras-${espId}`);
-            const headers = obrasRow.querySelectorAll('thead th');
-            const attrNames = [];
-            for (let i = 2; i < headers.length - 1; i++) {
-                const text = headers[i].textContent.trim();
-                attrNames.push(text.replace(/\s*\*$/, ''));
-            }
-
-            const detalles = {};
-            attrNames.forEach(a => {
-                const el = document.getElementById(`det-${obraId}-${a}`);
-                if (el) {
-                    if (el.type === 'number') {
-                        detalles[a] = el.value !== '' ? parseFloat(el.value) : '';
-                    } else if (el.tagName === 'SELECT') {
-                        if (el.value === 'true') detalles[a] = true;
-                        else if (el.value === 'false') detalles[a] = false;
-                        else detalles[a] = '';
-                    } else {
-                        detalles[a] = el.value;
-                    }
-                }
-            });
-
-            try {
-                const res = await fetch(`/api/obras-admin/${obraId}/detalles`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ detalles })
-                });
-                const result = await res.json();
-                if (result.success) {
-                    btn.textContent = '✅';
-                    const fila = document.getElementById(`obra-detalle-fila-${obraId}`);
-                    if (espObrasFilterSinDetalles[espId] && fila) {
-                        // If filter is active, remove the row with animation
-                        fila.style.transition = 'all 0.3s ease';
-                        fila.style.opacity = '0';
-                        fila.style.transform = 'translateX(-20px)';
-                        setTimeout(() => {
-                            fila.remove();
-                            // Check if any rows remain
-                            const tbody = obrasRow.querySelector('tbody');
-                            if (tbody && tbody.children.length === 0) {
-                                const content = document.getElementById(`esp-obras-content-${espId}`);
-                                if (content) {
-                                    const summary = content.querySelector('div:first-child');
-                                    content.innerHTML = summary ? summary.outerHTML + '<p style="text-align:center;color:#16a34a;padding:20px;font-weight:bold;">✅ Todas las obras tienen atributos asignados</p>' : '';
-                                }
-                            }
-                        }, 300);
-                    } else {
-                        setTimeout(() => { btn.textContent = '💾'; btn.disabled = false; }, 1500);
-                    }
-                } else {
-                    alert('❌ ' + (result.message || 'Error al guardar'));
-                    btn.textContent = '💾';
-                    btn.disabled = false;
-                }
-            } catch (error) {
-                console.error('Error guardando detalles:', error);
-                alert('❌ Error al guardar detalles');
-                btn.textContent = '💾';
-                btn.disabled = false;
-            }
-        }
-
-        let espEditandoId = null;
-
-        function editarEspecializacion(id) {
-            // Switch to the add form tab visually
-            const tab = document.getElementById('tab-especializaciones');
-            const cardAdd = tab.querySelector('.card:first-child');
-            cardAdd.scrollIntoView({ behavior: 'smooth' });
-
-            fetch('/api/especializaciones')
-                .then(r => r.json())
-                .then(data => {
-                    const esp = data.find(e => e.id === id);
-                    if (!esp) return;
-
-                    espEditandoId = id;
-
-                    // Set the genre select
-                    const sel = document.getElementById('input-esp-genero');
-                    sel.value = esp.nombre;
-
-                    // Fill the attributes table
-                    const tbody = document.getElementById('body-atributos');
-                    tbody.innerHTML = '';
-                    contadorAtributos = 0;
-                    esp.atributos.forEach(attr => {
-                        agregarFilaAtributo(attr.nombre, attr.tipo, attr.requerido);
-                    });
-
-                    document.getElementById('esp-atributos-section').style.display = 'block';
-
-                    // Change button text and behavior
-                    const btnGuardar = document.querySelector('#tab-especializaciones .card:first-child .btn-green');
-                    btnGuardar.textContent = '✏️ Actualizar Especialización';
-                    btnGuardar.onclick = actualizarEspecializacion;
-                    document.getElementById('btn-cancelar-editar-esp').style.display = 'inline-block';
-                })
-                .catch(err => console.error('Error cargando especialización para editar:', err));
-        }
-
-        async function actualizarEspecializacion() {
-            if (!espEditandoId) return;
-
-            const filas = document.querySelectorAll('#body-atributos tr');
-            const atributos = [];
-            filas.forEach(fila => {
-                const input = fila.querySelector('input[id^="attr-nombre-"]');
-                const select = fila.querySelector('select[id^="attr-tipo-"]');
-                const checkbox = fila.querySelector('input[id^="attr-req-"]');
-                if (input && select) {
-                    const val = input.value.trim();
-                    if (val) {
-                        atributos.push({
-                            nombre: val,
-                            tipo: select.value,
-                            requerido: checkbox ? checkbox.checked : false
-                        });
-                    }
-                }
-            });
-
-            if (atributos.length === 0) {
-                alert('Debe agregar al menos un atributo');
-                return;
-            }
-
-            try {
-                const res = await fetch(`/api/especializaciones/${espEditandoId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ atributos })
-                });
-                const result = await res.json();
-                if (result.success) {
-                    alert('✅ Especialización actualizada correctamente');
-                    const updatedId = espEditandoId;
-                    resetFormEspecializacion();
-                    await cargarEspecializaciones();
-                    // Auto-expand obras for this specialization
-                    if (updatedId) {
-                        setTimeout(() => {
-                            toggleObrasEspecializacion(updatedId, true);
-                        }, 300);
-                    }
-                } else {
-                    alert('❌ ' + (result.message || 'Error al actualizar'));
-                }
-            } catch (error) {
-                console.error('Error actualizando especialización:', error);
-                alert('❌ Error al actualizar especialización');
-            }
-        }
-
-        function resetFormEspecializacion() {
-            espEditandoId = null;
-            document.getElementById('input-esp-genero').value = '';
-            document.getElementById('body-atributos').innerHTML = '';
-            document.getElementById('esp-atributos-section').style.display = 'none';
-            contadorAtributos = 0;
-            const btnGuardar = document.querySelector('#tab-especializaciones .card:first-child .btn-green');
-            btnGuardar.textContent = '💾 Guardar Especialización';
-            btnGuardar.onclick = agregarEspecializacion;
-            document.getElementById('btn-cancelar-editar-esp').style.display = 'none';
-        }
-
-        async function agregarEspecializacion() {
-            const sel = document.getElementById('input-esp-genero');
-            const nombre = sel.value;
-
-            if (!nombre) {
-                alert('Por favor seleccione un género');
-                return;
-            }
-
-            const filas = document.querySelectorAll('#body-atributos tr');
-            const atributos = [];
-            filas.forEach(fila => {
-                const input = fila.querySelector('input[id^="attr-nombre-"]');
-                const select = fila.querySelector('select[id^="attr-tipo-"]');
-                const checkbox = fila.querySelector('input[id^="attr-req-"]');
-                if (input && select) {
-                    const val = input.value.trim();
-                    if (val) {
-                        atributos.push({
-                            nombre: val,
-                            tipo: select.value,
-                            requerido: checkbox ? checkbox.checked : false
-                        });
-                    }
-                }
-            });
-
-            if (atributos.length === 0) {
-                alert('Debe agregar al menos un atributo');
-                return;
-            }
-
-            try {
-                const res = await fetch('/api/especializaciones', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nombre, atributos })
-                });
-                const result = await res.json();
-                if (result.success) {
-                    alert('✅ Especialización agregada correctamente');
-                    sel.value = '';
-                    document.getElementById('body-atributos').innerHTML = '';
-                    document.getElementById('esp-atributos-section').style.display = 'none';
-                    contadorAtributos = 0;
-                    const espId = result.id;
-                    await cargarEspecializaciones();
-                    // Auto-expand obras for this specialization with filter active
-                    if (espId) {
-                        setTimeout(() => {
-                            toggleObrasEspecializacion(espId, true);
-                        }, 300);
-                    }
-                } else {
-                    alert('❌ ' + (result.message || 'Error al agregar especialización'));
-                }
-            } catch (error) {
-                console.error('Error agregando especialización:', error);
-                alert('❌ Error al agregar especialización');
-            }
-        }
-
-        async function eliminarEspecializacion(id, btn) {
-            if (!confirm('¿Eliminar esta especialización?')) return;
-            btn.disabled = true;
-
-            try {
-                const res = await fetch(`/api/especializaciones/${id}`, { method: 'DELETE' });
-                const result = await res.json();
-                if (result.success) {
-                    const fila = document.getElementById(`esp-fila-${id}`);
-                    if (fila) {
-                        fila.style.transition = 'all 0.4s ease';
-                        fila.style.opacity = '0';
-                        fila.style.transform = 'translateX(-20px)';
-                        setTimeout(() => fila.remove(), 400);
-                    }
-                } else {
-                    alert('❌ ' + (result.message || 'Error al eliminar'));
-                }
-            } catch (error) {
-                console.error('Error eliminando especialización:', error);
-                alert('❌ Error al eliminar especialización');
-            } finally {
-                btn.disabled = false;
-            }
         }
 
         function cargarObrasConHistorial() {
@@ -2742,7 +2107,7 @@
                             f.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
                         let tipoClase = '';
-                        if (l.tipo_evento === 'INICIO_SESION' || l.tipo_evento === 'APROBACION_USUARIO' || l.tipo_evento === 'APROBACION_PAGO') tipoClase = 'color: #38a169;';
+                        if (l.tipo_evento === 'INICIO_SESION' || l.tipo_evento === 'APROBACION_USUARIO' || l.tipo_evento === 'APROBACION_PAGO') tipoClase = 'color: #00ff00;';
                         else if (l.tipo_evento === 'CIERRE_SESION' || l.tipo_evento === 'CAMBIO_CONTRASENA') tipoClase = 'color: #e53e3e;';
 
                         tbody.innerHTML += `<tr>
@@ -2764,7 +2129,6 @@
         window.onload = () => {
             console.log('Panel administrativo cargado');
             mostrarTab('gestion');
-            cargarGenerosSelectEsp();
         };
         async function cargarTendencias() {
             try {
@@ -2777,9 +2141,9 @@
                         container.innerHTML = '<p style="color:#a0aec0;">Sin datos aún</p>';
                     } else {
                         container.innerHTML = artistas.slice(0, 5).map(a =>
-                            `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e2e8f0;">
+                            `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #222;">
                         <span>${a.Artista}</span>
-                        <span style="color:#38a169;font-weight:bold;">${a.ObrasVendidas} ventas</span>
+                        <span style="color:#00ff00;font-weight:bold;">${a.ObrasVendidas} ventas</span>
                     </div>`
                         ).join('');
                     }
@@ -2794,9 +2158,9 @@
                         container.innerHTML = '<p style="color:#a0aec0;">Sin datos aún</p>';
                     } else {
                         container.innerHTML = generos.slice(0, 5).map(g =>
-                            `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e2e8f0;">
+                            `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #222;">
                         <span>${g.Genero}</span>
-                        <span style="color:#38a169;font-weight:bold;">${g.ObrasVendidas} vendidas</span>
+                        <span style="color:#00ff00;font-weight:bold;">${g.ObrasVendidas} vendidas</span>
                     </div>`
                         ).join('');
                     }
@@ -2812,7 +2176,7 @@
                         stats.nodos.forEach(n => {
                             html += `<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:0.85rem;">
                         <span>${n.tipo}</span>
-                        <span style="color:#3182ce;">${n.cantidad}</span>
+                        <span style="color:#00ff00;">${n.cantidad}</span>
                     </div>`;
                         });
                     }
@@ -2830,6 +2194,151 @@
                 console.error('Error cargando tendencias:', e);
             }
         }
+    </script>
+
+    <!-- Modal para datos del comprador (facturación manual) -->
+    <div id="modal-comprador" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:10000;justify-content:center;align-items:center;">
+        <div style="background:#1a202c;border-radius:12px;padding:30px;width:420px;max-width:90%;border:1px solid #2d3748;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+            <h3 style="color:#00ff00;margin:0 0 20px 0;font-size:1.2rem;text-transform:uppercase;letter-spacing:1px;">Datos del Comprador</h3>
+            <p style="color:#a0aec0;margin:0 0 20px 0;font-size:0.85rem;">Ingrese el email o cédula para buscar al usuario, o complete los datos manualmente.</p>
+            <div style="display:flex;gap:10px;margin-bottom:15px;">
+                <input type="text" id="modal-buscar-input" placeholder="Email o cédula..." style="flex:1;padding:8px 12px;border:1px solid #2d3748;border-radius:6px;background:#0d1117;color:#e2e8f0;font-size:14px;">
+                <button onclick="buscarCompradorModal()" class="btn btn-blue" style="white-space:nowrap;">🔍 Buscar</button>
+            </div>
+            <div id="modal-buscar-resultado" style="margin-bottom:15px;font-size:0.85rem;"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:15px;">
+                <div>
+                    <label style="color:#a0aec0;font-size:0.8rem;display:block;margin-bottom:4px;">Nombre</label>
+                    <input type="text" id="modal-nombre" placeholder="Nombre" style="width:100%;padding:8px 12px;border:1px solid #2d3748;border-radius:6px;background:#0d1117;color:#e2e8f0;font-size:14px;box-sizing:border-box;">
+                </div>
+                <div>
+                    <label style="color:#a0aec0;font-size:0.8rem;display:block;margin-bottom:4px;">Apellido</label>
+                    <input type="text" id="modal-apellido" placeholder="Apellido" style="width:100%;padding:8px 12px;border:1px solid #2d3748;border-radius:6px;background:#0d1117;color:#e2e8f0;font-size:14px;box-sizing:border-box;">
+                </div>
+                <div>
+                    <label style="color:#a0aec0;font-size:0.8rem;display:block;margin-bottom:4px;">Email</label>
+                    <input type="email" id="modal-email" placeholder="Email" style="width:100%;padding:8px 12px;border:1px solid #2d3748;border-radius:6px;background:#0d1117;color:#e2e8f0;font-size:14px;box-sizing:border-box;">
+                </div>
+                <div>
+                    <label style="color:#a0aec0;font-size:0.8rem;display:block;margin-bottom:4px;">Cédula</label>
+                    <input type="text" id="modal-cedula" placeholder="Cédula" style="width:100%;padding:8px 12px;border:1px solid #2d3748;border-radius:6px;background:#0d1117;color:#e2e8f0;font-size:14px;box-sizing:border-box;">
+                </div>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button onclick="cerrarModalComprador()" class="btn" style="color:#888;border-color:#444;">Cancelar</button>
+                <button onclick="confirmarCompradorModal()" class="btn btn-green" id="btn-confirmar-comprador">✅ Facturar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let datosFacturaPendiente = null;
+
+        function abrirModalComprador() {
+            document.getElementById('modal-comprador').style.display = 'flex';
+            document.getElementById('modal-buscar-input').value = '';
+            document.getElementById('modal-nombre').value = '';
+            document.getElementById('modal-apellido').value = '';
+            document.getElementById('modal-email').value = '';
+            document.getElementById('modal-cedula').value = '';
+            document.getElementById('modal-buscar-resultado').innerHTML = '';
+            document.getElementById('modal-buscar-input').focus();
+        }
+
+        function cerrarModalComprador() {
+            document.getElementById('modal-comprador').style.display = 'none';
+            if (datosFacturaPendiente && datosFacturaPendiente.btn) {
+                datosFacturaPendiente.btn.disabled = false;
+            }
+            datosFacturaPendiente = null;
+        }
+
+        async function buscarCompradorModal() {
+            const q = document.getElementById('modal-buscar-input').value.trim();
+            const resultadoDiv = document.getElementById('modal-buscar-resultado');
+            if (!q) { resultadoDiv.innerHTML = '<span style="color:#e53e3e;">Ingrese un email o cédula</span>'; return; }
+
+            resultadoDiv.innerHTML = '<span style="color:#a0aec0;">Buscando...</span>';
+
+            const isEmail = q.includes('@');
+            const body = isEmail ? { email: q } : { cedula: q };
+
+            try {
+                const res = await fetch('/api/buscar-comprador', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                if (data.success && data.found) {
+                    const u = data.usuario;
+                    document.getElementById('modal-nombre').value = u.Nombre || '';
+                    document.getElementById('modal-apellido').value = u.Apellido || '';
+                    document.getElementById('modal-email').value = u.Email || '';
+                    document.getElementById('modal-cedula').value = u.Cedula || '';
+                    resultadoDiv.innerHTML = `<span style="color:#00ff00;">✅ Usuario encontrado: ${u.Nombre || ''} ${u.Apellido || ''} (${u.Email})</span>`;
+                } else {
+                    resultadoDiv.innerHTML = '<span style="color:#e53e3e;">❌ Usuario no registrado. Complete los datos manualmente o verifique.</span>';
+                }
+            } catch (err) {
+                resultadoDiv.innerHTML = `<span style="color:#e53e3e;">Error al buscar: ${err.message}</span>`;
+            }
+        }
+
+        async function confirmarCompradorModal() {
+            const nombre = document.getElementById('modal-nombre').value.trim();
+            const apellido = document.getElementById('modal-apellido').value.trim();
+            const email = document.getElementById('modal-email').value.trim();
+            const cedula = document.getElementById('modal-cedula').value.trim();
+
+            if (!nombre || !apellido) {
+                alert("Nombre y Apellido son obligatorios");
+                return;
+            }
+
+            if (!datosFacturaPendiente) return;
+            const btn = datosFacturaPendiente.btn;
+            const enviarFactura = datosFacturaPendiente.enviarFactura;
+
+            try {
+                document.getElementById('btn-confirmar-comprador').disabled = true;
+                document.getElementById('btn-confirmar-comprador').innerHTML = '⏳ Facturando...';
+
+                const result = await enviarFactura({
+                    buyer_nombre: nombre,
+                    buyer_apellido: apellido,
+                    buyer_email: email,
+                    buyer_cedula: cedula || null
+                });
+
+                cerrarModalComprador();
+
+                if (result.success) {
+                    generarPDFFactura(result.datos);
+                    if (result.mostrarEnvio) {
+                        if (confirm(`✅ Factura #${result.id_factura} generada con éxito.\n\n¿Desea registrar el envío de esta obra ahora?`)) {
+                            window.open(`/user/Registrar-envio.html?id_factura=${result.id_factura}`, '_blank');
+                        }
+                    } else {
+                        alert(`✅ Factura #${result.id_factura} generada con éxito`);
+                    }
+                    setTimeout(() => cargarReservadas(), 500);
+                } else {
+                    throw new Error(result.message || "Error al generar factura");
+                }
+            } catch (error) {
+                console.error('Error generando factura:', error);
+                alert("❌ Error al generar factura: " + error.message);
+            } finally {
+                document.getElementById('btn-confirmar-comprador').disabled = false;
+                document.getElementById('btn-confirmar-comprador').innerHTML = '✅ Facturar';
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            const c = document.getElementById('autor-selector-container');
+            if (c && !c.contains(e.target)) cerrarDropdownAutores();
+        });
     </script>
 </body>
 
