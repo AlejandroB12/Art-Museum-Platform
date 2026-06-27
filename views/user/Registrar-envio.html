@@ -553,7 +553,7 @@ document.getElementById('envioForm').addEventListener('submit', async function(e
         console.log('Respuesta:', result);
 
         if (result.success) {
-                    window.location.href = `/user/Envio-exitoso.html?id_factura=${idFactura}`;
+                    window.location.href = `/user/Envio-exitoso.html?id_factura=${idFactura}&numero_guia=${encodeURIComponent(result.numero_guia || '')}`;
         } else {
             showError(result.message || 'Error al registrar el envío');
         }

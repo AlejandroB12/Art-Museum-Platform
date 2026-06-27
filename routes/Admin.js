@@ -700,16 +700,18 @@ router.get('/api/factura/:id', (req, res) => {
         // Obtener dirección de envío si existe
         const dirQuery = "SELECT * FROM Envio WHERE Factura_id_Factura = ? ORDER BY id_Envio DESC LIMIT 1";
         db.query(dirQuery, [idFactura], (errDir, dirResults) => {
-            const direccion = dirResults && dirResults.length > 0 ? {
-                municipio: dirResults[0].Municipio || '',
-                parroquia: dirResults[0].Parroquia || '',
-                direccion: dirResults[0].Calle || ''
+            const envio = dirResults && dirResults.length > 0 ? dirResults[0] : null;
+            const direccion = envio ? {
+                municipio: envio.Municipio || '',
+                parroquia: envio.Parroquia || '',
+                direccion: envio.Calle || ''
             } : null;
             
             res.json({ 
                 success: true, 
                 factura, 
-                direccion
+                direccion,
+                numero_guia: envio ? envio.numero_guia : null
             });
         });
     });
@@ -717,7 +719,12 @@ router.get('/api/factura/:id', (req, res) => {
 
 // Registrar un nuevo envío (versión con textos)
 router.post('/api/registrar-envio', (req, res) => {
-    const { id_factura, estado, municipio, parroquia, direccion_detallada, numero_guia } = req.body;
+    let { id_factura, estado, municipio, parroquia, direccion_detallada, numero_guia } = req.body;
+    
+    if (!numero_guia || numero_guia.trim() === '') {
+        const rand = String(Math.floor(1000 + Math.random() * 9000));
+        numero_guia = `MUS-${String(id_factura).padStart(6,'0')}-${rand}`;
+    }
     
     console.log('Datos recibidos en /api/registrar-envio:', req.body);
     
@@ -770,12 +777,12 @@ router.post('/api/registrar-envio', (req, res) => {
                     INSERT INTO Envio (Factura_id_Factura, Monto_total, Estado_entrega, Municipio, Parroquia, Calle, numero_guia, fecha_envio) 
                     VALUES (?, ?, 'En proceso', ?, ?, ?, ?, NOW())
                 `;
-                db.query(insertQuery, [id_factura, factura.Total_Pagado || 0, municipio, parroquia, direccion_detallada, numero_guia || null], (err2, result) => {
+                db.query(insertQuery, [id_factura, factura.Total_Pagado || 0, municipio, parroquia, direccion_detallada, numero_guia], (err2, result) => {
                     if (err2) {
                         console.error('Error registrando envío:', err2);
                         return res.status(500).json({ success: false, message: 'Error al registrar el envío: ' + err2.message });
                     }
-                    res.json({ success: true, message: 'Envío registrado exitosamente', id_envio: result.insertId });
+                    res.json({ success: true, message: 'Envío registrado exitosamente', id_envio: result.insertId, numero_guia });
                 });
             };
 

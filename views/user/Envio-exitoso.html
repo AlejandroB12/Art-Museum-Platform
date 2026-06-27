@@ -39,9 +39,13 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const idFactura = urlParams.get('id_factura');
+        const guiaUrl = urlParams.get('numero_guia');
 
         if (idFactura) {
             document.addEventListener('DOMContentLoaded', async () => {
+                if (guiaUrl) {
+                    document.getElementById('numeroGuia').textContent = guiaUrl;
+                }
                 try {
                     const res = await fetch(`/api/factura/${idFactura}`);
                     const data = await res.json();
@@ -52,6 +56,9 @@
                         if (data.direccion) {
                             document.getElementById('destino').textContent = `${data.direccion.municipio || ''}, ${data.direccion.parroquia || ''}`.replace(/^, /, '').replace(/, $/, '') || 'No especificado';
                             document.getElementById('direccion').textContent = data.direccion.direccion || 'No especificada';
+                        }
+                        if (data.numero_guia) {
+                            document.getElementById('numeroGuia').textContent = data.numero_guia;
                         }
                     }
                 } catch (e) {
