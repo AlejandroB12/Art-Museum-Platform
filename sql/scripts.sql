@@ -2205,3 +2205,20 @@ INSERT INTO Parroquia (id_parroquia, id_municipio, nombre) VALUES
 -- ==========================================
 -- ALTER TABLE Comprador ADD COLUMN PuedeAdquirir tinyint(1) DEFAULT 1;
 --
+
+-- ==========================================
+-- ADMINISTRADORES
+-- ==========================================
+INSERT INTO `Usuario` (`id_usuario`, `Email`, `Contraseña`, `Nombre`, `Apellido`, `Estatus`, `Rol`) VALUES
+(1, 'alejandro.briceno@email.com', 'Admin1234', 'Alejandro', 'Briceño', 1, 'administrador'),
+(2, 'kelvys.concepcion@email.com', 'Admin1234', 'Kelvys', 'Concepcion', 1, 'administrador'),
+(3, 'rolannys.sanchez@email.com', 'Admin1234', 'Rolannys', 'Sanchez', 1, 'administrador'),
+(4, 'angel.laucho@email.com', 'Admin1234', 'Angel', 'Laucho', 1, 'administrador'),
+(5, 'ivanna.bravo@email.com', 'Admin1234', 'Ivanna', 'Bravo', 1, 'administrador');
+
+INSERT INTO `Administrador` (`id_usuario`) VALUES
+(1),
+(2),
+(3),
+(4),
+(5);
