@@ -49,7 +49,20 @@
         .status-vendida { color: #ff4444; font-weight: bold; }
         header h1 { margin: 0; font-size: 1.5rem; color: #e0e0e0; }
         .edit-input { padding: 5px; border: 1px solid #333; border-radius: 4px; background: #111; color: #ccc; }
-        /* Labels consistent with panel-admin.css */
+        .nav-parent {
+            display:flex; justify-content:space-between; align-items:center;
+            padding:14px 20px; cursor:pointer; color:#e0e0e0; font-size:0.8rem;
+            text-transform:uppercase; letter-spacing:1px; font-weight:700;
+            transition:0.3s; border-left:3px solid transparent;
+        }
+        .nav-parent:hover { color:#00ff00; background:#0a0a0a; border-left-color:#00ff00; }
+        .nav-parent .arrow { font-size:0.7rem; color:#555; transition:transform 0.3s; }
+        .nav-parent.open .arrow { transform:rotate(180deg); color:#00ff00; }
+        .sub-nav { overflow:hidden; max-height:0; transition:max-height 0.35s ease; }
+        .sub-nav.open { max-height:400px; }
+        .sub-nav .nav-item { padding-left:32px; font-size:0.7rem; }
+        .sidebar { overflow:hidden; }
+        .nav-label { display:none; }
         label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: #888; }
     </style>
 </head>
@@ -59,43 +72,49 @@
     <div class="sidebar">
         <h2>Museo UNEG</h2>
 
+        <!-- Grupo: Obras -->
         <div class="nav-group">
-            <span class="nav-label">Gestión Maestra</span>
-            <div class="nav-item active" id="btn-gestion" onclick="mostrarTab('gestion')">📦 Inventario</div>
-            <div class="nav-item" id="btn-usuarios" onclick="mostrarTab('usuarios')">👥 Usuarios</div>
-            <div class="nav-item" id="btn-facturacion" onclick="mostrarTab('facturacion')">🧾 Facturar Reservas</div>
-            <div class="nav-item" id="btn-usuarios-pagos" onclick="mostrarTab('usuarios-pagos')">💳 Validar Pagos
-                Membresía</div>
-            <div class="nav-item" id="btn-validar-usuarios" onclick="mostrarTab('validar-usuarios')">👤 Validar Registro
-                Usuarios</div>
-            <div class="nav-item" id="btn-generos" onclick="mostrarTab('generos')">🎭 Gestionar Géneros</div>
-            <div class="nav-item" id="btn-autores" onclick="mostrarTab('autores')">✍️ Gestionar Autores</div>
-            <div class="nav-item" id="btn-obras" onclick="mostrarTab('obras')">🖼️ Gestionar Obras</div>
-        </div>
-
-        <div class="nav-group">
-            <span class="nav-label">Reportes</span>
-            <div class="nav-item" id="btn-rep-obras" onclick="mostrarTab('rep-obras')">📊 Obras Vendidas</div>
-            <div class="nav-item" id="btn-rep-facturas" onclick="mostrarTab('rep-facturas')">📈 Resumen Facturación
+            <div class="nav-parent open" onclick="toggleGroup('obras-group')">
+                <span>🖼️ Gestión de Obras</span>
+                <span class="arrow" id="arrow-obras-group">▾</span>
             </div>
-            <div class="nav-item" id="btn-rep-membresias" onclick="mostrarTab('rep-membresias')">🎫 Reporte Membresías
+            <div id="obras-group" class="sub-nav open">
+                <div class="nav-item active" id="btn-gestion" onclick="mostrarTab('gestion')">📦 Inventario</div>
+                <div class="nav-item" id="btn-facturacion" onclick="mostrarTab('facturacion')">🧾 Facturar Reservas</div>
+                <div class="nav-item" id="btn-autores" onclick="mostrarTab('autores')">✍️ Autores</div>
+                <div class="nav-item" id="btn-generos" onclick="mostrarTab('generos')">🎭 Géneros</div>
+                <div class="nav-item" id="btn-obras" onclick="mostrarTab('obras')">🖼️ Obras</div>
+                <div class="nav-item" id="btn-rep-obras" onclick="mostrarTab('rep-obras')">📊 Obras Vendidas</div>
+                <div class="nav-item" id="btn-tendencias" onclick="mostrarTab('tendencias')">📈 Tendencias</div>
             </div>
         </div>
+
+        <!-- Grupo: Usuarios -->
         <div class="nav-group">
-            <span class="nav-label">Estadísticas</span>
-            <div class="nav-item" id="btn-tendencias" onclick="mostrarTab('tendencias')">📈 Tendencias del Museo</div>
+            <div class="nav-parent" onclick="toggleGroup('usuarios-group')">
+                <span>👥 Gestión de Usuarios</span>
+                <span class="arrow" id="arrow-usuarios-group">▾</span>
+            </div>
+            <div id="usuarios-group" class="sub-nav">
+                <div class="nav-item" id="btn-usuarios" onclick="mostrarTab('usuarios')">👥 Usuarios</div>
+                <div class="nav-item" id="btn-usuarios-pagos" onclick="mostrarTab('usuarios-pagos')">💳 Pagos Membresía</div>
+                <div class="nav-item" id="btn-validar-usuarios" onclick="mostrarTab('validar-usuarios')">✅ Validar Registros</div>
+                <div class="nav-item" id="btn-rep-facturas" onclick="mostrarTab('rep-facturas')">📈 Resumen Facturación</div>
+                <div class="nav-item" id="btn-rep-membresias" onclick="mostrarTab('rep-membresias')">🎫 Reporte Membresías</div>
+            </div>
         </div>
 
+        <!-- Grupo: Sistema -->
         <div class="nav-group">
-            <span class="nav-label">Cassandra</span>
-            <div class="nav-item" id="btn-historial-estatus" onclick="mostrarTab('historial-estatus')">📋 Historial de
-                Estatus</div>
-            <div class="nav-item" id="btn-logs-seguridad"
-                onclick="mostrarTab('logs-seguridad'); cargarLogsSeguridad();">🔒 Bitácora de Seguridad</div>
-        </div>
-
-        <div class="nav-group" style="margin-top: 50px;">
-            <div class="nav-item" style="color: #ff4444;" onclick="cerrarSesion()">🚪 Cerrar Sesión</div>
+            <div class="nav-parent" onclick="toggleGroup('sistema-group')">
+                <span>⚙️ Sistema</span>
+                <span class="arrow" id="arrow-sistema-group">▾</span>
+            </div>
+            <div id="sistema-group" class="sub-nav">
+                <div class="nav-item" id="btn-historial-estatus" onclick="mostrarTab('historial-estatus')">📋 Historial Estatus</div>
+                <div class="nav-item" id="btn-logs-seguridad" onclick="mostrarTab('logs-seguridad'); cargarLogsSeguridad();">🔒 Bitácora Seguridad</div>
+                <div class="nav-item" style="color:#ff4444;" onclick="cerrarSesion()">🚪 Cerrar Sesión</div>
+            </div>
         </div>
     </div>
 
@@ -595,6 +614,15 @@
             setTimeout(() => { btn.disabled = false; }, tiempo);
         }
 
+        // Acordeón sidebar: abrir grupo por defecto y al hacer clic
+        function toggleGroup(id) {
+            const el = document.getElementById(id);
+            const parent = el.previousElementSibling;
+            if (!el || !parent) return;
+            const isOpen = el.classList.toggle('open');
+            parent.classList.toggle('open', isOpen);
+        }
+
         function mostrarTab(tab) {
             document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
@@ -604,6 +632,16 @@
 
             const btnElement = document.getElementById('btn-' + tab);
             if (btnElement) btnElement.classList.add('active');
+
+            // Auto-abrir el grupo padre del item clickeado
+            if (btnElement) {
+                const subNav = btnElement.closest('.sub-nav');
+                if (subNav && !subNav.classList.contains('open')) {
+                    subNav.classList.add('open');
+                    const parent = subNav.previousElementSibling;
+                    if (parent) parent.classList.add('open');
+                }
+            }
 
             // Actualizar título
             const titulos = {
