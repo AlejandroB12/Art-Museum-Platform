@@ -770,33 +770,52 @@
             clearTimeout(timeoutBuscador);
 
             if (!query || query.trim().length < 2) {
-                renderGallery(); // Volver al catálogo normal
+                renderGallery();
                 return;
             }
 
             timeoutBuscador = setTimeout(async () => {
                 try {
-                    const resp = await fetch('/api/buscar?q=' + encodeURIComponent(query));
-                    const obras = await resp.json();
+                    // Buscar en ambos: texto exacto + visual CLIP
+                    const [respExacta, respVisual] = await Promise.all([
+                        fetch('/api/buscar?q=' + encodeURIComponent(query)),
+                        fetch('/api/buscar/visual?q=' + encodeURIComponent(query))
+                    ]);
+
+                    const exactas = respExacta.ok ? await respExacta.json() : [];
+                    const visuales = respVisual.ok ? await respVisual.json() : [];
+
+                    // Unir sin duplicar
+                    const idsVistos = new Set();
+                    const todas = [];
+
+                    for (const o of [...exactas, ...visuales]) {
+                        const id = o.id_Obra;
+                        if (!idsVistos.has(id)) {
+                            idsVistos.add(id);
+                            todas.push(o);
+                        }
+                    }
 
                     gallery.innerHTML = '';
 
-                    if (obras.length === 0) {
-                        gallery.innerHTML = '<p style="text-align:center; width:100%; color:#444;">No se encontraron obras.</p>';
+                    if (todas.length === 0) {
+                        gallery.innerHTML = '<p style="text-align:center; width:100%; color:#444;">No se encontraron obras. Prueba con otra palabra.</p>';
                         return;
                     }
 
-                    obras.forEach(obra => {
+                    todas.forEach(obra => {
                         const imgSource = obra.imagen_url || '/assets/images/placeholder.jpg';
-                        const autorNombreCompleto = `${obra.AutorNombre || ''} ${obra.AutorApellido || ''}`.trim();
+                        const autorNombreCompleto = obra.AutorNombre || '';
                         const detallesHTML = construirDetallesTecnicos(obra);
+                        const esVisual = obra.tipo === 'visual';
 
                         const card = document.createElement('div');
                         card.className = 'art-card';
                         card.innerHTML = `
-                    <div class="art-img" style="background-image: url('${imgSource}'); background-size: cover; background-position: center;" 
+                    <div class="art-img" style="background-image: url('${imgSource}'); background-size: cover; background-position: center; position: relative;" 
                          onclick="abrirModal('${imgSource}', '${(obra.Nombre || '').replace(/'/g, "\\'")}', '${autorNombreCompleto.replace(/'/g, "\\'")}', \`${detallesHTML}\`, '${obra.GeneroNombre || ''}', '${obra.id_Obra}')">
-                        ${obra.tipo === 'semántica' ? `<span style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); color: #00ff00; font-size: 0.6rem; padding: 3px 8px; border-radius: 10px;">${obra.similitud}% match</span>` : ''}
+                        ${esVisual ? `<span style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); color: #00ff00; font-size: 0.6rem; padding: 3px 8px; border-radius: 10px;">${Math.round(obra.score * 100)}%</span>` : ''}
                     </div>
                     <div class="art-info">
                         <span class="author-link">${autorNombreCompleto || 'Anónimo'}</span>
@@ -810,7 +829,7 @@
                 } catch (e) {
                     console.error('Error en búsqueda:', e);
                 }
-            }, 400); // Esperar 400ms después de dejar de escribir
+            }, 400);
         }
     </script>
 </body>

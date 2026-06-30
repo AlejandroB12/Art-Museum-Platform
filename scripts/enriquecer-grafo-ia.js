@@ -1,15 +1,11 @@
 /**
  * Script de enriquecimiento del grafo Neo4j con IA local.
  * 
- * Analiza las imágenes de las obras y genera:
- * - Descripciones textuales (BLIP)
- * - Vectores de embedding (all-MiniLM-L6-v2)
- * - Nuevos nodos: Estilo, Paleta, Tecnica, Epoca
- * - Nuevas relaciones: TIENE_ESTILO, USA_PALETA, USA_TECNICA, PERTENECE_A_EPOCA, SIMILAR_A
- * - Metadatos reales: epocaReal, tecnicasReales, rangoPrecio
+ * Combina BLIP (descripción) + CLIP (tags semánticos) + Metadatos.
+ * Solo procesa obras NUEVAS o fuerza reprocesamiento con --force.
  * 
- * Solo procesa obras NUEVAS (sin embedding en Neo4j).
  * Ejecutar: node scripts/enriquecer-grafo-ia.js
+ *           node scripts/enriquecer-grafo-ia.js --force  (reprocesa todas)
  */
 
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
@@ -21,45 +17,106 @@ const path = require('path');
 
 const Obra = require('../models/Obra');
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGO_URI_FALLBACK;
+const FORCE = process.argv.includes('--force');
 
-// Función auxiliar para manejar números de Neo4j
-function toNum(val) {
-    if (val === null || val === undefined) return 0;
-    if (typeof val === 'number') return val;
-    if (typeof val === 'object' && val.toNumber) return val.toNumber();
-    return Number(val);
+// ============================================
+// MODELOS DE IA
+// ============================================
+
+let blip = null;     // Para descripción de imágenes
+let clip = null;     // Para tags semánticos
+let embedder = null; // Para vectores de similitud
+
+async function cargarModelos() {
+    if (!blip) {
+        console.log('Cargando BLIP (descripción de imágenes)...');
+        blip = await pipeline('image-to-text', 'Xenova/vit-gpt2-image-captioning');
+        console.log('✓ BLIP cargado');
+    }
+    if (!clip) {
+        console.log('Cargando CLIP (tags semánticos)...');
+        clip = await pipeline('zero-shot-image-classification', 'Xenova/clip-vit-base-patch32');
+        console.log('✓ CLIP cargado');
+    }
+    if (!embedder) {
+        console.log('Cargando embedder (all-MiniLM-L6-v2)...');
+        embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+        console.log('✓ Embedder cargado\n');
+    }
 }
 
 // ============================================
 // FUNCIONES DE IA
 // ============================================
 
-let captioner = null;
-let embedder = null;
-
-async function cargarModelos() {
-    if (!captioner) {
-        console.log('Cargando modelo BLIP (descripción de imágenes)...');
-        captioner = await pipeline('image-to-text', 'Xenova/vit-gpt2-image-captioning');
-        console.log('✓ BLIP cargado');
-    }
-    if (!embedder) {
-        console.log('Cargando modelo all-MiniLM-L6-v2 (embeddings)...');
-        embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-        console.log('✓ Embedder cargado\n');
-    }
-}
-
-async function describirImagen(rutaImagen) {
+/**
+ * BLIP: Describe la imagen con una frase
+ */
+async function describirConBLIP(rutaImagen) {
     try {
-        const buffer = fs.readFileSync(rutaImagen);
-        const resultado = await captioner(buffer);
+        const resultado = await blip(rutaImagen);
         return resultado[0].generated_text;
     } catch (err) {
         return null;
     }
 }
 
+/**
+ * Extrae palabras clave de una frase (stopwords en inglés)
+ */
+function extraerPalabrasClave(frase) {
+    if (!frase) return [];
+    const stopwords = new Set([
+        'a', 'an', 'the', 'of', 'in', 'on', 'at', 'to', 'for', 'with',
+        'and', 'or', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
+        'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would',
+        'could', 'should', 'may', 'might', 'can', 'shall', 'that',
+        'this', 'these', 'those', 'it', 'its', 'very', 'just', 'some',
+        'photo', 'image', 'picture', 'painting', 'sculpture', 'photograph'
+    ]);
+
+    return frase
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, '')
+        .split(/\s+/)
+        .filter(w => w.length > 2 && !stopwords.has(w));
+}
+
+/**
+ * CLIP: Evalúa las palabras clave contra la imagen y da scores reales
+ */
+async function etiquetarConCLIP(rutaImagen, palabrasClave) {
+    if (!palabrasClave || palabrasClave.length === 0) return [];
+
+    // Añadir conceptos base + palabras de BLIP
+    const conceptosBase = [
+        "abstract", "geometric", "organic", "minimalist", "surreal",
+        "realistic", "cubist", "impressionist", "baroque", "modern",
+        "man", "woman", "child", "person", "face", "portrait", "hands",
+        "building", "house", "tower", "bridge", "nature", "landscape",
+        "red", "blue", "green", "yellow", "orange", "black", "white",
+        "metal", "bronze", "gold", "ceramic", "wood", "stone", "glass",
+        "circle", "square", "triangle", "sphere", "cube",
+        "dark", "bright", "colorful", "peaceful", "chaotic"
+    ];
+
+    const todasLasPalabras = [...new Set([...palabrasClave, ...conceptosBase])];
+
+    try {
+        const resultado = await clip(rutaImagen, todasLasPalabras);
+        return resultado
+            .filter(c => c.score > 0.03)
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 15)
+            .map(c => ({ tag: c.label, score: Math.round(c.score * 100) / 100 }));
+    } catch (err) {
+        return [];
+    }
+}
+
+/**
+ * Genera embedding de un texto combinado
+ */
 async function generarEmbedding(texto) {
     try {
         const resultado = await embedder(texto, { pooling: 'mean', normalize: true });
@@ -70,19 +127,26 @@ async function generarEmbedding(texto) {
 }
 
 // ============================================
-// CLASIFICADOR (usa metadatos reales + IA)
+// CLASIFICADOR CON PERCENTILES REALES
 // ============================================
 
-function extraerEtiquetas(obra, descripcionIA, todosLosPrecios) {
-    const etiquetas = {
-        estilos: [],
-        paletas: [],
-        tecnicas: [],
-        epocas: [],
-        rangoPrecio: ''
-    };
+function calcularRangoPrecio(precio, todosLosPrecios) {
+    if (!todosLosPrecios || todosLosPrecios.length === 0) return 'medio';
+    const ordenados = [...todosLosPrecios].sort((a, b) => a - b);
+    const n = ordenados.length;
+    const p20 = ordenados[Math.floor(n * 0.2)];
+    const p50 = ordenados[Math.floor(n * 0.5)];
+    const p80 = ordenados[Math.floor(n * 0.8)];
+    if (precio < p20) return 'económico';
+    if (precio < p50) return 'accesible';
+    if (precio < p80) return 'medio-alto';
+    return 'premium';
+}
 
-    // 1. ÉPOCA: desde fecha_creacion (dato REAL de MongoDB)
+function extraerEtiquetas(obra, descripcionBLIP, tagsClip, todosLosPrecios) {
+    const etiquetas = { estilos: [], paletas: [], tecnicas: [], epocas: [], rangoPrecio: '' };
+
+    // ÉPOCA desde fecha_creacion
     if (obra.fecha_creacion) {
         const año = new Date(obra.fecha_creacion).getFullYear();
         if (año < 1800) etiquetas.epocas.push('clásico');
@@ -94,112 +158,66 @@ function extraerEtiquetas(obra, descripcionIA, todosLosPrecios) {
         etiquetas.epocas.push('contemporáneo');
     }
 
-    // 2. TÉCNICA: desde detalles del género (dato REAL de MongoDB)
-    if (obra.genero?.detalles?.tecnica_principal) {
-        etiquetas.tecnicas.push(obra.genero.detalles.tecnica_principal);
+    // TÉCNICA desde detalles reales + CLIP
+    const detalles = obra.genero?.detalles || {};
+    if (detalles.tecnica_principal) etiquetas.tecnicas.push(detalles.tecnica_principal);
+    if (detalles.material_predominante) etiquetas.tecnicas.push(detalles.material_predominante);
+    if (detalles.formato_origen) etiquetas.tecnicas.push(detalles.formato_origen);
+    if (detalles.metal_base_dominante) etiquetas.tecnicas.push(detalles.metal_base_dominante);
+    if (etiquetas.tecnicas.length === 0 && tagsClip) {
+        const tagsTecnica = tagsClip.filter(t => ['bronze', 'metal', 'gold', 'ceramic', 'wood', 'stone', 'glass'].includes(t.tag));
+        tagsTecnica.forEach(t => etiquetas.tecnicas.push(t.tag));
     }
-    if (obra.genero?.detalles?.material_predominante) {
-        etiquetas.tecnicas.push(obra.genero.detalles.material_predominante);
-    }
-    if (obra.genero?.detalles?.formato_origen) {
-        etiquetas.tecnicas.push(obra.genero.detalles.formato_origen);
-    }
-    if (obra.genero?.detalles?.metal_base_dominante) {
-        etiquetas.tecnicas.push(obra.genero.detalles.metal_base_dominante);
-    }
-    if (obra.genero?.detalles?.tipo_arcilla_base) {
-        etiquetas.tecnicas.push(obra.genero.detalles.tipo_arcilla_base);
-    }
-    if (etiquetas.tecnicas.length === 0 && descripcionIA) {
-        // Fallback: inferir de la descripción IA
-        const texto = descripcionIA.toLowerCase();
-        if (texto.includes('oil painting')) etiquetas.tecnicas.push('óleo');
-        else if (texto.includes('sculpture')) etiquetas.tecnicas.push('escultura');
-        else if (texto.includes('photograph')) etiquetas.tecnicas.push('fotografía');
-        else if (texto.includes('ceramic')) etiquetas.tecnicas.push('cerámica');
-        else etiquetas.tecnicas.push('técnica mixta');
+    if (etiquetas.tecnicas.length === 0) etiquetas.tecnicas.push('técnica mixta');
+
+    // ESTILO desde género + CLIP
+    if (obra.genero?.nombre) etiquetas.estilos.push(obra.genero.nombre);
+    if (tagsClip) {
+        const tagsEstilo = tagsClip.filter(t =>
+            ['abstract', 'geometric', 'organic', 'minimalist', 'surreal', 'realistic', 'cubist', 'impressionist'].includes(t.tag)
+        );
+        tagsEstilo.forEach(t => { if (!etiquetas.estilos.includes(t.tag)) etiquetas.estilos.push(t.tag); });
     }
 
-    // 3. ESTILO: desde el género (dato REAL) + inferencia IA
-    if (obra.genero?.nombre) {
-        etiquetas.estilos.push(obra.genero.nombre);
+    // PALETA desde descripción BLIP + CLIP
+    const texto = (descripcionBLIP || '').toLowerCase();
+    const colores = {
+        'black': 'oscura', 'dark': 'oscura', 'white': 'clara', 'bright': 'brillante',
+        'red': 'cálida', 'yellow': 'cálida', 'orange': 'cálida', 'blue': 'fría', 'green': 'natural',
+        'purple': 'vibrante', 'colorful': 'multicolor', 'monochrome': 'monocromática',
+        'gold': 'dorada', 'silver': 'plateada', 'brown': 'terrosa', 'grey': 'neutra', 'gray': 'neutra'
+    };
+    for (const [key, value] of Object.entries(colores)) {
+        if (texto.includes(key) && !etiquetas.paletas.includes(value)) etiquetas.paletas.push(value);
     }
-    if (descripcionIA) {
-        const texto = descripcionIA.toLowerCase();
-        const estilosIA = {
-            'abstract': 'abstracto', 'cubist': 'cubista', 'surreal': 'surrealista',
-            'impressionist': 'impresionista', 'minimalist': 'minimalista',
-            'realistic': 'realista', 'expressionist': 'expresionista',
-            'pop art': 'pop art', 'modern': 'moderno', 'contemporary': 'contemporáneo'
-        };
-        for (const [key, value] of Object.entries(estilosIA)) {
-            if (texto.includes(key) && !etiquetas.estilos.includes(value)) {
-                etiquetas.estilos.push(value);
-            }
-        }
-    }
-
-    // 4. PALETA: desde descripción IA
-    if (descripcionIA) {
-        const texto = descripcionIA.toLowerCase();
-        const colores = {
-            'black': 'oscura', 'dark': 'oscura', 'white': 'clara', 'bright': 'brillante',
-            'red': 'cálida', 'yellow': 'cálida', 'orange': 'cálida',
-            'blue': 'fría', 'green': 'natural', 'purple': 'vibrante',
-            'colorful': 'multicolor', 'monochrome': 'monocromática',
-            'gold': 'dorada', 'silver': 'plateada', 'brown': 'terrosa',
-            'grey': 'neutra', 'gray': 'neutra', 'pink': 'pastel'
-        };
-        for (const [key, value] of Object.entries(colores)) {
-            if (texto.includes(key) && !etiquetas.paletas.includes(value)) {
-                etiquetas.paletas.push(value);
-            }
-        }
+    if (tagsClip) {
+        const tagsColor = tagsClip.filter(t => ['red', 'blue', 'green', 'yellow', 'orange', 'black', 'white', 'dark', 'bright', 'colorful'].includes(t.tag));
+        tagsColor.forEach(t => {
+            const mapped = colores[t.tag] || t.tag;
+            if (!etiquetas.paletas.includes(mapped)) etiquetas.paletas.push(mapped);
+        });
     }
     if (etiquetas.paletas.length === 0) etiquetas.paletas.push('variada');
 
-    // 5. RANGO DE PRECIO - Percentil real dentro de la colección
+    // RANGO DE PRECIO por percentil real
     etiquetas.rangoPrecio = calcularRangoPrecio(obra.precio || 0, todosLosPrecios);
 
     return etiquetas;
-}
-
-// 5. RANGO DE PRECIO - Basado en percentiles de la colección real
-// Esta función usa los precios de TODAS las obras para calcular rangos relativos
-function calcularRangoPrecio(precio, todosLosPrecios) {
-    if (!todosLosPrecios || todosLosPrecios.length === 0) return 'medio';
-
-    // Ordenar precios para calcular percentiles
-    const ordenados = [...todosLosPrecios].sort((a, b) => a - b);
-    const n = ordenados.length;
-
-    // Encontrar posición percentil de este precio
-    let posicion = 0;
-    for (let i = 0; i < n; i++) {
-        if (precio <= ordenados[i]) {
-            posicion = i;
-            break;
-        }
-    }
-    if (precio > ordenados[n - 1]) posicion = n - 1;
-
-    const percentil = (posicion / n) * 100;
-
-    if (percentil < 20) return 'económico';      // 20% más barato
-    if (percentil < 50) return 'accesible';       // 20-50%
-    if (percentil < 80) return 'medio-alto';      // 50-80%
-    return 'premium';                              // 20% más caro
 }
 
 // ============================================
 // FUNCIONES DE NEO4J
 // ============================================
 
+function toNum(val) {
+    if (val === null || val === undefined) return 0;
+    if (typeof val === 'number') return val;
+    if (typeof val === 'object' && val.toNumber) return val.toNumber();
+    return Number(val);
+}
+
 async function crearNodoUnico(session, label, propiedad, valor) {
-    await session.run(
-        `MERGE (n:${label} {${propiedad}: $valor})`,
-        { valor }
-    );
+    await session.run(`MERGE (n:${label} {${propiedad}: $valor})`, { valor });
 }
 
 async function crearRelacion(session, idObra, labelNodo, propiedadNodo, valorNodo, tipoRelacion) {
@@ -227,173 +245,195 @@ function cosineSimilarity(a, b) {
 // ============================================
 
 async function enriquecerGrafo() {
-    console.log('=== ENRIQUECIENDO GRAFO NEO4J CON IA LOCAL ===\n');
+    console.log('=== ENRIQUECIENDO GRAFO NEO4J CON BLIP + CLIP + METADATOS ===\n');
 
-    // 1. Conectar a MongoDB
+    // 1. Conexiones
     console.log('Conectando a MongoDB...');
     await mongoose.connect(MONGO_URI);
     console.log('✓ MongoDB conectado\n');
 
-    // 2. Conectar a Neo4j
     console.log('Conectando a Neo4j...');
     await connectNeo4j();
     const session = getSession();
     console.log('✓ Neo4j conectado\n');
 
-    // 3. Cargar modelos de IA
+    // 2. Cargar modelos
     await cargarModelos();
 
-    // 4. Crear constraints
-    console.log('Creando constraints para nuevos tipos de nodos...');
-    const newConstraints = [
+    // 3. Constraints
+    console.log('Creando constraints...');
+    for (const cypher of [
         'CREATE CONSTRAINT IF NOT EXISTS FOR (e:Estilo) REQUIRE e.nombre IS UNIQUE',
         'CREATE CONSTRAINT IF NOT EXISTS FOR (p:Paleta) REQUIRE p.nombre IS UNIQUE',
         'CREATE CONSTRAINT IF NOT EXISTS FOR (t:Tecnica) REQUIRE t.nombre IS UNIQUE',
         'CREATE CONSTRAINT IF NOT EXISTS FOR (ep:Epoca) REQUIRE ep.nombre IS UNIQUE'
-    ];
-    for (const cypher of newConstraints) {
-        try { await session.run(cypher); } catch (e) { /* ignorar */ }
+    ]) {
+        try { await session.run(cypher); } catch (e) { }
     }
     console.log('✓ Constraints creados\n');
 
-    // 5. Obtener obras de MongoDB
+    // 4. Obtener obras de MongoDB
     console.log('Obteniendo obras de MongoDB...');
     const obras = await Obra.find().lean();
-    // Extraer todos los precios para calcular percentiles
-    const todosLosPrecios = obras.map(o => o.precio || 0).filter(p => p > 0);
-    console.log(`  Precios: min=$${Math.min(...todosLosPrecios)}, max=$${Math.max(...todosLosPrecios)}, mediana=$${todosLosPrecios.sort((a, b) => a - b)[Math.floor(todosLosPrecios.length / 2)]}\n`);
-    console.log(`  ${obras.length} obras en MongoDB`);
+    const todosLosPrecios = obras.map(o => o.precio || 0).filter(p => p > 0).sort((a, b) => a - b);
+    console.log(`  ${obras.length} obras en MongoDB\n`);
 
-    // 6. Verificar obras ya procesadas en Neo4j
-    console.log('Verificando obras ya procesadas...');
-    const procesadas = await session.run(
-        `MATCH (o:Obra) WHERE o.embedding IS NOT NULL 
-         RETURN o.id_obra AS idObra`
-    );
-    const idsProcesadas = new Set(procesadas.records.map(r => toNum(r.get('idObra'))));
-    const obrasPendientes = obras.filter(o => !idsProcesadas.has(o._id));
-    console.log(`  ${idsProcesadas.size} ya procesadas`);
-    console.log(`  ${obrasPendientes.length} pendientes\n`);
+    // 5. Verificar obras ya procesadas
+    let obrasPendientes;
+    if (FORCE) {
+        obrasPendientes = obras;
+        console.log('⚠️  Modo FORCE: reprocesando TODAS las obras\n');
+    } else {
+        const procesadas = await session.run(
+            `MATCH (o:Obra) WHERE o.embedding IS NOT NULL RETURN o.id_obra AS idObra`
+        );
+        const idsProcesadas = new Set(procesadas.records.map(r => toNum(r.get('idObra'))));
+        obrasPendientes = obras.filter(o => !idsProcesadas.has(o._id));
+        console.log(`  ${idsProcesadas.size} ya procesadas, ${obrasPendientes.length} pendientes\n`);
+    }
 
     if (obrasPendientes.length === 0) {
-        console.log('✅ Todas las obras ya tienen embedding. Nada que procesar.');
-        await session.close();
-        await closeNeo4j();
-        await mongoose.disconnect();
-        return;
-    }
+        console.log('✅ Todas las obras ya tienen embedding.');
+    } else {
+        let ok = 0, errores = 0;
+        for (const obra of obrasPendientes) {
+            try {
+                ok++;
+                console.log(`Obra ${ok}/${obrasPendientes.length}: "${obra.nombre}"`);
 
-    // 7. Procesar obras pendientes
-    let procesadasCount = 0;
-    let errores = 0;
-
-    for (const obra of obrasPendientes) {
-        try {
-            console.log(`Obra ${++procesadasCount}/${obrasPendientes.length}: "${obra.nombre}"`);
-
-            // Descripción base desde metadatos
-            const descripcionBase = [
-                obra.nombre,
-                obra.genero?.nombre || '',
-                obra.genero?.detalles?.tecnica_principal || '',
-                obra.genero?.detalles?.material_predominante || '',
-                obra.genero?.detalles?.clasificacion_espacio || ''
-            ].filter(Boolean).join('. ');
-
-            // Describir imagen con IA
-            let descripcionIA = null;
-            if (obra.fotografia) {
-                const rutaImagen = path.join(__dirname, '..', 'assets', 'images', 'art_previews', path.basename(obra.fotografia));
-                if (fs.existsSync(rutaImagen)) {
-                    descripcionIA = await describirImagen(rutaImagen);
-                    if (descripcionIA) console.log(`  IA: "${descripcionIA}"`);
+                // Buscar imagen
+                let rutaImagen = null;
+                if (obra.fotografia) {
+                    const imgPath = path.join(__dirname, '..', 'assets', 'images', 'Abstract_gallery', path.basename(obra.fotografia));
+                    if (fs.existsSync(imgPath)) rutaImagen = imgPath;
                 }
-            }
 
-            const descripcionFinal = [descripcionBase, descripcionIA].filter(Boolean).join('. ');
+                let descripcionBLIP = null;
+                let tagsClip = [];
+                let descripcionCLIP = null;
 
-            // Generar embedding
-            const embedding = await generarEmbedding(descripcionFinal);
+                if (rutaImagen) {
+                    // BLIP: describir imagen
+                    descripcionBLIP = await describirConBLIP(rutaImagen);
+                    if (descripcionBLIP) console.log(`  BLIP: "${descripcionBLIP}"`);
 
-            // Extraer etiquetas mejoradas
-            const etiquetas = extraerEtiquetas(obra, descripcionIA, todosLosPrecios);
-            console.log(`  Época: ${etiquetas.epocas[0]} | Precio: ${etiquetas.rangoPrecio}`);
+                    // Extraer palabras clave de BLIP
+                    const palabrasClave = extraerPalabrasClave(descripcionBLIP);
 
-            // Guardar en Neo4j
-            await session.run(
-                `MATCH (o:Obra {id_obra: $idObra})
-                 SET o.descripcionIA = $descripcionIA,
-                     o.embedding = $embedding,
-                     o.tagsIA = $tagsIA,
-                     o.epocaReal = $epocaReal,
-                     o.tecnicasReales = $tecnicasReales,
-                     o.rangoPrecio = $rangoPrecio,
-                     o.fotografia = $foto`,
-                {
-                    idObra: obra._id,
-                    descripcionIA: descripcionIA || descripcionBase,
-                    embedding: embedding || [],
-                    tagsIA: [...etiquetas.estilos, ...etiquetas.paletas, ...etiquetas.tecnicas],
-                    epocaReal: etiquetas.epocas[0] || 'contemporáneo',
-                    tecnicasReales: etiquetas.tecnicas,
-                    rangoPrecio: etiquetas.rangoPrecio,
-                    foto: obra.fotografia || ''
+                    // CLIP: validar palabras clave contra la imagen
+                    tagsClip = await etiquetarConCLIP(rutaImagen, palabrasClave);
+                    if (tagsClip.length > 0) {
+                        console.log(`  CLIP: ${tagsClip.slice(0, 5).map(t => t.tag + ':' + t.score).join(', ')}`);
+                        descripcionCLIP = tagsClip.slice(0, 5).map(t => t.tag).join(' ');
+                    }
                 }
-            );
 
-            // Crear nodos y relaciones
-            for (const estilo of [...new Set(etiquetas.estilos)]) {
-                await crearNodoUnico(session, 'Estilo', 'nombre', estilo);
-                await crearRelacion(session, obra._id, 'Estilo', 'nombre', estilo, 'TIENE_ESTILO');
-            }
-            for (const paleta of [...new Set(etiquetas.paletas)]) {
-                await crearNodoUnico(session, 'Paleta', 'nombre', paleta);
-                await crearRelacion(session, obra._id, 'Paleta', 'nombre', paleta, 'USA_PALETA');
-            }
-            for (const tecnica of [...new Set(etiquetas.tecnicas)]) {
-                await crearNodoUnico(session, 'Tecnica', 'nombre', tecnica);
-                await crearRelacion(session, obra._id, 'Tecnica', 'nombre', tecnica, 'USA_TECNICA');
-            }
-            for (const epoca of [...new Set(etiquetas.epocas)]) {
-                await crearNodoUnico(session, 'Epoca', 'nombre', epoca);
-                await crearRelacion(session, obra._id, 'Epoca', 'nombre', epoca, 'PERTENECE_A_EPOCA');
-            }
+                // Metadatos base
+                const descripcionBase = [
+                    obra.nombre,
+                    obra.genero?.nombre || '',
+                    obra.genero?.detalles?.tecnica_principal || '',
+                    obra.genero?.detalles?.material_predominante || ''
+                ].filter(Boolean).join('. ');
 
-            console.log(`  ✓ Procesada\n`);
+                // Etiquetas con metadatos reales
+                const etiquetas = extraerEtiquetas(obra, descripcionBLIP, tagsClip, todosLosPrecios);
 
-        } catch (err) {
-            console.error(`  ✗ Error: ${err.message}\n`);
-            errores++;
+                // Descripción combinada para embedding
+                const descripcionFinal = [
+                    descripcionBase,
+                    descripcionBLIP,
+                    descripcionCLIP,
+                    etiquetas.epocas[0],
+                    etiquetas.rangoPrecio
+                ].filter(Boolean).join('. ');
+
+                // Generar embedding
+                const embedding = await generarEmbedding(descripcionFinal);
+
+                // Guardar en Neo4j
+                await session.run(
+                    `MATCH (o:Obra {id_obra: $id})
+                     SET o.descripcionIA = $descBLIP,
+                         o.descripcionCLIP = $descCLIP,
+                         o.tagsClip = $tagsClip,
+                         o.embedding = $emb,
+                         o.tagsIA = $tagsIA,
+                         o.epocaReal = $epoca,
+                         o.tecnicasReales = $tec,
+                         o.rangoPrecio = $rango,
+                         o.fotografia = $foto`,
+                    {
+                        id: obra._id,
+                        descBLIP: descripcionBLIP || descripcionBase,
+                        descCLIP: descripcionCLIP || '',
+                        tagsClip: JSON.stringify(tagsClip),
+                        emb: embedding || [],
+                        tagsIA: [...etiquetas.estilos, ...etiquetas.paletas, ...etiquetas.tecnicas],
+                        epoca: etiquetas.epocas[0],
+                        tec: etiquetas.tecnicas,
+                        rango: etiquetas.rangoPrecio,
+                        foto: obra.fotografia || ''
+                    }
+                );
+
+                // Crear nodos y relaciones de etiquetas
+                for (const estilo of [...new Set(etiquetas.estilos)]) {
+                    await crearNodoUnico(session, 'Estilo', 'nombre', estilo);
+                    await crearRelacion(session, obra._id, 'Estilo', 'nombre', estilo, 'TIENE_ESTILO');
+                }
+                for (const paleta of [...new Set(etiquetas.paletas)]) {
+                    await crearNodoUnico(session, 'Paleta', 'nombre', paleta);
+                    await crearRelacion(session, obra._id, 'Paleta', 'nombre', paleta, 'USA_PALETA');
+                }
+                for (const tecnica of [...new Set(etiquetas.tecnicas)]) {
+                    await crearNodoUnico(session, 'Tecnica', 'nombre', tecnica);
+                    await crearRelacion(session, obra._id, 'Tecnica', 'nombre', tecnica, 'USA_TECNICA');
+                }
+                for (const epoca of [...new Set(etiquetas.epocas)]) {
+                    await crearNodoUnico(session, 'Epoca', 'nombre', epoca);
+                    await crearRelacion(session, obra._id, 'Epoca', 'nombre', epoca, 'PERTENECE_A_EPOCA');
+                }
+
+                console.log(`  ✓ Listo (${etiquetas.epocas[0]}, ${etiquetas.rangoPrecio})\n`);
+
+            } catch (err) {
+                console.error(`  ✗ Error: ${err.message}\n`);
+                errores++;
+            }
         }
+        console.log(`✅ ${ok} procesadas, ${errores} errores\n`);
     }
 
-    // 8. Crear relaciones SIMILAR_A basadas en embeddings
-    console.log('Creando relaciones de similitud entre obras...');
+    // 6. Crear relaciones SIMILAR_A
+    console.log('Creando relaciones de similitud...');
     const result = await session.run(
         `MATCH (o:Obra) WHERE o.embedding IS NOT NULL
          RETURN o.id_obra AS idObra, o.embedding AS embedding`
     );
-    const obrasConEmbedding = result.records.map(r => ({
+
+    const obrasEmb = result.records.map(r => ({
         id: toNum(r.get('idObra')),
         embedding: r.get('embedding')
     }));
-    console.log(`  ${obrasConEmbedding.length} obras con embedding`);
+    console.log(`  ${obrasEmb.length} obras con embedding`);
+
+    await session.run('MATCH ()-[r:SIMILAR_A]->() DELETE r');
 
     let similares = 0;
-    for (const obra of obrasConEmbedding) {
-        const similares_ = obrasConEmbedding
+    for (const obra of obrasEmb) {
+        const tops = obrasEmb
             .filter(o => o.id !== obra.id)
             .map(o => ({ id: o.id, score: cosineSimilarity(obra.embedding, o.embedding) }))
             .sort((a, b) => b.score - a.score)
             .slice(0, 5);
 
-        for (const s of similares_) {
+        for (const s of tops) {
             if (s.score > 0.7) {
                 await session.run(
-                    `MATCH (o1:Obra {id_obra: $id1})
-                     MATCH (o2:Obra {id_obra: $id2})
+                    `MATCH (o1:Obra {id_obra: $id1}) MATCH (o2:Obra {id_obra: $id2})
                      MERGE (o1)-[:SIMILAR_A {score: $score}]->(o2)`,
-                    { id1: obra.id, id2: s.id, score: s.score }
+                    { id1: obra.id, id2: s.id, score: Math.round(s.score * 100) / 100 }
                 );
                 similares++;
             }
@@ -401,19 +441,14 @@ async function enriquecerGrafo() {
     }
     console.log(`  ${similares} relaciones SIMILAR_A creadas\n`);
 
-    // 9. Estadísticas finales
-    console.log('=== ESTADÍSTICAS DEL GRAFO ===');
+    // 7. Estadísticas
+    console.log('=== ESTADÍSTICAS FINALES ===');
     const stats = await session.run(`MATCH (n) RETURN labels(n) AS tipo, count(n) AS cantidad ORDER BY tipo`);
-    for (const record of stats.records) {
-        console.log(`  ${record.get('tipo')[0]}: ${toNum(record.get('cantidad'))} nodos`);
-    }
-    const relStats = await session.run(`MATCH ()-[r]->() RETURN type(r) AS tipo, count(r) AS cantidad ORDER BY tipo`);
-    for (const record of relStats.records) {
-        console.log(`  ${record.get('tipo')}: ${record.get('cantidad').toNumber()} relaciones`);
-    }
+    for (const r of stats.records) console.log(`  ${r.get('tipo')[0]}: ${toNum(r.get('cantidad'))} nodos`);
+    const rels = await session.run(`MATCH ()-[r]->() RETURN type(r) AS tipo, count(r) AS cantidad ORDER BY tipo`);
+    for (const r of rels.records) console.log(`  ${r.get('tipo')}: ${toNum(r.get('cantidad'))} relaciones`);
 
-    console.log(`\n✅ ${procesadasCount} obras procesadas, ${errores} errores`);
-    console.log('=== GRAFO ENRIQUECIDO EXITOSAMENTE ===');
+    console.log('\n=== GRAFO ENRIQUECIDO EXITOSAMENTE ===');
 
     await session.close();
     await closeNeo4j();

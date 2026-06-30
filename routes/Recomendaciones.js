@@ -275,21 +275,22 @@ router.get('/recomendaciones/por-similitud-ia/:idObra', async (req, res) => {
     const { idObra } = req.params;
     const session = getSession();
     try {
-        // 1. Obtener la obra de referencia con su embedding
+        // Obtener embedding y tags CLIP de la obra de referencia
         const obraRef = await session.run(
             `MATCH (o:Obra {id_obra: $idObra}) 
              WHERE o.embedding IS NOT NULL
-             RETURN o.embedding AS embedding, o.nombre AS nombre`,
+             RETURN o.embedding AS embedding, o.tagsClip AS tagsClip`,
             { idObra: toNum(req.params.idObra) }
         );
 
-        if (obraRef.records.length === 0) {
-            return res.json([]);
-        }
+        if (obraRef.records.length === 0) return res.json([]);
 
         const embeddingRef = obraRef.records[0].get('embedding');
+        let tagsRef = [];
+        try { tagsRef = JSON.parse(obraRef.records[0].get('tagsClip') || '[]'); } catch (e) { }
+        const palabrasRef = new Set(tagsRef.map(t => t.tag));
 
-        // 2. Obtener género y autores de la obra de referencia
+        // Obtener género y autores de la referencia
         const infoObra = await session.run(
             `MATCH (o:Obra {id_obra: $idObra})
              OPTIONAL MATCH (o)<-[:CREO]-(a:Artista)-[:TRABAJA_EN]->(g:Genero)
@@ -297,11 +298,10 @@ router.get('/recomendaciones/por-similitud-ia/:idObra', async (req, res) => {
                     collect(DISTINCT a.id_artista) AS artistas`,
             { idObra: toNum(req.params.idObra) }
         );
-
         const generosRef = infoObra.records[0]?.get('generos') || [];
-        const artistasRef = infoObra.records[0]?.get('artistas').map(a => toNum(a)) || [];
+        const artistasRef = (infoObra.records[0]?.get('artistas') || []).map(a => toNum(a));
 
-        // 3. Obtener todas las obras disponibles con embedding
+        // Obtener obras disponibles
         const result = await session.run(
             `MATCH (o:Obra)
              OPTIONAL MATCH (o)<-[:CREO]-(a:Artista)-[:TRABAJA_EN]->(g:Genero)
@@ -313,49 +313,43 @@ router.get('/recomendaciones/por-similitud-ia/:idObra', async (req, res) => {
                     o.precio AS precio,
                     o.fotografia AS fotografia,
                     o.embedding AS embedding,
+                    o.tagsClip AS tagsClip,
                     collect(DISTINCT g.nombre) AS generos,
                     collect(DISTINCT a.id_artista) AS artistas
              LIMIT 200`,
             { idObra: toNum(req.params.idObra) }
         );
 
-        function cosineSimilarity(a, b) {
-            let dot = 0, normA = 0, normB = 0;
-            for (let i = 0; i < a.length; i++) {
-                dot += a[i] * b[i];
-                normA += a[i] * a[i];
-                normB += b[i] * b[i];
-            }
-            return (normA === 0 || normB === 0) ? 0 : dot / (Math.sqrt(normA) * Math.sqrt(normB));
-        }
-
         const puntuadas = result.records.map(r => {
+            // Similitud de embedding (BLIP + metadatos)
             const similitudBase = cosineSimilarity(embeddingRef, r.get('embedding'));
+
+            // Similitud de tags CLIP
+            let tagsObra = [];
+            try { tagsObra = JSON.parse(r.get('tagsClip') || '[]'); } catch (e) { }
+            const palabrasObra = new Set(tagsObra.map(t => t.tag));
+            const interseccion = [...palabrasRef].filter(t => palabrasObra.has(t)).length;
+            const bonusCLIP = palabrasRef.size > 0 ? interseccion / palabrasRef.size * 0.3 : 0;
+
+            // Bonus grafo
             const generosObra = r.get('generos') || [];
             const artistasObra = (r.get('artistas') || []).map(a => toNum(a));
+            const bonusGenero = generosObra.some(g => generosRef.includes(g)) ? 0.15 : 0;
+            const bonusAutor = artistasObra.some(a => artistasRef.includes(a)) ? 0.25 : 0;
 
-            // Bonus por mismo género
-            const bonusGenero = generosObra.some(g => generosRef.includes(g)) ? 0.20 : 0;
-
-            // Bonus por mismo autor
-            const bonusAutor = artistasObra.some(a => artistasRef.includes(a)) ? 0.30 : 0;
-
-            // Puntuación final (máximo 1.0)
-            const puntuacionFinal = Math.min(1, similitudBase + bonusGenero + bonusAutor);
+            const puntuacionFinal = Math.min(1, similitudBase + bonusCLIP + bonusGenero + bonusAutor);
 
             return {
                 idObra: toNum(r.get('idObra')),
                 nombre: r.get('nombre'),
                 precio: toNum(r.get('precio')),
                 fotografia: r.get('fotografia') || '',
-                similitud: Math.round(similitudBase * 100),
-                puntuacionFinal: Math.round(puntuacionFinal * 100)
+                similitud: Math.round(puntuacionFinal * 100)
             };
         });
 
-        // Ordenar por puntuación final y tomar los 5 mejores (sin umbral mínimo)
         const top5 = puntuadas
-            .sort((a, b) => b.puntuacionFinal - a.puntuacionFinal)
+            .sort((a, b) => b.similitud - a.similitud)
             .slice(0, 5);
 
         res.json(top5);
@@ -367,6 +361,18 @@ router.get('/recomendaciones/por-similitud-ia/:idObra', async (req, res) => {
         await session.close();
     }
 });
+
+// Mover cosineSimilarity fuera si no existe
+function cosineSimilarity(a, b) {
+    if (!a || !b || a.length === 0 || b.length === 0) return 0;
+    let dot = 0, normA = 0, normB = 0;
+    for (let i = 0; i < a.length; i++) {
+        dot += a[i] * b[i];
+        normA += a[i] * a[i];
+        normB += b[i] * b[i];
+    }
+    return (normA === 0 || normB === 0) ? 0 : dot / (Math.sqrt(normA) * Math.sqrt(normB));
+}
 
 // ==========================================
 // RECOMENDACIÓN POR ACTIVIDAD DEL USUARIO
@@ -811,6 +817,60 @@ router.get('/buscar', async (req, res) => {
 
     } catch (err) {
         console.error('Error en buscador:', err);
+        res.json([]);
+    } finally {
+        await session.close();
+    }
+});
+
+// ==========================================
+// BUSCADOR VISUAL CON CLIP
+// ==========================================
+
+router.get('/buscar/visual', async (req, res) => {
+    const query = (req.query.q || '').trim().toLowerCase();
+    if (!query || query.length < 2) return res.json([]);
+
+    const session = getSession();
+    try {
+        // Buscar obras cuyos tagsClip contengan la palabra
+        const result = await session.run(
+            `MATCH (o:Obra)
+             WHERE o.estado = 'Disponible'
+               AND o.tagsClip IS NOT NULL
+               AND toLower(o.tagsClip) CONTAINS $query
+             OPTIONAL MATCH (o)<-[:CREO]-(a:Artista)
+             RETURN o.id_obra AS idObra,
+                    o.nombre AS nombre,
+                    o.precio AS precio,
+                    o.fotografia AS fotografia,
+                    o.tagsClip AS tagsClip,
+                    a.nombre + ' ' + a.apellido AS autor
+             LIMIT 15`,
+            { query }
+        );
+
+        const resultados = result.records.map(r => {
+            let tags = [];
+            try { tags = JSON.parse(r.get('tagsClip') || '[]'); } catch (e) { }
+            const tagMatch = tags.find(t => t.tag.includes(query));
+
+            return {
+                id_Obra: toNum(r.get('idObra')),
+                Nombre: r.get('nombre'),
+                Precio: toNum(r.get('precio')),
+                imagen_url: r.get('fotografia') || '',
+                AutorNombre: r.get('autor') || '',
+                PrecioFormateado: '$' + Number(toNum(r.get('precio'))).toLocaleString(),
+                score: tagMatch ? tagMatch.score : 0,
+                tipo: 'visual'
+            };
+        }).sort((a, b) => b.score - a.score);
+
+        res.json(resultados);
+
+    } catch (err) {
+        console.error('Error en búsqueda visual:', err);
         res.json([]);
     } finally {
         await session.close();
