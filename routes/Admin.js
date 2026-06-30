@@ -5,14 +5,28 @@ const db = require('../config/database');
 const path = require('path');
 
 require('dotenv').config();
+const mongoose = require('mongoose');
 
 const Genero = require('../models/Genero');
 const Autor = require('../models/Autor');
 const Obra = require('../models/Obra');
-const Especializacion = require('../models/Especializacion');
+
 const Nacionalidad = require('../models/Nacionalidad');
 
 const { client } = require('../config/cassandra');
+
+// Migración al arrancar: asegurar columna Fecha_Venta y corregir NULLs
+db.query("ALTER TABLE Factura MODIFY COLUMN Fecha_Venta timestamp NULL DEFAULT CURRENT_TIMESTAMP", (errMod) => {
+    if (errMod) {
+        db.query("ALTER TABLE Factura ADD COLUMN Fecha_Venta timestamp NULL DEFAULT CURRENT_TIMESTAMP", (errAdd) => {
+            if (errAdd) console.error('Error creando Fecha_Venta:', errAdd.message);
+        });
+    }
+});
+db.query("UPDATE Factura SET Fecha_Venta = NOW() WHERE Fecha_Venta IS NULL OR Fecha_Venta = '0000-00-00 00:00:00'", (errUpd) => {
+    if (errUpd) console.error('Error actualizando Fecha_Venta NULL:', errUpd.message);
+    else console.log('Facturas actualizadas con Fecha_Venta');
+});
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -356,20 +370,23 @@ router.delete('/api/obras/:id', (req, res) => {
 // 4. RUTAS SIMPLIFICADAS PARA FACTURACIÓN
 // ==========================================
 
-router.get('/api/obras-reservadas', (req, res) => {
-    const sql = "SELECT id_Obra, Nombre, Precio FROM Obra WHERE Estado_obra = 'Reservado'";
-    
-    db.query(sql, (err, results) => {
-        if (err) {
-            console.error('Error obteniendo obras reservadas:', err);
-            return res.status(500).json([]);
-        }
-        res.json(results);
-    });
+router.get('/api/obras-reservadas', async (req, res) => {
+    try {
+        const obras = await Obra.find({ estado_obra: 'Reservado' }).select('_id nombre precio').lean();
+        const mapped = obras.map(o => ({
+            id_Obra: o._id,
+            Nombre: o.nombre,
+            Precio: o.precio
+        }));
+        res.json(mapped);
+    } catch (err) {
+        console.error('Error obteniendo obras reservadas:', err);
+        res.status(500).json([]);
+    }
 });
 
 router.post('/generar-factura', (req, res) => {
-    const { id_obra, id_admin, precio_neto, porcentaje_comision } = req.body;
+    const { id_obra, id_admin, precio_neto, porcentaje_comision, buyer_nombre, buyer_apellido, buyer_email, buyer_cedula } = req.body;
     const adminId = req.session?.id_usuario || id_admin;
     
     if (!id_obra || !adminId || !precio_neto || !porcentaje_comision) {
@@ -378,226 +395,134 @@ router.post('/generar-factura', (req, res) => {
             message: "Faltan datos requeridos (ID de administrador no disponible)" 
         });
     }
-    
-    db.beginTransaction((err) => {
-        if (err) {
-            console.error('Error al iniciar transacción:', err);
-            return res.status(500).json({ 
-                success: false, 
-                message: "Error al iniciar transacción" 
+
+    const procesarFactura = (id_comp, obraNombre, buyerManual, cb) => {
+        const nombre = buyerManual?.nombre || '';
+        const apellido = buyerManual?.apellido || '';
+        const email = buyerManual?.email || '';
+        const cedula = buyerManual?.cedula || null;
+        const nombreComprador = buyerManual ? `${nombre} ${apellido}`.trim() || 'No disponible' : null;
+        const compradorEmail = buyerManual ? email : null;
+        const compradorCedula = buyerManual ? cedula : null;
+
+        const obtenerDatosYFacturar = (comprador) => {
+            const nombreCompradorFinal = buyerManual
+                ? nombreComprador
+                : (comprador.Nombre && comprador.Apellido ? `${comprador.Nombre} ${comprador.Apellido}` : 'No disponible');
+            const emailFinal = buyerManual ? compradorEmail : (comprador.Email || 'No disponible');
+            const cedulaFinal = buyerManual ? compradorCedula : (comprador.Cedula || null);
+            const nombreFinal = buyerManual ? nombre : (comprador.Nombre || '');
+            const apellidoFinal = buyerManual ? apellido : (comprador.Apellido || '');
+
+            const iva = parseFloat(precio_neto) * 0.12;
+            const gananciaMuseo = parseFloat(precio_neto) * (parseFloat(porcentaje_comision) / 100);
+            const total = parseFloat(precio_neto) + iva;
+            const ahora = new Date();
+            const fechaStr = ahora.getFullYear()+'-'+String(ahora.getMonth()+1).padStart(2,'0')+'-'+String(ahora.getDate()).padStart(2,'0')+' '+String(ahora.getHours()).padStart(2,'0')+':'+String(ahora.getMinutes()).padStart(2,'0')+':'+String(ahora.getSeconds()).padStart(2,'0');
+            const sqlFactura = `INSERT INTO Factura (Monto_Neto, IVA, Total_Pagado, Ganancia_Museo_USD, Porcentaje_Comision, id_obra, id_comprador, id_admin, NombreComprador, EmailComprador, CedulaComprador, Fecha_Venta) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+            db.query(sqlFactura, [precio_neto, iva, total, gananciaMuseo, porcentaje_comision, id_obra, id_comp, adminId, nombreCompradorFinal || null, emailFinal || null, cedulaFinal || null, fechaStr], (err, result) => {
+                if (err) return cb(err);
+                const idFactura = result.insertId;
+                console.log('Factura creada ID:', idFactura, 'Fecha:', fechaStr);
+                db.query("UPDATE Obra SET Estado_obra = 'Vendida' WHERE id_Obra = ?", [id_obra], (err) => {
+                    if (err) return cb(err);
+                    db.query("DELETE FROM Reserva WHERE id_obra = ?", [id_obra], () => {});
+                    db.commit(async (err) => {
+                        if (err) return cb(err);
+                        try {
+                            const fecha = new Date();
+                            const anioMes = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
+                            await client.batch([
+                                { query: `INSERT INTO obras_vendidas_por_periodo (anio_mes, fecha_venta, id_factura, id_obra, nombre_obra, precio_venta, iva, total_pagado, ganancia_museo_usd, porcentaje_comision, id_comprador, comprador_nombre, comprador_apellido, comprador_email, comprador_cedula, id_admin, admin_nombre) VALUES (?, toTimestamp(now()), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                                  params: [anioMes, idFactura, id_obra, obraNombre, precio_neto, iva, total, gananciaMuseo, porcentaje_comision, id_comp, nombreFinal, apellidoFinal, emailFinal, cedulaFinal, adminId, 'Admin'] },
+                                { query: `INSERT INTO historial_estatus_obra (id_obra, fecha_cambio, estatus_anterior, estatus_nuevo, modificado_por, motivo) VALUES (?, toTimestamp(now()), ?, ?, ?, ?)`,
+                                  params: [id_obra, 'Reservado', 'Vendida', adminId, `Pago completado - Factura #${idFactura}`] }
+                            ], { prepare: true });
+                        } catch (cassErr) { console.error('Error Cassandra:', cassErr.message); }
+                        try { await Obra.findByIdAndUpdate(id_obra, { estado_obra: 'Vendida' }); } catch (mongoErr) { console.error('Error MongoDB:', mongoErr.message); }
+                        cb(null, { id_factura: idFactura, id_obra, nombreObra: obraNombre, id_comprador: id_comp, nombreComprador: nombreCompradorFinal, emailComprador: emailFinal, cedulaComprador: cedulaFinal, precio_neto: parseFloat(precio_neto), iva, ganancia_museo: gananciaMuseo, porcentaje_comision: parseFloat(porcentaje_comision), total, fecha: new Date().toLocaleDateString(), hora: new Date().toLocaleTimeString() });
+                    });
+                });
+            });
+        };
+
+        if (buyerManual) {
+            obtenerDatosYFacturar({});
+        } else {
+            const sqlDatosComprador = `SELECT u.Email, u.Nombre, u.Apellido, c.Cedula FROM Usuario u LEFT JOIN Comprador c ON u.id_usuario = c.id_usuario WHERE u.id_usuario = ?`;
+            db.query(sqlDatosComprador, [id_comp], (err, compradorDatos) => {
+                if (err) return cb(err);
+                obtenerDatosYFacturar(compradorDatos[0] || {});
             });
         }
+    };
+
+    const continuarFacturacion = (obraNombre) => {
+        if (buyer_nombre && buyer_apellido) {
+            procesarFactura(adminId, obraNombre, { nombre: buyer_nombre, apellido: buyer_apellido, email: buyer_email || '', cedula: buyer_cedula || null }, (err, data) => {
+                if (err) return db.rollback(() => res.status(500).json({ success: false, message: err.message }));
+                res.json({ success: true, message: "Factura generada correctamente", id_factura: data.id_factura, mostrarEnvio: true, datos: data });
+            });
+            return;
+        }
+
+        const sqlComprador = "SELECT id_usuario FROM Reserva WHERE id_obra = ?";
+        db.query(sqlComprador, [id_obra], (err, compradorResults) => {
+            if (err) return db.rollback(() => res.status(500).json({ success: false, message: "Error obteniendo datos del comprador" }));
+            if (compradorResults.length === 0) {
+                return db.rollback(() => res.json({ success: false, needsBuyerData: true, message: "La obra no fue reservada por un comprador. Ingrese los datos manualmente." }));
+            }
+            procesarFactura(compradorResults[0].id_usuario, obraNombre, null, (err, data) => {
+                if (err) return db.rollback(() => res.status(500).json({ success: false, message: err.message }));
+                res.json({ success: true, message: "Factura generada correctamente", id_factura: data.id_factura, mostrarEnvio: true, datos: data });
+            });
+        });
+    };
+
+    // Asegurar columnas de comprador en Factura (Fecha_Venta se maneja al arrancar)
+    db.query("ALTER TABLE Factura ADD COLUMN NombreComprador varchar(90) DEFAULT NULL, ADD COLUMN EmailComprador varchar(90) DEFAULT NULL, ADD COLUMN CedulaComprador varchar(45) DEFAULT NULL", (errCol) => {
+        if (errCol && !errCol.message.includes('Duplicate column')) {
+            console.error('Error agregando columnas a Factura:', errCol.message);
+        }
+    });
+
+    db.beginTransaction((err) => {
+        if (err) return res.status(500).json({ success: false, message: "Error al iniciar transacción" });
         
         const sqlVerificarObra = "SELECT Estado_obra FROM Obra WHERE id_Obra = ?";
         db.query(sqlVerificarObra, [id_obra], (err, obraResults) => {
-            if (err) {
-                return db.rollback(() => res.status(500).json({ 
-                    success: false, 
-                    message: "Error verificando obra" 
-                }));
-            }
+            if (err) return db.rollback(() => res.status(500).json({ success: false, message: "Error verificando obra" }));
             
             if (obraResults.length === 0) {
-                return db.rollback(() => res.status(404).json({ 
-                    success: false, 
-                    message: "La obra no existe" 
-                }));
+                Obra.findById(id_obra).lean().then(obraMongo => {
+                    if (!obraMongo || obraMongo.estado_obra !== 'Reservado') {
+                        return db.rollback(() => res.status(404).json({ success: false, message: "La obra no existe o no está reservada" }));
+                    }
+                    const generoMap = { 'Pintura': 1, 'Escultura': 2, 'Fotografía': 3, 'Orfebreria': 4, 'Ceramica': 5 };
+                    const idGenero = generoMap[obraMongo.genero?.nombre] || null;
+                    db.query("SET FOREIGN_KEY_CHECKS = 0", (errFK) => {
+                        if (errFK) return db.rollback(() => res.status(500).json({ success: false, message: "Error al deshabilitar FK" }));
+                        db.query(
+                            "INSERT INTO Obra (id_Obra, Nombre, Fecha_creacion, Precio, Estado_obra, id_Genero, Fotografia) VALUES (?, ?, ?, ?, 'Reservado', ?, ?) ON DUPLICATE KEY UPDATE Nombre = VALUES(Nombre), Precio = VALUES(Precio), Estado_obra = VALUES(Estado_obra)",
+                            [id_obra, obraMongo.nombre, obraMongo.fecha_creacion || null, obraMongo.precio, idGenero, obraMongo.fotografia || ''],
+                            (err) => {
+                                db.query("SET FOREIGN_KEY_CHECKS = 1");
+                                if (err) return db.rollback(() => res.status(500).json({ success: false, message: "Error al sincronizar obra" }));
+                                continuarFacturacion(obraMongo.nombre || '');
+                            }
+                        );
+                    });
+                }).catch(() => db.rollback(() => res.status(500).json({ success: false, message: "Error al verificar obra" })));
+                return;
             }
             
             if (obraResults[0].Estado_obra !== 'Reservado') {
-                return db.rollback(() => res.status(400).json({ 
-                    success: false, 
-                    message: "La obra no está en estado Reservado" 
-                }));
+                return db.rollback(() => res.status(400).json({ success: false, message: "La obra no está en estado Reservado" }));
             }
             
-            const sqlDatosObra = "SELECT Nombre FROM Obra WHERE id_Obra = ?";
-            db.query(sqlDatosObra, [id_obra], (err, obraDatos) => {
-                if (err) {
-                    return db.rollback(() => res.status(500).json({ 
-                        success: false, 
-                        message: "Error obteniendo datos de la obra" 
-                    }));
-                }
-                
-                const sqlComprador = "SELECT id_usuario FROM Reserva WHERE id_obra = ?";
-                db.query(sqlComprador, [id_obra], (err, compradorResults) => {
-                    if (err) {
-                        console.error('Error obteniendo comprador:', err);
-                        return db.rollback(() => res.status(500).json({ 
-                            success: false, 
-                            message: "Error obteniendo datos del comprador" 
-                        }));
-                    }
-                    
-                    let id_comprador;
-                    
-                    const procesarComprador = (id_comp) => {
-                        const sqlDatosComprador = `
-                            SELECT u.Email, u.Nombre, u.Apellido, c.Cedula
-                            FROM Usuario u
-                            LEFT JOIN Comprador c ON u.id_usuario = c.id_usuario
-                            WHERE u.id_usuario = ?
-                        `;
-                        
-                        db.query(sqlDatosComprador, [id_comp], (err, compradorDatos) => {
-                            if (err) {
-                                console.error('Error obteniendo datos del comprador:', err);
-                                return db.rollback(() => res.status(500).json({ 
-                                    success: false, 
-                                    message: "Error obteniendo datos del comprador" 
-                                }));
-                            }
-                            
-                            const comprador = compradorDatos[0] || {};
-                            const nombreComprador = comprador.Nombre && comprador.Apellido ? 
-                                `${comprador.Nombre} ${comprador.Apellido}` : 'No disponible';
-                            
-                            const iva = parseFloat(precio_neto) * 0.12;
-                            const gananciaMuseo = parseFloat(precio_neto) * (parseFloat(porcentaje_comision) / 100);
-                            const total = parseFloat(precio_neto) + iva;
-                            
-                            const sqlFactura = `
-                                INSERT INTO Factura 
-                                (Monto_Neto, IVA, Total_Pagado, Ganancia_Museo_USD, Porcentaje_Comision, id_obra, id_comprador, id_admin) 
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                            `;
-                            
-                            db.query(sqlFactura, [
-                                precio_neto, 
-                                iva, 
-                                total, 
-                                gananciaMuseo, 
-                                porcentaje_comision, 
-                                id_obra, 
-                                id_comp, 
-                                adminId
-                            ], (err, result) => {
-                                if (err) {
-                                    console.error('Error al generar factura:', err);
-                                    return db.rollback(() => res.status(500).json({ 
-                                        success: false, 
-                                        message: "Error al generar factura: " + err.message 
-                                    }));
-                                }
-                                
-                                const idFactura = result.insertId;
-                                
-                                db.query("UPDATE Obra SET Estado_obra = 'Vendida' WHERE id_Obra = ?", [id_obra], (err) => {
-                                    if (err) {
-                                        console.error('Error al actualizar obra:', err);
-                                        return db.rollback(() => res.status(500).json({ 
-                                            success: false, 
-                                            message: "Error al actualizar obra: " + err.message 
-                                        }));
-                                    }
-                                    
-                                    db.query("DELETE FROM Reserva WHERE id_obra = ?", [id_obra], (err) => {
-                                        if (err) {
-                                            console.error('Error al eliminar reserva:', err);
-                                            console.warn('La reserva no pudo ser eliminada automáticamente');
-                                        }
-                                        
-                                            db.commit(async (err) => {
-                                                if (err) {
-                                                    console.error('Error al confirmar transacción:', err);
-                                                    return db.rollback(() => res.status(500).json({ 
-                                                        success: false, 
-                                                        message: "Error al confirmar" 
-                                                    }));
-                                                }
-
-                                                try {
-                                                    const fecha = new Date();
-                                                    const anioMes = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
-
-                                                    await client.batch([
-                                                        {
-                                                            query: `INSERT INTO obras_vendidas_por_periodo
-                                                                    (anio_mes, fecha_venta, id_factura, id_obra, nombre_obra, precio_venta, iva,
-                                                                     total_pagado, ganancia_museo_usd, porcentaje_comision, id_comprador,
-                                                                     comprador_nombre, comprador_apellido, comprador_email, comprador_cedula,
-                                                                     id_admin, admin_nombre)
-                                                                    VALUES (?, toTimestamp(now()), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                                                            params: [anioMes, idFactura, id_obra, obraDatos[0]?.Nombre || '', precio_neto, iva, total,
-                                                                     gananciaMuseo, porcentaje_comision, id_comp, comprador.Nombre || '',
-                                                                     comprador.Apellido || '', comprador.Email || '', comprador.Cedula || null,
-                                                                     adminId, 'Admin']
-                                                         },
-                                                         {
-                                                             query: `INSERT INTO historial_estatus_obra
-                                                                     (id_obra, fecha_cambio, estatus_anterior, estatus_nuevo, modificado_por, motivo)
-                                                                     VALUES (?, toTimestamp(now()), ?, ?, ?, ?)`,
-                                                             params: [id_obra, 'Reservado', 'Vendida', adminId, `Pago completado - Factura #${idFactura}`]
-                                                        }
-                                                    ], { prepare: true });
-                                                } catch (cassErr) {
-                                                    console.error('Error insertando en Cassandra:', cassErr.message);
-                                                }
-                                                
-                                                res.json({ 
-                                                    success: true, 
-                                                    message: "Factura generada correctamente",
-                                                    id_factura: idFactura,
-                                                    mostrarEnvio: true,
-                                                    datos: {
-                                                        id_factura: idFactura,
-                                                        id_obra: id_obra,
-                                                        nombreObra: obraDatos[0]?.Nombre || 'No disponible',
-                                                        id_comprador: id_comp,
-                                                        nombreComprador: nombreComprador,
-                                                        emailComprador: comprador.Email || 'No disponible',
-                                                        cedulaComprador: comprador.Cedula || 'No disponible',
-                                                        precio_neto: parseFloat(precio_neto),
-                                                        iva: iva,
-                                                        ganancia_museo: gananciaMuseo,
-                                                        porcentaje_comision: parseFloat(porcentaje_comision),
-                                                        total: total,
-                                                        fecha: new Date().toLocaleDateString(),
-                                                        hora: new Date().toLocaleTimeString()
-                                                    }
-                                                });
-                                            });
-                                    });
-                                });
-                            });
-                        });
-                    };
-                    
-                    if (compradorResults.length === 0) {
-                        console.log('No hay reserva para la obra, buscando comprador por defecto...');
-                        
-                        const sqlBuscarComprador = "SELECT id_usuario FROM Usuario WHERE Rol = 'comprador' AND Estatus = 1 LIMIT 1";
-                        
-                        db.query(sqlBuscarComprador, (err, compradorDefault) => {
-                            if (err || compradorDefault.length === 0) {
-                                return db.rollback(() => res.status(400).json({ 
-                                    success: false, 
-                                    message: "No hay compradores disponibles en el sistema" 
-                                }));
-                            }
-                            
-                            id_comprador = compradorDefault[0].id_usuario;
-                            
-                            const sqlCrearReserva = "INSERT INTO Reserva (id_obra, id_usuario) VALUES (?, ?)";
-                            db.query(sqlCrearReserva, [id_obra, id_comprador], (err) => {
-                                if (err) {
-                                    console.error('Error creando reserva:', err);
-                                    return db.rollback(() => res.status(500).json({ 
-                                        success: false, 
-                                        message: "Error creando reserva automática" 
-                                    }));
-                                }
-                                
-                                console.log(`Reserva creada automáticamente para obra ${id_obra} con comprador ${id_comprador}`);
-                                procesarComprador(id_comprador);
-                            });
-                        });
-                    } else {
-                        id_comprador = compradorResults[0].id_usuario;
-                        procesarComprador(id_comprador);
-                    }
-                });
+            db.query("SELECT Nombre FROM Obra WHERE id_Obra = ?", [id_obra], (err, obraDatos) => {
+                if (err) return db.rollback(() => res.status(500).json({ success: false, message: "Error obteniendo datos de la obra" }));
+                continuarFacturacion(obraDatos[0]?.Nombre || '');
             });
         });
     });
@@ -707,7 +632,7 @@ router.post('/registrar-nuevo-pago', (req, res) => {
 
 router.get('/consultas/obras-vendidas', (req, res) => {
     const { fecha_inicio, fecha_fin } = req.query;
-    const sql = "SELECT f.id_factura, f.id_obra, o.Nombre AS Obra, f.Total_Pagado, DATE_FORMAT(f.Fecha_Venta, '%Y-%m-%d') AS Fecha FROM Factura f JOIN Obra o ON f.id_obra = o.id_Obra WHERE DATE(f.Fecha_Venta) BETWEEN ? AND ? ORDER BY f.Fecha_Venta DESC";
+    const sql = "SELECT f.id_factura, f.id_obra, o.Nombre AS Obra, f.Total_Pagado, COALESCE(DATE_FORMAT(f.Fecha_Venta, '%Y-%m-%d'), '—') AS Fecha FROM Factura f JOIN Obra o ON f.id_obra = o.id_Obra WHERE COALESCE(DATE(f.Fecha_Venta), CURDATE()) BETWEEN ? AND ? ORDER BY f.Fecha_Venta DESC";
     db.query(sql, [fecha_inicio, fecha_fin], (err, results) => {
         if (err) return res.status(500).send(err.message);
         res.json(results);
@@ -716,7 +641,7 @@ router.get('/consultas/obras-vendidas', (req, res) => {
 
 router.get('/consultas/resumen-facturacion', (req, res) => {
     const { fecha_inicio, fecha_fin } = req.query;
-    const sql = "SELECT f.id_factura, DATE_FORMAT(f.Fecha_Venta, '%Y-%m-%d') AS Fecha, o.Nombre AS Obra, f.Monto_Neto AS Precio_Obra, f.Porcentaje_Comision AS Porcentaje_Museo, f.Ganancia_Museo_USD AS Ganancia_Museo, f.Total_Pagado AS Total_Recaudado FROM Factura f JOIN Obra o ON f.id_obra = o.id_Obra WHERE DATE(f.Fecha_Venta) BETWEEN ? AND ? ORDER BY f.Fecha_Venta DESC";
+    const sql = "SELECT f.id_factura, COALESCE(DATE_FORMAT(f.Fecha_Venta, '%Y-%m-%d'), '—') AS Fecha, o.Nombre AS Obra, f.Monto_Neto AS Precio_Obra, f.Porcentaje_Comision AS Porcentaje_Museo, f.Ganancia_Museo_USD AS Ganancia_Museo, f.Total_Pagado AS Total_Recaudado FROM Factura f JOIN Obra o ON f.id_obra = o.id_Obra WHERE COALESCE(DATE(f.Fecha_Venta), CURDATE()) BETWEEN ? AND ? ORDER BY f.Fecha_Venta DESC";
     db.query(sql, [fecha_inicio, fecha_fin], (err, results) => {
         if (err) return res.status(500).send(err.message);
         res.json(results);
@@ -745,11 +670,15 @@ router.get('/api/factura/:id', (req, res) => {
     console.log('Buscando factura ID:', idFactura);
     
     const query = `
-        SELECT f.*, u.Email, c.Nombre, c.Apellido, c.Cedula,
+        SELECT f.*, u.Nombre, u.Apellido, u.Email,
+               c.Cedula,
+               COALESCE(NULLIF(f.NombreComprador,''), CONCAT(u.Nombre,' ',u.Apellido)) as CompradorNombre,
+               COALESCE(NULLIF(f.EmailComprador,''), u.Email) as CompradorEmail,
+               COALESCE(NULLIF(f.CedulaComprador,''), c.Cedula) as CompradorCedula,
                o.Nombre as nombre_obra, o.Precio
         FROM Factura f
         INNER JOIN Usuario u ON f.id_comprador = u.id_usuario
-        INNER JOIN Comprador c ON u.id_usuario = c.id_usuario
+        LEFT JOIN Comprador c ON u.id_usuario = c.id_usuario
         INNER JOIN Obra o ON f.id_obra = o.id_Obra
         WHERE f.id_factura = ?
     `;
@@ -768,18 +697,34 @@ router.get('/api/factura/:id', (req, res) => {
         
         const factura = results[0];
         
-        // Como no tenemos columnas de dirección, devolvemos direccion: null
-        res.json({ 
-            success: true, 
-            factura, 
-            direccion: null
+        // Obtener dirección de envío si existe
+        const dirQuery = "SELECT * FROM Envio WHERE Factura_id_Factura = ? ORDER BY id_Envio DESC LIMIT 1";
+        db.query(dirQuery, [idFactura], (errDir, dirResults) => {
+            const envio = dirResults && dirResults.length > 0 ? dirResults[0] : null;
+            const direccion = envio ? {
+                municipio: envio.Municipio || '',
+                parroquia: envio.Parroquia || '',
+                direccion: envio.Calle || ''
+            } : null;
+            
+            res.json({ 
+                success: true, 
+                factura, 
+                direccion,
+                numero_guia: envio ? envio.numero_guia : null
+            });
         });
     });
 });
 
 // Registrar un nuevo envío (versión con textos)
 router.post('/api/registrar-envio', (req, res) => {
-    const { id_factura, estado, municipio, parroquia, direccion_detallada, numero_guia } = req.body;
+    let { id_factura, estado, municipio, parroquia, direccion_detallada, numero_guia } = req.body;
+    
+    if (!numero_guia || numero_guia.trim() === '') {
+        const rand = String(Math.floor(1000 + Math.random() * 9000));
+        numero_guia = `MUS-${String(id_factura).padStart(6,'0')}-${rand}`;
+    }
     
     console.log('Datos recibidos en /api/registrar-envio:', req.body);
     
@@ -790,14 +735,14 @@ router.post('/api/registrar-envio', (req, res) => {
         });
     }
     
-    if (!estado || !municipio || !parroquia || !direccion_detallada) {
+    if (!municipio || !parroquia || !direccion_detallada) {
         return res.status(400).json({ 
             success: false, 
             message: 'Todos los campos de dirección son obligatorios' 
         });
     }
     
-    const checkFacturaQuery = 'SELECT id_factura FROM Factura WHERE id_factura = ?';
+    const checkFacturaQuery = 'SELECT id_factura, Total_Pagado FROM Factura WHERE id_factura = ?';
     db.query(checkFacturaQuery, [id_factura], (err, facturaResults) => {
         if (err) {
             console.error('Error verificando factura:', err);
@@ -811,7 +756,9 @@ router.post('/api/registrar-envio', (req, res) => {
             });
         }
         
-        const checkQuery = 'SELECT id_envio FROM Envio WHERE id_factura = ?';
+        const factura = facturaResults[0];
+        
+        const checkQuery = 'SELECT id_Envio FROM Envio WHERE Factura_id_Factura = ?';
         db.query(checkQuery, [id_factura], (err, results) => {
             if (err) {
                 console.error('Error verificando envío:', err);
@@ -825,25 +772,29 @@ router.post('/api/registrar-envio', (req, res) => {
                 });
             }
             
-            const insertQuery = `
-                INSERT INTO Envio (id_factura, estado, municipio, parroquia, direccion_detallada, numero_guia, fecha_envio) 
-                VALUES (?, ?, ?, ?, ?, ?, NOW())
-            `;
-            
-            db.query(insertQuery, [id_factura, estado, municipio, parroquia, direccion_detallada, numero_guia || null], (err2, result) => {
-                if (err2) {
-                    console.error('Error registrando envío:', err2);
-                    return res.status(500).json({ 
-                        success: false, 
-                        message: 'Error al registrar el envío: ' + err2.message 
-                    });
-                }
-                
-                res.json({ 
-                    success: true, 
-                    message: 'Envío registrado exitosamente',
-                    id_envio: result.insertId
+            const insertEnvio = () => {
+                const insertQuery = `
+                    INSERT INTO Envio (Factura_id_Factura, Monto_total, Estado_entrega, Municipio, Parroquia, Calle, numero_guia, fecha_envio) 
+                    VALUES (?, ?, 'En proceso', ?, ?, ?, ?, NOW())
+                `;
+                db.query(insertQuery, [id_factura, factura.Total_Pagado || 0, municipio, parroquia, direccion_detallada, numero_guia], (err2, result) => {
+                    if (err2) {
+                        console.error('Error registrando envío:', err2);
+                        return res.status(500).json({ success: false, message: 'Error al registrar el envío: ' + err2.message });
+                    }
+                    res.json({ success: true, message: 'Envío registrado exitosamente', id_envio: result.insertId, numero_guia });
                 });
+            };
+
+            // Asegurar que las columnas adicionales existan
+            db.query("SHOW COLUMNS FROM Envio LIKE 'numero_guia'", (err, colResults) => {
+                if (colResults && colResults.length === 0) {
+                    db.query("ALTER TABLE Envio ADD COLUMN numero_guia varchar(45) DEFAULT NULL, ADD COLUMN fecha_envio datetime DEFAULT NULL, MODIFY COLUMN Estado_entrega enum('En proceso','Enviado','Entregado') DEFAULT 'En proceso'", (alterErr) => {
+                        insertEnvio();
+                    });
+                } else {
+                    insertEnvio();
+                }
             });
         });
     });
@@ -960,6 +911,21 @@ router.post('/api/obras-admin', async (req, res) => {
         });
 
         await obra.save();
+
+        // Sync to MySQL
+        try {
+            const generoMap = { 'Pintura': 1, 'Escultura': 2, 'Fotografía': 3, 'Orfebreria': 4, 'Ceramica': 5 };
+            const idGenero = generoMap[genero_nombre] || null;
+            db.query("SET FOREIGN_KEY_CHECKS = 0");
+            db.query(
+                "INSERT INTO Obra (id_Obra, Nombre, Fecha_creacion, Precio, Estado_obra, id_Genero, Fotografia) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE Nombre = VALUES(Nombre), Precio = VALUES(Precio), Estado_obra = VALUES(Estado_obra)",
+                [newId, nombre.trim(), fecha_creacion || null, parseFloat(precio), estado_obra || 'Disponible', idGenero, rutaFoto || '']
+            );
+            db.query("SET FOREIGN_KEY_CHECKS = 1");
+        } catch (mysqlErr) {
+            console.error('Error MySQL al crear obra:', mysqlErr.message);
+        }
+
         res.json({ success: true, message: 'Obra agregada correctamente', id: newId });
     } catch (err) {
         console.error('Error creando obra:', err);
@@ -987,6 +953,16 @@ router.put('/api/obras-admin/:id', async (req, res) => {
         obra.precio = parseFloat(precio);
         obra.estado_obra = estado_obra || 'Disponible';
         await obra.save();
+
+        // Also update MySQL
+        try {
+            db.query(
+                "UPDATE Obra SET Nombre = ?, Precio = ?, Estado_obra = ? WHERE id_Obra = ?",
+                [nombre.trim(), parseFloat(precio), estado_obra || 'Disponible', id]
+            );
+        } catch (mysqlErr) {
+            console.error('Error MySQL:', mysqlErr.message);
+        }
 
         if (estadoAnterior !== obra.estado_obra) {
             try {
@@ -1017,6 +993,14 @@ router.delete('/api/obras-admin/:id', async (req, res) => {
         if (!result) {
             return res.status(404).json({ success: false, message: 'Obra no encontrada' });
         }
+
+        // Sync MySQL
+        try {
+            db.query("DELETE FROM Obra WHERE id_Obra = ?", [id]);
+        } catch (mysqlErr) {
+            console.error('Error MySQL al eliminar obra:', mysqlErr.message);
+        }
+
         res.json({ success: true, message: 'Obra eliminada correctamente' });
     } catch (err) {
         console.error('Error eliminando obra:', err);
@@ -1027,127 +1011,6 @@ router.delete('/api/obras-admin/:id', async (req, res) => {
 // ==========================================
 // 8.7 GESTIÓN DE ESPECIALIZACIONES (MongoDB)
 // ==========================================
-
-router.get('/api/especializaciones', async (req, res) => {
-    try {
-        const esp = await Especializacion.find().sort({ _id: 1 }).lean();
-        res.json(esp.map(e => ({
-            id: e._id,
-            nombre: e.nombre,
-            atributos: e.atributos || []
-        })));
-    } catch (err) {
-        console.error('Error obteniendo especializaciones:', err);
-        res.status(500).json({ success: false, message: 'Error al obtener especializaciones' });
-    }
-});
-
-router.post('/api/especializaciones', async (req, res) => {
-    try {
-        const { nombre, atributos } = req.body;
-        if (!nombre || !nombre.trim()) {
-            return res.status(400).json({ success: false, message: 'Debe seleccionar un género' });
-        }
-
-        const existe = await Especializacion.findOne({ nombre: nombre.trim() }).lean();
-        if (existe) {
-            return res.status(400).json({ success: false, message: 'Ya existe una especialización para este género' });
-        }
-
-        const maxId = await Especializacion.findOne().sort({ _id: -1 }).select('_id').lean();
-        const newId = (maxId ? maxId._id : 0) + 1;
-
-        const esp = new Especializacion({
-            _id: newId,
-            nombre: nombre.trim(),
-            atributos: Array.isArray(atributos) ? atributos : []
-        });
-
-        await esp.save();
-        res.json({ success: true, message: 'Especialización agregada correctamente', id: newId });
-    } catch (err) {
-        console.error('Error creando especialización:', err);
-        res.status(500).json({ success: false, message: 'Error al crear especialización' });
-    }
-});
-
-router.put('/api/especializaciones/:id', async (req, res) => {
-    try {
-        const id = parseInt(req.params.id);
-        const { atributos } = req.body;
-
-        if (!Array.isArray(atributos) || atributos.length === 0) {
-            return res.status(400).json({ success: false, message: 'Debe proporcionar al menos un atributo' });
-        }
-
-        const result = await Especializacion.findByIdAndUpdate(id, { atributos }, { new: true });
-        if (!result) {
-            return res.status(404).json({ success: false, message: 'Especialización no encontrada' });
-        }
-        res.json({ success: true, message: 'Especialización actualizada correctamente' });
-    } catch (err) {
-        console.error('Error actualizando especialización:', err);
-        res.status(500).json({ success: false, message: 'Error al actualizar especialización' });
-    }
-});
-
-router.delete('/api/especializaciones/:id', async (req, res) => {
-    try {
-        const id = parseInt(req.params.id);
-        const result = await Especializacion.findByIdAndDelete(id);
-        if (!result) {
-            return res.status(404).json({ success: false, message: 'Especialización no encontrada' });
-        }
-        res.json({ success: true, message: 'Especialización eliminada correctamente' });
-    } catch (err) {
-        console.error('Error eliminando especialización:', err);
-        res.status(500).json({ success: false, message: 'Error al eliminar especialización' });
-    }
-});
-
-router.get('/api/especializaciones/:id/obras', async (req, res) => {
-    try {
-        const id = parseInt(req.params.id);
-        const esp = await Especializacion.findById(id).lean();
-        if (!esp) {
-            return res.status(404).json({ success: false, message: 'Especialización no encontrada' });
-        }
-
-        const soloSinDetalles = req.query.solo_sin_detalles === 'true';
-        let filter = { 'genero.nombre': esp.nombre };
-
-        if (soloSinDetalles) {
-            filter['genero.detalles'] = { $exists: false };
-        }
-
-        const obras = await Obra.find(filter)
-            .select('_id nombre genero.detalles')
-            .sort({ _id: 1 })
-            .lean();
-
-        const sinDetallesFilter = soloSinDetalles
-            ? obras
-            : await Obra.find({ 'genero.nombre': esp.nombre, 'genero.detalles': { $exists: false } })
-                .select('_id')
-                .lean();
-
-        const idsSinDetalles = new Set(sinDetallesFilter.map(o => o._id));
-
-        res.json({
-            obras: obras.map(o => ({
-                id: o._id,
-                nombre: o.nombre,
-                detalles: o.genero?.detalles || {}
-            })),
-            totalObras: await Obra.countDocuments({ 'genero.nombre': esp.nombre }),
-            obrasSinDetalles: idsSinDetalles.size,
-            idsSinDetalles: Array.from(idsSinDetalles)
-        });
-    } catch (err) {
-        console.error('Error obteniendo obras por especialización:', err);
-        res.status(500).json({ success: false, message: 'Error al obtener obras' });
-    }
-});
 
 router.put('/api/obras-admin/:id/detalles', async (req, res) => {
     try {
@@ -1173,36 +1036,6 @@ router.put('/api/obras-admin/:id/detalles', async (req, res) => {
     }
 });
 
-router.put('/api/especializaciones/:id/obras/batch-detalles', async (req, res) => {
-    try {
-        const espId = parseInt(req.params.id);
-        const { detalles } = req.body;
-
-        if (!detalles || typeof detalles !== 'object') {
-            return res.status(400).json({ success: false, message: 'Debe proporcionar un objeto de detalles válido' });
-        }
-
-        const esp = await Especializacion.findById(espId).lean();
-        if (!esp) {
-            return res.status(404).json({ success: false, message: 'Especialización no encontrada' });
-        }
-
-        const result = await Obra.updateMany(
-            { 'genero.nombre': esp.nombre, 'genero.detalles': { $exists: false } },
-            { $set: { 'genero.detalles': detalles } }
-        );
-
-        res.json({
-            success: true,
-            message: `${result.modifiedCount} obra(s) actualizada(s) correctamente`,
-            modifiedCount: result.modifiedCount
-        });
-    } catch (err) {
-        console.error('Error en actualización masiva de detalles:', err);
-        res.status(500).json({ success: false, message: 'Error al actualizar detalles masivamente' });
-    }
-});
-
 // ==========================================
 // 8.8 NACIONALIDADES (MongoDB)
 // ==========================================
@@ -1223,10 +1056,16 @@ router.get('/api/nacionalidades', async (req, res) => {
 
 router.get('/api/generos', async (req, res) => {
     try {
-        const generos = await Genero.find().sort({ _id: 1 }).lean();
+        const [generos, espDocs] = await Promise.all([
+            Genero.find().sort({ _id: 1 }).lean(),
+            mongoose.connection.db.collection('especializaciones').find().toArray()
+        ]);
+        const espMap = {};
+        espDocs.forEach(e => { espMap[e.nombre] = e.atributos || []; });
         res.json(generos.map(g => ({
             id: g._id,
-            nombre: g.nombre
+            nombre: g.nombre,
+            atributos: (g.atributos && g.atributos.length) ? g.atributos : (espMap[g.nombre] || [])
         })));
     } catch (err) {
         console.error('Error obteniendo géneros:', err);
@@ -1236,7 +1075,7 @@ router.get('/api/generos', async (req, res) => {
 
 router.post('/api/generos', async (req, res) => {
     try {
-        const { nombre } = req.body;
+        const { nombre, atributos } = req.body;
         if (!nombre || !nombre.trim()) {
             return res.status(400).json({ success: false, message: 'El nombre del género es requerido' });
         }
@@ -1251,7 +1090,8 @@ router.post('/api/generos', async (req, res) => {
 
         const genero = new Genero({
             _id: newId,
-            nombre: nombre.trim()
+            nombre: nombre.trim(),
+            atributos: Array.isArray(atributos) ? atributos : []
         });
 
         await genero.save();
@@ -1259,6 +1099,26 @@ router.post('/api/generos', async (req, res) => {
     } catch (err) {
         console.error('Error creando género:', err);
         res.status(500).json({ success: false, message: 'Error al crear género' });
+    }
+});
+
+router.put('/api/generos/:id', async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { nombre, atributos } = req.body;
+
+        const update = {};
+        if (nombre && nombre.trim()) update.nombre = nombre.trim();
+        if (atributos !== undefined) update.atributos = Array.isArray(atributos) ? atributos : [];
+
+        const result = await Genero.findByIdAndUpdate(id, update, { new: true });
+        if (!result) {
+            return res.status(404).json({ success: false, message: 'Género no encontrado' });
+        }
+        res.json({ success: true, message: 'Género actualizado correctamente' });
+    } catch (err) {
+        console.error('Error actualizando género:', err);
+        res.status(500).json({ success: false, message: 'Error al actualizar género' });
     }
 });
 
@@ -1598,5 +1458,24 @@ router.post('/cassandra/registrar-cambio-estatus', async (req, res) => {
 });
 
 
+
+// Buscar comprador por email o cédula
+router.post('/api/buscar-comprador', (req, res) => {
+    const { email, cedula } = req.body;
+    if (!email && !cedula) {
+        return res.status(400).json({ success: false, message: "Debe proporcionar email o cédula" });
+    }
+    let sql = "SELECT u.id_usuario, u.Email, u.Nombre, u.Apellido, c.Cedula FROM Usuario u LEFT JOIN Comprador c ON u.id_usuario = c.id_usuario WHERE";
+    const params = [];
+    const conditions = [];
+    if (email) { conditions.push("u.Email = ?"); params.push(email); }
+    if (cedula) { conditions.push("c.Cedula = ?"); params.push(cedula); }
+    sql += " " + conditions.join(" OR ") + " LIMIT 1";
+    db.query(sql, params, (err, results) => {
+        if (err) return res.status(500).json({ success: false, message: err.message });
+        if (results.length === 0) return res.json({ success: true, found: false, message: "Usuario no encontrado" });
+        res.json({ success: true, found: true, usuario: results[0] });
+    });
+});
 
 module.exports = router;

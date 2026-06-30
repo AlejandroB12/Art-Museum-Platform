@@ -259,10 +259,17 @@
             <div class="error-message" id="error"></div>
         </form>
 
-        <a href="Panel-administrador.html" class="back-link">← Volver al panel</a>
+        <a href="/admin/Panel-adminsitrador.html" class="back-link">← Volver al panel</a>
     </div>
 
     <script>
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error').textContent = message;
+            document.getElementById('submitBtn').disabled = false;
+        }
+
         // Obtener ID de factura de la URL
         const urlParams = new URLSearchParams(window.location.search);
         const idFactura = urlParams.get('id_factura');
@@ -272,7 +279,7 @@
         // Si no hay ID de factura, redirigir
         if (!idFactura) {
             alert('No se especificó ninguna factura');
-            window.location.href = 'Panel-administrador.html';
+            window.location.href = '/admin/Panel-adminsitrador.html';
         }
 
         // Cargar estados al iniciar
@@ -431,35 +438,17 @@ document.getElementById('municipio').addEventListener('change', async function()
                 console.log('Datos de factura recibidos:', data);
                 
                 if (data.success && data.factura) {
-                    // Formatear número de factura
-                    const facturaFormateada = data.factura.id_factura.toString().padStart(8, '0');
-                    
-                    // Llenar resumen
+                    const f = data.factura;
+                    const facturaFormateada = f.id_factura.toString().padStart(8, '0');
                     document.getElementById('facturaNumero').textContent = facturaFormateada;
-                    
-                    const nombreCompleto = `${data.factura.Nombre || ''} ${data.factura.Apellido || ''}`.trim();
-                    document.getElementById('clienteNombre').textContent = nombreCompleto || 'No disponible';
-                    document.getElementById('clienteCedula').textContent = data.factura.Cedula || 'No disponible';
-                    
-                    const precioFormateado = (data.factura.Precio || 0).toLocaleString('es-VE', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    });
-                    document.getElementById('obraDetalle').textContent = 
-                        `${data.factura.nombre_obra || 'Obra'} - ${precioFormateado}€`;
-                    
-                    const totalFormateado = (data.factura.Total_Pagado || 0).toLocaleString('es-VE', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    });
+                    document.getElementById('clienteNombre').textContent = f.CompradorNombre || `${f.Nombre || ''} ${f.Apellido || ''}`.trim() || 'No disponible';
+                    document.getElementById('clienteCedula').textContent = f.CompradorCedula || f.Cedula || 'No disponible';
+                    const precioFormateado = (f.Precio || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    document.getElementById('obraDetalle').textContent = `${f.nombre_obra || 'Obra'} - ${precioFormateado}€`;
+                    const totalFormateado = (f.Total_Pagado || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                     document.getElementById('totalPagado').textContent = totalFormateado;
-                    
-                    // Si hay dirección guardada, seleccionar los valores
                     if (data.direccion) {
-                        console.log('Dirección encontrada:', data.direccion);
                         await seleccionarDireccion(data.direccion);
-                    } else {
-                        console.log('No hay dirección guardada para este comprador');
                     }
                 } else {
                     throw new Error(data.message || 'Error al cargar la factura');
@@ -564,7 +553,7 @@ document.getElementById('envioForm').addEventListener('submit', async function(e
         console.log('Respuesta:', result);
 
         if (result.success) {
-            window.location.href = 'Envio-exitoso.html';
+                    window.location.href = `/user/Envio-exitoso.html?id_factura=${idFactura}&numero_guia=${encodeURIComponent(result.numero_guia || '')}`;
         } else {
             showError(result.message || 'Error al registrar el envío');
         }
