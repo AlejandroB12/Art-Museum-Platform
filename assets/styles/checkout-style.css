@@ -1,0 +1,95 @@
+body {
+    background: #050505;
+    color: white;
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+.checkout-box {
+    background: #0a0a0a;
+    border: 1px solid #111;
+    padding: 40px;
+    width: 100%;
+    max-width: 500px;
+    border-radius: 4px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+.obra-resumen {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #222;
+    padding-bottom: 20px;
+}
+.obra-img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border: 1px solid #333;
+}
+.checkout-box h2 {
+    margin: 0 0 20px 0;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #00ff00;
+}
+.datos-usuario {
+    background: #0e0e0e;
+    padding: 15px;
+    border-radius: 2px;
+    border-left: 3px solid #00ff00;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+}
+.checkout-box input {
+    width: 100%;
+    padding: 12px;
+    background: #111;
+    border: 1px solid #333;
+    color: white;
+    margin: 8px 0;
+    border-radius: 2px;
+    box-sizing: border-box;
+}
+.btn-pagar {
+    background: #00ff00;
+    color: #000;
+    border: none;
+    padding: 15px;
+    width: 100%;
+    cursor: pointer;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-top: 20px;
+    transition: 0.3s;
+}
+.btn-pagar:hover {
+    background: #00cc00;
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+}
+.secure-badge {
+    text-align: center;
+    font-size: 0.7rem;
+    color: #666;
+    margin-top: 20px;
+}
+.section-label {
+    font-size: 0.75rem;
+    color: #555;
+    margin-top: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.obra-title { font-weight: bold; }
+.obra-author { font-size: 0.8rem; color: #888; }
+.obra-price { color: #00ff00; font-weight: bold; margin-top: 5px; }
+.user-data-loading { color: #666; }
+.flex-row-gap { display: flex; gap: 10px; }
+.input-half { width: 50%; }
+.error-msg-checkout { color: #ff4444; font-size: 0.8rem; margin-top: 10px; display: none; }

@@ -1,0 +1,101 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #121212;
+    padding: 20px;
+    color: white;
+}
+
+.login-container {
+    background: #1e1e1e;
+    padding: 50px 40px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border: 1px solid #333;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    position: relative;
+}
+
+.icon-box {
+    font-size: 50px;
+    margin-bottom: 15px;
+    filter: drop-shadow(0 0 10px rgba(0, 255, 0, 0.5));
+}
+
+h2 {
+    color: #00ff00;
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    letter-spacing: -1px;
+    text-transform: uppercase;
+}
+
+.main-msg {
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 25px;
+}
+
+.info-alert {
+    background: rgba(0, 255, 0, 0.05);
+    border-left: 4px solid #00ff00;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    text-align: left;
+}
+
+.info-alert p {
+    color: #ccc;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.info-alert strong {
+    color: #00ff00;
+    font-weight: 700;
+}
+
+.spam-notice {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.login-btn {
+    width: 100%;
+    padding: 16px;
+    background: #00ff00;
+    border: none;
+    border-radius: 5px;
+    color: #121212;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 10px;
+}
+
+.login-btn:hover {
+    background: #00cc00;
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+}

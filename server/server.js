@@ -22,7 +22,7 @@ app.use(session({
 }));
 
 app.get('/', (req, res) => {
-    res.redirect('/public/Inicio.html');
+    res.redirect('/public/home.html');
 });
 
 const loginRoutes = require('../routes/Login');

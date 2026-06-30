@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil del Autor | MUSEO CONTEMPORANEO</title>
+    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+    <link rel="stylesheet" href="/styles/artist-profile-style.css">
+</head>
+
+<body>
+    <div id="main-wrapper"> 
+        <nav class="navbar">
+            <a href="/public/home.html" class="logo">ARTE CONTEMPORANEO</a>
+            
+            <div class="nav-container">
+                <ul class="nav-links">
+                    <li><a href="art-catalog.html">Catálogo</a></li>
+                    <li><a href="artist-catalog.html">Artistas</a></li>
+                </ul>
+
+                <div class="auth-buttons" id="auth-buttons">
+                    <a href="/public/login.html" class="btn-login">INICIAR SESION</a>
+                    <a href="/public/login.html" class="btn-register">REGISTRARTE</a>
+                </div>
+            </div>
+        </nav>
+
+        <div class="author-profile-container">
+            <div class="author-frame">
+                <img id="authImg" src="placeholder.jpg" alt="Autor">
+            </div>
+            <div class="author-details">
+                <span id="authNation" class="badge-nacionalidad">Nacionalidad</span>
+                <h1 id="authName">Nombre del Autor</h1>
+                
+                <div class="author-meta">
+                    <p id="authBirth" class="auth-birth"></p>
+                    <div id="authTypes" class="auth-types"></div>
+                </div>
+
+                <div id="authBio" class="bio">
+                    Cargando biografía del artista...
+                </div>
+            </div>
+        </div>
+
+        <div class="separator"></div>
+
+        <h2 class="section-title">Obras</h2>
+
+        <div class="filter-date-container">
+            <div class="filter-group">
+                <label class="sort-label">Ordenar por fecha:</label>
+                <select id="sortDate">
+                    <option value="desc">Más Recientes</option>
+                    <option value="asc">Más Antiguas</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="gallery-grid" id="authorGallery"></div>
+    </div>
+
+    <div id="obra-modal" class="modal">
+        <span class="cerrar-modal" onclick="cerrarModal()">&times;</span>
+        <div class="modal-contenido">
+            <img id="modal-imagen" src="" alt="Obra expandida">
+            <div class="modal-info-panel">
+                <h2 id="modal-titulo"></h2>
+                <p id="modal-artista" class="modal-artist-name"></p>
+                <hr class="modal-divider">
+                <div id="modal-detalles-tecnicos" class="modal-tech-details">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const modal = document.getElementById('obra-modal');
+
+        function abrirModal(img, titulo, artista, detalles) {
+            document.getElementById('modal-imagen').src = img;
+            document.getElementById('modal-titulo').innerText = titulo;
+            document.getElementById('modal-artista').innerText = `Por ${artista}`;
+            document.getElementById('modal-detalles-tecnicos').innerHTML = detalles;
+            
+            modal.style.display = 'flex';
+            document.body.classList.add('modal-active');
+        }
+
+        function cerrarModal() {
+            modal.style.display = 'none';
+            document.body.classList.remove('modal-active');
+        }
+
+        window.onclick = (event) => { 
+            if (event.target == modal) cerrarModal(); 
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const idAutor = params.get('id');
+
+        async function cargarPerfil() {
+            if (!idAutor) {
+                console.error("No se encontró ID de autor en la URL");
+                document.getElementById('authorGallery').innerHTML = '<p style="text-align:center; color:red;">Error: No se especificó qué autor mostrar</p>';
+                return;
+            }
+
+            const ordenDate = document.getElementById('sortDate').value;
+            
+            try {
+                const resp = await fetch(`/api/autor-detalle/${idAutor}?ordenDate=${ordenDate}`);
+                
+                if (!resp.ok) {
+                    throw new Error(`Error HTTP: ${resp.status}`);
+                }
+                
+                const data = await resp.json();
+
+                let nombreAutor = "Artista Desconocido";
+
+                if (data.autor) {
+                    nombreAutor = `${data.autor.Nombre || ''} ${data.autor.Apellido || ''}`.trim();
+                    document.getElementById('authName').textContent = nombreAutor || "Artista Desconocido";
+                    document.getElementById('authNation').textContent = data.autor.NacionalidadDesc || data.autor.Nacionalidad || "Nacionalidad no especificada";
+                    
+                    if (data.autor.Fecha_nacimiento) {
+                        const fecha = new Date(data.autor.Fecha_nacimiento);
+                        document.getElementById('authBirth').textContent = `Nacimiento: ${fecha.toLocaleDateString()}`;
+                    } else {
+                        document.getElementById('authBirth').textContent = "Fecha de nacimiento no disponible";
+                    }
+                    
+                    document.getElementById('authBio').textContent = data.autor.Biografia || "Sin biografía disponible.";
+                    
+                    document.getElementById('authImg').src = data.autor.Fotografia || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Crect fill=%22%231a1a1a%22 width=%22300%22 height=%22300%22/%3E%3Ctext fill=%22%23666%22 font-size=%2214%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3ESin Imagen%3C/text%3E%3C/svg%3E';
+                }
+
+                const typesContainer = document.getElementById('authTypes');
+                typesContainer.innerHTML = '';
+                
+                if (data.obras && data.obras.length > 0) {
+                    const generosUnicos = [...new Set(data.obras.map(o => o.GeneroNombre).filter(g => g))];
+                    
+                    generosUnicos.forEach(genero => {
+                        const span = document.createElement('span');
+                        span.className = 'type-tag';
+                        span.textContent = genero;
+                        typesContainer.appendChild(span);
+                    });
+
+                    const gallery = document.getElementById('authorGallery');
+                    gallery.innerHTML = '';
+                    
+                    data.obras.forEach(obra => {
+                        const imgPath = obra.imagen_url || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22350%22 height=%22300%22%3E%3Crect fill=%22%231a1a1a%22 width=%22350%22 height=%22300%22/%3E%3Ctext fill=%22%23666%22 font-size=%2214%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3ESin Imagen%3C/text%3E%3C/svg%3E';
+                        
+                        // Preparar ficha técnica para la modal
+                        const año = obra.Fecha_creacion ? new Date(obra.Fecha_creacion).getFullYear() : 'N/A';
+                        const precio = obra.PrecioFormateado || 'Precio no disponible';
+                        
+                        // Recopilar detalles técnicos según el tipo de obra
+                        let detallesTecnicos = '';
+                        if (obra.Tecnica_Principal) detallesTecnicos += `<p><strong>TÉCNICA PRINCIPAL:</strong> ${obra.Tecnica_Principal}</p>`;
+                        if (obra.Soporte_Base) detallesTecnicos += `<p><strong>SOPORTE:</strong> ${obra.Soporte_Base}</p>`;
+                        if (obra.Material_Predominante) detallesTecnicos += `<p><strong>MATERIAL:</strong> ${obra.Material_Predominante}</p>`;
+                        if (obra.Requiere_Pedestal !== undefined) detallesTecnicos += `<p><strong>REQUIERE PEDESTAL:</strong> ${obra.Requiere_Pedestal ? 'Sí' : 'No'}</p>`;
+                        if (obra.Formato_Origen) detallesTecnicos += `<p><strong>FORMATO ORIGEN:</strong> ${obra.Formato_Origen}</p>`;
+                        if (obra.Metal_Base_Dominante) detallesTecnicos += `<p><strong>METAL BASE:</strong> ${obra.Metal_Base_Dominante}</p>`;
+                        if (obra.Kilataje_Estandar) detallesTecnicos += `<p><strong>KILATAJE:</strong> ${obra.Kilataje_Estandar}</p>`;
+                        if (obra.Tecnica_Acabado) detallesTecnicos += `<p><strong>ACABADO:</strong> ${obra.Tecnica_Acabado}</p>`;
+                        if (obra.Tipo_Arcilla_Base) detallesTecnicos += `<p><strong>ARCILLA:</strong> ${obra.Tipo_Arcilla_Base}</p>`;
+                        
+                        const fichaTecnica = `
+                            <p><strong>GÉNERO:</strong> ${obra.GeneroNombre || 'N/A'}</p>
+                            <p><strong>AÑO:</strong> ${año}</p>
+                            <p><strong>PRECIO:</strong> ${precio}</p>
+                            ${detallesTecnicos || '<p><em>No hay detalles técnicos adicionales</em></p>'}
+                        `;
+
+                        const card = document.createElement('div');
+                        card.className = 'art-card';
+                        card.innerHTML = `
+                            <div class="art-img" style="background-image: url('${imgPath}')"></div>
+                            <div class="art-info">
+                                <h3 class="art-title">${obra.Nombre || 'Sin título'}</h3>
+                                <p style="color: #666; font-size: 0.7rem; margin-top: 5px;">Año: ${año}</p>
+                                <div class="art-footer" style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                                    <span class="price">${precio}</span>
+                                    <button class="btn-buy" data-id="${obra.id_Obra}">Adquirir</button>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Agregar evento click a la imagen
+                        const imgDiv = card.querySelector('.art-img');
+                        imgDiv.addEventListener('click', () => {
+                            abrirModal(imgPath, obra.Nombre || 'Sin título', nombreAutor, fichaTecnica);
+                        });
+                        
+                        // Agregar evento click al botón de compra
+                        const buyBtn = card.querySelector('.btn-buy');
+                        buyBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            comprar(obra.id_Obra, obra.Nombre);
+                        });
+                        
+                        gallery.appendChild(card);
+                    });
+                } else {
+                    document.getElementById('authorGallery').innerHTML = '<p style="text-align:center; width:100%; color:#444; padding: 50px;">Este autor no tiene obras disponibles.</p>';
+                }
+            } catch (error) {
+                console.error("Error cargando perfil:", error);
+                document.getElementById('authorGallery').innerHTML = '<p style="text-align:center; width:100%; color:red; padding: 50px;">Error al cargar las obras del autor. Por favor, intenta de nuevo más tarde.</p>';
+            }
+        }
+
+        function comprar(id, nombre) {
+            alert(`Solicitud de adquisición para la obra: ${nombre || 'ID: ' + id}\n\nPróximamente estará disponible el sistema de compras.`);
+            // Aquí puedes redirigir a una página de checkout o abrir un modal de compra
+            // window.location.href = `/comprar/${id}`;
+        }
+
+        // Event listener para el selector de orden
+        document.getElementById('sortDate').addEventListener('change', cargarPerfil);
+        
+        // Cargar el perfil cuando la página esté lista
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarPerfil();
+            
+            // Verificar estado de usuario para mostrar/ocultar botones de autenticación
+            fetch('/api/estado-usuario')
+                .then(response => response.json())
+                .then(data => {
+                    const authContainer = document.querySelector('.auth-buttons');
+                    const navContainer = document.querySelector('.nav-container');
+                    
+                    if (data.autenticado) {
+                        if (authContainer) authContainer.style.display = 'none';
+                        
+                        fetch('/api/usuario-actual')
+                            .then(res => res.json())
+                            .then(user => {
+                                const userDiv = document.createElement('div');
+                                userDiv.className = 'user-profile';
+                                const panelLink = user.Rol === 'administrador' ? '/admin/admin-dashboard.html' : '/private/user-dashboard.html';
+                                const panelLabel = user.Rol === 'administrador' ? 'PANEL ADMIN' : 'PANEL DE USUARIO';
+                                userDiv.innerHTML = `
+                                    <span style="margin-right: 15px; color:white;">Hola, ${user.Nombre || user.email || 'Usuario'}</span>
+                                    <a href="${panelLink}" style="margin-right: 15px; color: #00ff00; text-decoration: none; border: 1px solid #00ff00; padding: 5px 10px; font-size: 0.7rem;">${panelLabel}</a>
+                                    <a href="/logout" class="btn-logout" style="color:white; text-decoration:none;">Cerrar Sesión</a>
+                                `;
+                                if (navContainer) navContainer.appendChild(userDiv);
+                            })
+                            .catch(err => console.error("Error cargando usuario:", err));
+                    }
+                })
+                .catch(err => console.error("Error verificando autenticación:", err));
+        });
+    </script>
+</body>
+</html>

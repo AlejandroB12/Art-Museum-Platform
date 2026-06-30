@@ -1,0 +1,31 @@
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { min-height: 100vh; display: flex; justify-content: center; align-items: center; background-color: #121212; padding: 20px; color: white; }
+.register-container { background: #1e1e1e; padding: 50px 40px 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #333; width: 100%; max-width: 500px; margin: 0 auto; }
+.login-form { width: 100%; }
+.login-form h2 { text-align: center; color: #00ff00; font-size: 30px; font-weight: 800; margin-bottom: 8px; letter-spacing: -1px; }
+.login-form p { text-align: center; color: #888; font-size: 15px; margin-bottom: 30px; }
+.order-summary { background: #252525; border-left: 4px solid #00ff00; padding: 20px; border-radius: 8px; margin-bottom: 30px; width: 100%; }
+.order-summary p { text-align: left; margin: 8px 0; color: #ccc; font-size: 0.95rem; }
+.order-summary strong { color: #00ff00; }
+.address-card { background: #1a1a1a; border: 2px solid #333; border-radius: 8px; padding: 20px; margin-bottom: 30px; width: 100%; }
+.address-card h3 { color: #00ff00; font-size: 16px; text-transform: uppercase; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+.address-card .address-label { color: #888; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 2px; }
+.address-card select, .address-card input { width: 100%; background: #333; border: 1px solid #555; color: white; padding: 8px; border-radius: 4px; margin-bottom: 12px; font-size: 1rem; }
+.address-card select option { background: #333; color: white; }
+.address-card select:focus, .address-card input:focus { outline: none; border-color: #00ff00; box-shadow: 0 0 5px rgba(0,255,0,0.3); }
+.login-btn { width: 100%; padding: 16px; margin: 10px 0; background: #00ff00; border: none; border-radius: 5px; color: #121212; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; display: inline-block; text-align: center; }
+.login-btn:hover { background: #00cc00; transform: translateY(-2px); box-shadow: 0 0 20px rgba(0,255,0,0.3); }
+.login-btn:disabled { background: #666; cursor: not-allowed; transform: none; box-shadow: none; }
+.back-link { display: block; text-align: center; margin-top: 25px; color: #888; text-decoration: none; font-size: 0.9rem; transition: 0.3s; }
+.back-link:hover { color: #00ff00; }
+.loading { display: none; color: #00ff00; text-align: center; margin-top: 10px; }
+.error-message { color: #ff4444; text-align: center; margin-top: 10px; display: none; }
+.guia-field { margin-bottom: 15px; text-align: left; }
+.guia-field label { color: #888; font-size: 0.9rem; display: block; margin-bottom: 5px; }
+.guia-field input { width: 100%; background: #333; border: 1px solid #555; color: white; padding: 8px; border-radius: 4px; }
+.check-icon { font-size: 64px; margin-bottom: 16px; text-align: center; }
+.success-view { display: none; }
+.form-view { display: block; }
+@media (max-width: 480px) { .register-container { padding: 30px 20px; } }
+.success-message { text-align: center; color: #888; font-size: 15px; margin-bottom: 30px; }
+.loading-top { display: none; margin-top: 10px; }

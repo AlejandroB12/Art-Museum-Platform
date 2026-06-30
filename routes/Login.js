@@ -45,7 +45,7 @@ router.post('/login-auth', (req, res) => {
             const usuario = results[0];
 
             if (usuario.Estatus === 0) {
-                return res.sendFile(path.join(__dirname, '..', 'views', 'user', 'Cuenta-pendiente.html'));
+                return res.sendFile(path.join(__dirname, '..', 'views', 'user', 'pending-activation.html'));
             }
 
             const sqlPago = "SELECT FechaPago, MontoPagado FROM Membresia WHERE id_usuario = ? ORDER BY FechaPago DESC LIMIT 1";
@@ -78,13 +78,13 @@ router.post('/login-auth', (req, res) => {
                 registrarEventoSeguridad(usuario.id_usuario, 'INICIO_SESION', 'Inicio de sesión exitoso', req);
 
                 if (usuario.Rol === 'administrador') {
-                    res.redirect('/admin/Panel-adminsitrador.html');
+                    res.redirect('/admin/admin-dashboard.html');
                 } else {
-                    res.redirect(`/user/Panel-usuario.html?email=${usuario.Email}`);
+                    res.redirect(`/private/user-dashboard.html?email=${usuario.Email}`);
                 }
             });
         } else {
-            res.redirect('/user/Login.html?error=credenciales');
+            res.redirect('/public/login.html?error=credenciales');
         }
     });
 });
@@ -98,7 +98,7 @@ router.post('/recuperar-pw', (req, res) => {
         if (err) return res.status(500).send("Error en el servidor");
         if (results.length > 0) {
             const userId = results[0].id_usuario;
-            const enlaceRecuperacion = `http://localhost:3000/Recovery/Nueva-contraseña.html?id=${userId}`;
+            const enlaceRecuperacion = `http://localhost:3000/private/password-recovery.html?id=${userId}`;
             const mailOptions = {
                 from: '"Museo Virtual" <fg57179@gmail.com>',
                 to: correo,
@@ -108,7 +108,7 @@ router.post('/recuperar-pw', (req, res) => {
             transporter.sendMail(mailOptions, (error) => {
                 if (error) return res.status(500).send("Error al enviar el correo.");
                 registrarEventoSeguridad(userId, 'CODIGO_RECUPERACION', 'Código de recuperación enviado al email', req);
-                res.redirect('/recovery/Confirmacion-envio.html');
+                res.redirect('/private/password-recovery.html?success=1');
             });
         } else {
             res.status(404).send("<h2>Correo no encontrado</h2>");
@@ -123,7 +123,7 @@ router.post('/update-password', (req, res) => {
     db.query(sql, [newPassword, userId], (err) => {
         if (err) return res.status(500).send("Error al actualizar");
         registrarEventoSeguridad(userId, 'CAMBIO_CONTRASENA', 'Contraseña actualizada exitosamente', req);
-        res.redirect('/recovery/Actualizacion-contraseña.html');
+        res.redirect('/private/password-recovery.html');
     });
 });
 
@@ -168,7 +168,7 @@ router.post('/registrar', (req, res) => {
                     db.commit((err) => {
                         if (err) return db.rollback(() => res.status(500).send("Error en Commit"));
                         registrarEventoSeguridad(idUsuario, 'REGISTRO_USUARIO', 'Registro de nuevo comprador', req);
-                        res.redirect('/user/Mensaje-exitoso.html');
+                        res.redirect(`/public/register.html?success=1&nombre=${encodeURIComponent(nombre)}&correo=${encodeURIComponent(correo)}`);
                     });
                 });
             });

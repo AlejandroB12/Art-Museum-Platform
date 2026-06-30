@@ -62,44 +62,13 @@ router.post('/registrar-admin', (req, res) => {
                 
                 db.commit((err) => {
                     if (err) return db.rollback(() => res.status(500).send("Error al confirmar registro"));
-                    res.redirect('/admin/Mensaje-exitoso.html');
-                    //res.sendFile(path.join(__dirname, 'admin', 'Mensaje-exitoso.html'));
+                    res.redirect('/public/login.html');
                 });
             });
         });
     });
 });
-router.post('/admin-auth', (req, res) => {
-    const { "admin-user": username, "admin-password": password } = req.body;
-    const sql = "SELECT * FROM Usuario WHERE Email = ? AND Contraseña = ? AND Rol = 'administrador'";
-    
-    db.query(sql, [username, password], (err, results) => {
-        if (err) return res.status(500).send("Error en el servidor");
-        if (results.length > 0) {
-            req.session.id_usuario = results[0].id_usuario;
-            req.session.usuario = {
-                id_usuario: results[0].id_usuario,
-                Nombre: results[0].Nombre,
-                Email: results[0].Email,
-                Rol: results[0].Rol
-            };
-            try {
-                const { client } = require('../config/cassandra');
-                client.execute(
-                    `INSERT INTO bitacora_seguridad (id_usuario, fecha_evento, tipo_evento, descripcion, ip_origen, dispositivo)
-                     VALUES (?, toTimestamp(now()), ?, ?, ?, ?)`,
-                    [results[0].id_usuario, 'INICIO_SESION', `Administrador ${results[0].Nombre} ${results[0].Apellido} ha iniciado sesion`, req.ip || '', req.headers['user-agent'] || ''],
-                    { prepare: true }
-                ).catch(e => console.error('Error registrando admin login:', e.message));
-            } catch (e) {
-                console.error('Error Cassandra admin login:', e.message);
-            }
-            res.redirect('/admin/Panel-adminsitrador.html');
-        } else {
-            res.redirect('/admin/Credenciales-incorrectas-administrador.html');
-        }
-    });
-});
+
 
 // ==========================================
 // 2. GESTIÓN DE USUARIOS (CRUD Y APROBACIÓN)
@@ -199,7 +168,7 @@ router.patch('/aprobar-usuario/:id', (req, res) => {
                                             <table cellpadding="0" cellspacing="0" align="center">
                                                 <tr>
                                                     <td align="center" style="background:#00ff00; border-radius:5px; padding:14px 40px;">
-                                                        <a href="http://localhost:3000/user/Login.html" style="color:#121212; font-size:14px; font-weight:700; text-decoration:none; text-transform:uppercase; letter-spacing:1.5px; display:inline-block;">Iniciar Sesión</a>
+                                                        <a href="http://localhost:3000/public/login.html" style="color:#121212; font-size:14px; font-weight:700; text-decoration:none; text-transform:uppercase; letter-spacing:1.5px; display:inline-block;">Iniciar Sesión</a>
                                                     </td>
                                                 </tr>
                                             </table>

@@ -1,0 +1,2321 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Panel Administrativo - Museo</title>
+    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+    <link rel="stylesheet" href="/styles/admin-dashboard-style.css">
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <h2>Museo UNEG</h2>
+
+        <!-- Grupo: Obras -->
+        <div class="nav-group">
+            <div class="nav-parent open" onclick="toggleGroup('obras-group')">
+                <span>🖼️ Gestión de Obras</span>
+                <span class="arrow" id="arrow-obras-group">▾</span>
+            </div>
+            <div id="obras-group" class="sub-nav open">
+                <div class="nav-item active" id="btn-gestion" onclick="mostrarTab('gestion')">📦 Inventario</div>
+                <div class="nav-item" id="btn-facturacion" onclick="mostrarTab('facturacion')">🧾 Facturar Reservas</div>
+                <div class="nav-item" id="btn-autores" onclick="mostrarTab('autores')">✍️ Autores</div>
+                <div class="nav-item" id="btn-generos" onclick="mostrarTab('generos')">🎭 Géneros</div>
+                <div class="nav-item" id="btn-obras" onclick="mostrarTab('obras')">🖼️ Obras</div>
+                <div class="nav-item" id="btn-rep-obras" onclick="mostrarTab('rep-obras')">📊 Obras Vendidas</div>
+                <div class="nav-item" id="btn-tendencias" onclick="mostrarTab('tendencias')">📈 Tendencias</div>
+            </div>
+        </div>
+
+        <!-- Grupo: Usuarios -->
+        <div class="nav-group">
+            <div class="nav-parent" onclick="toggleGroup('usuarios-group')">
+                <span>👥 Gestión de Usuarios</span>
+                <span class="arrow" id="arrow-usuarios-group">▾</span>
+            </div>
+            <div id="usuarios-group" class="sub-nav">
+                <div class="nav-item" id="btn-usuarios" onclick="mostrarTab('usuarios')">👥 Usuarios</div>
+                <div class="nav-item" id="btn-usuarios-pagos" onclick="mostrarTab('usuarios-pagos')">💳 Pagos Membresía</div>
+                <div class="nav-item" id="btn-validar-usuarios" onclick="mostrarTab('validar-usuarios')">✅ Validar Registros</div>
+                <div class="nav-item" id="btn-rep-facturas" onclick="mostrarTab('rep-facturas')">📈 Resumen Facturación</div>
+                <div class="nav-item" id="btn-rep-membresias" onclick="mostrarTab('rep-membresias')">🎫 Reporte Membresías</div>
+            </div>
+        </div>
+
+        <!-- Grupo: Sistema -->
+        <div class="nav-group">
+            <div class="nav-parent" onclick="toggleGroup('sistema-group')">
+                <span>⚙️ Sistema</span>
+                <span class="arrow" id="arrow-sistema-group">▾</span>
+            </div>
+            <div id="sistema-group" class="sub-nav">
+                <div class="nav-item" id="btn-historial-estatus" onclick="mostrarTab('historial-estatus')">📋 Historial Estatus</div>
+                <div class="nav-item" id="btn-logs-seguridad" onclick="mostrarTab('logs-seguridad'); cargarLogsSeguridad();">🔒 Bitácora Seguridad</div>
+                <div class="nav-item text-danger" onclick="cerrarSesion()">🚪 Cerrar Sesión</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main">
+        <header class="main-header">
+            <h1 id="titulo-seccion">Gestión de Inventario y Usuarios</h1>
+        </header>
+
+        <!-- Tab: Gestión -->
+        <div id="tab-gestion" class="tab-content">
+            <div class="card">
+                <h3>📦 Modificar Obras Registradas</h3>
+                <div class="mb-10">
+                    <input type="text" id="buscador-inventario" placeholder="🔍 Buscar por ID o nombre..." oninput="filtrarInventario()" class="search-input">
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Precio ($)</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="body-gestion-obras"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="tab-usuarios" class="tab-content d-none">
+            <div class="card">
+                <h3>👥 Administradores</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Estatus</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="body-gestion-admins"></tbody>
+                </table>
+            </div>
+            <div class="card">
+                <h3>👤 Compradores</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Estatus</th>
+                            <th>Membresía</th>
+                            <th>Puede Adquirir</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="body-gestion-compradores"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab: Validar Pagos Membresía -->
+        <div id="tab-usuarios-pagos" class="tab-content d-none">
+            <div class="card">
+                <h3>💳 Solicitudes de Pago Pendientes</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Usuario (Email)</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-pagos"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab: Validar Usuarios Pendientes -->
+        <div id="tab-validar-usuarios" class="tab-content d-none">
+            <div class="card">
+                <h3>👤 Usuarios Pendientes de Registro</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Correo</th>
+                            <th>Código</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-usuarios-pendientes"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab: Facturación -->
+        <div id="tab-facturacion" class="tab-content d-none">
+            <div class="card">
+                <h3>🧾 Emitir Factura Oficial</h3>
+                <div class="mb-10">
+                    <input type="text" id="buscador-facturacion" placeholder="🔍 Buscar obra reservada por ID o nombre..." oninput="filtrarFacturacion()" class="search-input">
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID Obra</th>
+                            <th>Obra</th>
+                            <th>Precio Base</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-reservadas"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab: Reporte Obras Vendidas -->
+        <div id="tab-rep-obras" class="tab-content d-none">
+            <div class="card">
+                <h3>📊 Consulta de Obras Vendidas</h3>
+                <div class="report-filter">
+                    <div><label>Inicio:</label><input type="date" id="obras-inicio"></div>
+                    <div><label>Fin:</label><input type="date" id="obras-fin"></div>
+                    <button class="btn btn-blue" onclick="consultarObras()">Filtrar</button>
+                </div>
+                <table id="tabla-obras-vendidas">
+                    <thead>
+                        <tr>
+                            <th>ID Factura</th>
+                            <th>Obra</th>
+                            <th>Total Pagado</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <button class="btn btn-pdf" onclick="generarPDF('tabla-obras-vendidas', 'Obras Vendidas')">📄 Generar
+                    PDF</button>
+            </div>
+        </div>
+
+        <!-- Tab: Resumen Facturación -->
+        <div id="tab-rep-facturas" class="tab-content d-none">
+            <div class="card">
+                <h3>📈 Resumen de Facturación</h3>
+                <div class="report-filter">
+                    <div><label>Inicio:</label><input type="date" id="fact-inicio"></div>
+                    <div><label>Fin:</label><input type="date" id="fact-fin"></div>
+                    <button class="btn btn-blue" onclick="consultarFacturacion()">Filtrar</button>
+                </div>
+                <table id="tabla-facturacion">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Obra</th>
+                            <th>Neto</th>
+                            <th>%</th>
+                            <th>Ganancia</th>
+                            <th>Total</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <button class="btn btn-pdf" onclick="generarPDF('tabla-facturacion', 'Resumen Facturación')">📄 Generar
+                    PDF</button>
+            </div>
+        </div>
+
+        <!-- Tab: Gestionar Géneros -->
+        <div id="tab-generos" class="tab-content d-none">
+            <div class="card">
+                <h3>🎭 Agregar Nuevo Género</h3>
+                <div class="inline-form-row">
+                    <div>
+                        <label>Nombre del género:</label>
+                        <input type="text" id="input-genero-nombre" class="edit-input" placeholder="Ej: Acuarela" style="width:200px;">
+                    </div>
+                    <button class="btn btn-green" onclick="agregarGenero()">➕ Agregar Género</button>
+                </div>
+                <div class="section-divider">
+                    <div class="mb-10">
+                        <strong>Atributos del género:</strong>
+                        <button class="btn btn-blue btn-sm" onclick="agregarFilaAtributo()">➕ Agregar atributo</button>
+                    </div>
+                    <table id="tabla-atributos" class="w-100 mb-15">
+                        <thead>
+                            <tr>
+                                <th style="width:40%;">Nombre del atributo</th>
+                                <th style="width:25%;">Tipo</th>
+                                <th style="width:15%;">Requerido</th>
+                                <th style="width:20%;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="body-atributos"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card">
+                <h3>📋 Géneros Existentes</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Atributos</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="body-generos"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab: Gestionar Autores -->
+        <div id="tab-autores" class="tab-content d-none">
+            <div class="card">
+                <h3 class="card-title">✍️ Agregar Nuevo Autor</h3>
+                <div class="form-grid-2col">
+                    <div>
+                        <label class="form-label">Nombre *</label>
+                        <input type="text" id="input-autor-nombre" class="edit-input" placeholder="Nombre" class="w-100">
+                    </div>
+                    <div>
+                        <label class="form-label">Apellido *</label>
+                        <input type="text" id="input-autor-apellido" class="edit-input" placeholder="Apellido" class="w-100">
+                    </div>
+                    <div>
+                        <label class="form-label">Nacionalidad</label>
+                        <select id="input-autor-nacionalidad" class="edit-input w-100">
+                            <option value="">— Seleccione —</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Foto</label>
+                        <input type="file" id="input-autor-foto" accept="image/*" class="file-input">
+                    </div>
+                    <div class="grid-span-all">
+                        <label class="form-label">Biografía</label>
+                        <textarea id="input-autor-biografia" class="edit-input w-100" placeholder="Breve biografía del autor..." style="height:80px;resize:vertical;"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn-green btn-lg" onclick="agregarAutor()">➕ Agregar Autor</button>
+                        <button class="btn btn-secondary" onclick="limpiarFormAutor()">🔄 Limpiar</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <h3 class="card-title">📋 Autores Existentes</h3>
+                <div class="filter-bar">
+                    <input type="text" id="buscador-autores" placeholder="🔍 Buscar autor por nombre, apellido o nacionalidad..." oninput="filtrarAutores()" class="filter-input">
+                    <span id="autores-count" class="counter-text"></span>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Foto</th>
+                                <th>Nombre</th>
+                                <th>Apellido</th>
+                                <th>Nacionalidad</th>
+                                <th>Biografía</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="body-autores"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Gestionar Obras -->
+        <div id="tab-obras" class="tab-content d-none">
+            <div class="card">
+                <h3 class="card-title">🖼️ Agregar Nueva Obra</h3>
+                <div class="form-grid-3col">
+                    <div>
+                        <label class="form-label">Nombre *</label>
+                        <input type="text" id="input-obra-nombre" class="edit-input" placeholder="Nombre de la obra" class="w-100">
+                    </div>
+                    <div>
+                        <label class="form-label">Fecha creación</label>
+                        <input type="date" id="input-obra-fecha" class="edit-input w-100">
+                    </div>
+                    <div>
+                        <label class="form-label">Precio ($) *</label>
+                        <input type="number" id="input-obra-precio" class="edit-input" placeholder="0.00" step="0.01" class="w-100">
+                    </div>
+                    <div>
+                        <label class="form-label">Estado</label>
+                        <select id="input-obra-estado" class="edit-input w-100">
+                            <option value="Disponible">Disponible</option>
+                            <option value="Reservado">Reservado</option>
+                            <option value="Vendida">Vendida</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Género</label>
+                        <select id="input-obra-genero" class="edit-input w-100">
+                            <option value="">— Seleccione —</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Foto</label>
+                        <input type="file" id="input-obra-foto" accept="image/*" class="file-input">
+                    </div>
+                    <div class="grid-span-all">
+                        <label class="form-label">Autor(es)</label>
+                        <div id="autor-selector-container" class="autocomplete-container">
+                            <input type="text" id="input-buscar-autor" placeholder="Escriba para buscar autor..." autocomplete="off" class="autocomplete-input" onfocus="abrirDropdownAutores()" oninput="filtrarDropdownAutores()" onkeydown="if(event.key==='Escape')cerrarDropdownAutores()">
+                            <div id="autor-dropdown" class="autocomplete-dropdown"></div>
+                        </div>
+                        <div id="autores-seleccionados" class="selected-tags-container"></div>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn-green btn-lg" onclick="agregarObra()">➕ Agregar Obra</button>
+                        <button class="btn btn-secondary" onclick="limpiarFormObra()">🔄 Limpiar</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <h3 class="card-title">📋 Obras Registradas</h3>
+                <div class="filter-bar">
+                    <input type="text" id="buscador-obras" placeholder="🔍 Buscar obra por nombre, género o estado..." oninput="filtrarObras()" class="filter-input">
+                    <span id="obras-count" class="counter-text"></span>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Precio</th>
+                                <th>Estado</th>
+                                <th>Género</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="body-obras"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Tab: Reporte Membresías -->
+        <div id="tab-rep-membresias" class="tab-content d-none">
+            <div class="card">
+                <h3>🎫 Reporte de Membresías Pagadas</h3>
+                <div class="report-filter">
+                    <div><label>Inicio:</label><input type="date" id="mem-inicio"></div>
+                    <div><label>Fin:</label><input type="date" id="mem-fin"></div>
+                    <button class="btn btn-blue" onclick="consultarMembresias()">Filtrar</button>
+                </div>
+                <table id="tabla-membresias">
+                    <thead>
+                        <tr>
+                            <th>ID Pago</th>
+                            <th>Email</th>
+                            <th>Fecha Pago</th>
+                            <th>Monto</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <button class="btn btn-pdf" onclick="generarPDF('tabla-membresias', 'Membresías Pagadas')">📄 Generar
+                    PDF</button>
+            </div>
+        </div>
+
+        <!-- Tab: Historial de Estatus (Cassandra) -->
+        <div id="tab-historial-estatus" class="tab-content d-none">
+            <div class="card">
+                <h3>📋 Historial de Cambios de Estatus de Obras</h3>
+                <div class="report-filter">
+                    <div>
+                        <label for="he-obra-select">Seleccionar obra:</label>
+                        <select id="he-obra-select" class="select-wide">
+                            <option value="">-- Seleccione una obra --</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-blue" onclick="cargarHistorialEstatus()">Ver Historial</button>
+                    <button class="btn btn-green" onclick="cargarObrasConHistorial()">Actualizar lista</button>
+                </div>
+                <table id="tabla-historial-estatus">
+                    <thead>
+                        <tr>
+                            <th>ID Obra</th>
+                            <th>Obra</th>
+                            <th>Fecha / Hora</th>
+                            <th>Estatus Anterior</th>
+                            <th>Estatus Nuevo</th>
+                            <th>Modificado Por</th>
+                            <th>Motivo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="he-sin-seleccion">
+                            <td colspan="7" class="empty-message">Seleccione una obra y haga clic en
+                                "Ver Historial"</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab: Bitácora de Seguridad (Cassandra) -->
+        <div id="tab-logs-seguridad" class="tab-content d-none">
+            <div class="card">
+                <h3>🔒 Bitácora de Seguridad</h3>
+                <p class="text-muted mb-15">Eventos de seguridad registrados en
+                    Cassandra (solo-append, inmutable)</p>
+                <div class="mb-15">
+                    <select id="log-filtro-tipo" onchange="cargarLogsSeguridad()">
+                        <option value="">Todos los tipos</option>
+                        <option value="INICIO_SESION">Inicios de Sesión</option>
+                        <option value="CIERRE_SESION">Cierres de Sesión</option>
+                        <option value="REGISTRO_USUARIO">Registros</option>
+                        <option value="APROBACION_USUARIO">Aprobación de Usuarios</option>
+                        <option value="APROBACION_PAGO">Aprobación de Pagos</option>
+                        <option value="CONFIRMAR_RESERVA">Reservas</option>
+                        <option value="SOLICITUD_PAGO">Solicitudes de Pago</option>
+                        <option value="CAMBIO_CONTRASENA">Cambios de Contraseña</option>
+                        <option value="GUARDAR_SEGURIDAD">Seguridad</option>
+                        <option value="CODIGO_RECUPERACION">Recuperación</option>
+                    </select>
+                </div>
+                <div class="logs-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha / Hora</th>
+                                <th>Usuario</th>
+                                <th>Tipo</th>
+                                <th>Descripción</th>
+                                <th>IP Origen</th>
+                                <th>Dispositivo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-logs-seguridad">
+                            <tr>
+                                <td colspan="6" class="empty-message">Cargando registros...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- Tab: Tendencias del Museo -->
+        <div id="tab-tendencias" class="tab-content d-none">
+            <div class="card">
+                <h3>📈 Tendencias del Museo</h3>
+                <p class="text-muted mb-20">Datos en vivo desde Neo4j</p>
+
+                <div class="tendencias-grid">
+                    <div class="tendencia-card">
+                        <h4 class="tendencia-card-title">
+                            🎨 Artistas Populares</h4>
+                        <div id="pop-artistas">
+                            <p class="text-dim">Cargando...</p>
+                        </div>
+                    </div>
+
+                    <div class="tendencia-card">
+                        <h4 class="tendencia-card-title">
+                            🎭 Géneros más vendidos</h4>
+                        <div id="pop-generos">
+                            <p class="text-dim">Cargando...</p>
+                        </div>
+                    </div>
+
+                    <div class="tendencia-card">
+                        <h4 class="tendencia-card-title">
+                            🔗 Estadísticas del Grafo</h4>
+                        <div id="grafo-stats">
+                            <p class="text-dim">Cargando...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function deshabilitarBoton(btn, tiempo = 1500) {
+            if (!btn) return;
+            btn.disabled = true;
+            setTimeout(() => { btn.disabled = false; }, tiempo);
+        }
+
+        // Acordeón sidebar: abrir grupo por defecto y al hacer clic
+        function toggleGroup(id) {
+            const el = document.getElementById(id);
+            const parent = el.previousElementSibling;
+            if (!el || !parent) return;
+            const isOpen = el.classList.toggle('open');
+            parent.classList.toggle('open', isOpen);
+        }
+
+        function mostrarTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+
+            const tabElement = document.getElementById('tab-' + tab);
+            if (tabElement) tabElement.style.display = 'block';
+
+            const btnElement = document.getElementById('btn-' + tab);
+            if (btnElement) btnElement.classList.add('active');
+
+            // Auto-abrir el grupo padre del item clickeado
+            if (btnElement) {
+                const subNav = btnElement.closest('.sub-nav');
+                if (subNav && !subNav.classList.contains('open')) {
+                    subNav.classList.add('open');
+                    const parent = subNav.previousElementSibling;
+                    if (parent) parent.classList.add('open');
+                }
+            }
+
+            // Actualizar título
+            const titulos = {
+                'gestion': 'Gestión de Inventario',
+                'usuarios': 'Gestión de Usuarios del Sistema',
+                'facturacion': 'Facturación de Reservas',
+                'usuarios-pagos': 'Validar Pagos de Membresía',
+                'validar-usuarios': 'Validar Registro de Usuarios',
+                'generos': 'Gestión de Géneros',
+                'autores': 'Gestión de Autores',
+                'obras': 'Gestión de Obras',
+                'especializaciones': 'Gestión de Especializaciones',
+                'rep-obras': 'Reporte de Obras Vendidas',
+                'rep-facturas': 'Resumen de Facturación',
+                'rep-membresias': 'Reporte de Membresías Pagadas',
+                'historial-estatus': 'Historial de Cambios de Estatus',
+                'logs-seguridad': 'Bitácora de Seguridad',
+                'tendencias': 'Tendencias del Museo',
+            };
+            document.getElementById('titulo-seccion').textContent = titulos[tab] || 'Panel Administrativo';
+
+            // Cargar datos según el tab
+            if (tab === 'gestion') {
+                cargarObrasGestion();
+            }
+            if (tab === 'usuarios') {
+                cargarUsuariosGestion();
+            }
+            if (tab === 'usuarios-pagos') cargarPagos();
+            if (tab === 'validar-usuarios') cargarUsuariosPendientes();
+            if (tab === 'facturacion') cargarReservadas();
+            if (tab === 'historial-estatus') cargarObrasConHistorial();
+            if (tab === 'generos') cargarGeneros();
+            if (tab === 'autores') { cargarAutores(); cargarNacionalidades(); }
+            if (tab === 'obras') { cargarObrasAdmin(); cargarGenerosSelect(); cargarAutoresSelect(); }
+            if (tab === 'rep-obras') {
+                // Establecer fechas por defecto (últimos 30 días)
+                const hoy = new Date();
+                const hace30Dias = new Date();
+                hace30Dias.setDate(hoy.getDate() - 30);
+
+                document.getElementById('obras-inicio').value = hace30Dias.toISOString().split('T')[0];
+                document.getElementById('obras-fin').value = hoy.toISOString().split('T')[0];
+                consultarObras();
+            }
+            if (tab === 'rep-facturas') {
+                const hoy = new Date();
+                const hace30Dias = new Date();
+                hace30Dias.setDate(hoy.getDate() - 30);
+
+                document.getElementById('fact-inicio').value = hace30Dias.toISOString().split('T')[0];
+                document.getElementById('fact-fin').value = hoy.toISOString().split('T')[0];
+                consultarFacturacion();
+            }
+            if (tab === 'rep-membresias') {
+                const hoy = new Date();
+                const hace30Dias = new Date();
+                hace30Dias.setDate(hoy.getDate() - 30);
+
+                document.getElementById('mem-inicio').value = hace30Dias.toISOString().split('T')[0];
+                document.getElementById('mem-fin').value = hoy.toISOString().split('T')[0];
+                consultarMembresias(); // Esto llamará a la función que ahora tiene el alert
+            }
+
+            if (tab === 'tendencias') cargarTendencias();
+        }
+        let inventarioData = [];
+        let facturacionData = [];
+
+        function filtrarInventario() {
+            const q = document.getElementById('buscador-inventario').value.toLowerCase();
+            const filtradas = inventarioData.filter(o =>
+                String(o.id).includes(q) || (o.nombre || '').toLowerCase().includes(q)
+            );
+            renderizarInventario(filtradas);
+        }
+
+        function renderizarInventario(data) {
+            document.getElementById('body-gestion-obras').innerHTML = data.map(o => `
+                <tr id="obra-fila-${o.id}">
+                    <td>${o.id}</td>
+                    <td><input type="text" id="obra-nom-${o.id}" value="${(o.nombre || '').replace(/"/g, '&quot;')}" class="edit-input"></td>
+                    <td><input type="number" id="obra-pre-${o.id}" value="${o.precio || 0}" class="edit-input" style="width:80px"></td>
+                    <td>
+                        <select id="obra-est-${o.id}" class="edit-input">
+                            <option value="Disponible" ${o.estado_obra === 'Disponible' ? 'selected' : ''}>Disponible</option>
+                            <option value="Reservado" ${o.estado_obra === 'Reservado' ? 'selected' : ''}>Reservado</option>
+                            <option value="Vendida" ${o.estado_obra === 'Vendida' ? 'selected' : ''}>Vendida</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button class="btn btn-blue" onclick="actualizarObra(${o.id}, this)">💾 Actualizar</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // --- CRUD OBRAS (MongoDB) ---
+        async function cargarObrasGestion() {
+            try {
+                const res = await fetch('/api/obras-admin');
+                inventarioData = await res.json();
+                renderizarInventario(inventarioData);
+                document.getElementById('buscador-inventario').value = '';
+            } catch (error) {
+                console.error('Error cargando obras:', error);
+            }
+        }
+
+        async function actualizarObra(id, btn) {
+            deshabilitarBoton(btn);
+            const body = {
+                nombre: document.getElementById(`obra-nom-${id}`).value,
+                precio: document.getElementById(`obra-pre-${id}`).value,
+                estado_obra: document.getElementById(`obra-est-${id}`).value
+            };
+
+            try {
+                const res = await fetch(`/api/obras-admin/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert("✅ Obra actualizada correctamente");
+                    cargarObrasGestion();
+                } else {
+                    alert("❌ " + (result.message || 'Error al actualizar'));
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error actualizando obra:', error);
+                alert("❌ Error al actualizar: " + error.message);
+                btn.disabled = false;
+            }
+        }
+
+        // --- CRUD USUARIOS (SEPARADOS: ADMINISTRADORES Y COMPRADORES) ---
+        async function cargarUsuariosGestion() {
+            try {
+                const res = await fetch('/api/todos-los-usuarios');
+                const data = await res.json();
+                const admins = data.filter(u => u.Rol === 'administrador');
+                const compradores = data.filter(u => u.Rol === 'comprador');
+
+                document.getElementById('body-gestion-admins').innerHTML = admins.map(u => `
+                    <tr id="usuario-fila-${u.id_usuario}">
+                        <td>${u.id_usuario}</td>
+                        <td>${u.Email || ''}</td>
+                        <td>
+                            <select id="user-est-${u.id_usuario}" class="edit-input">
+                                <option value="1" ${u.Estatus == 1 ? 'selected' : ''}>Activo</option>
+                                <option value="0" ${u.Estatus == 0 ? 'selected' : ''}>Inactivo</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button class="btn btn-blue" onclick="actualizarUsuario(${u.id_usuario}, this)">💾 Actualizar</button>
+                            <button class="btn btn-red" onclick="borrarUsuario(${u.id_usuario}, this)">🗑️ Borrar</button>
+                        </td>
+                    </tr>
+                `).join('');
+
+                document.getElementById('body-gestion-compradores').innerHTML = compradores.map(u => {
+                    const puedeAdquirir = u.PuedeAdquirir == 1;
+                    const membresiaActiva = u.MembresiaActiva == 1;
+                    return `
+                    <tr id="usuario-fila-${u.id_usuario}">
+                        <td>${u.id_usuario}</td>
+                        <td>${u.Email || ''}</td>
+                        <td>
+                            <select id="user-est-${u.id_usuario}" class="edit-input">
+                                <option value="1" ${u.Estatus == 1 ? 'selected' : ''}>Activo</option>
+                                <option value="0" ${u.Estatus == 0 ? 'selected' : ''}>Inactivo</option>
+                            </select>
+                        </td>
+                        <td>
+                            <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:0.75rem;font-weight:bold;${membresiaActiva ? 'background:rgba(0,255,0,0.2);color:#00ff00;' : 'background:rgba(255,68,68,0.2);color:#ff4444;'}">
+                                ${membresiaActiva ? '✅ Activa' : '❌ Vencida'}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn ${puedeAdquirir ? 'btn-green' : 'btn-red'}" id="btn-adquirir-${u.id_usuario}" onclick="toggleAdquirir(${u.id_usuario}, ${puedeAdquirir ? 0 : 1}, this)" style="padding:5px 12px;font-size:0.75rem;">
+                                ${puedeAdquirir ? '✅ Habilitado' : '🚫 Deshabilitado'}
+                            </button>
+                        </td>
+                        <td>
+                            <button class="btn btn-blue" onclick="actualizarUsuario(${u.id_usuario}, this)">💾 Actualizar</button>
+                            <button class="btn btn-red" onclick="borrarUsuario(${u.id_usuario}, this)">🗑️ Borrar</button>
+                        </td>
+                    </tr>
+                `}).join('');
+            } catch (error) {
+                console.error('Error cargando usuarios:', error);
+            }
+        }
+
+        async function toggleAdquirir(id, nuevoValor, btn) {
+            if (!confirm(`¿${nuevoValor == 1 ? 'Habilitar' : 'Deshabilitar'} la compra para este usuario?`)) return;
+            btn.disabled = true;
+            btn.innerHTML = '⏳...';
+            try {
+                const res = await fetch(`/api/usuarios/${id}/toggle-adquirir`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ PuedeAdquirir: nuevoValor })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    mostrarNotificacion(result.message, 'success');
+                    cargarUsuariosGestion();
+                } else {
+                    mostrarNotificacion('❌ ' + (result.message || 'Error'), 'error');
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error toggling adquirir:', error);
+                mostrarNotificacion('❌ Error al cambiar estado', 'error');
+                btn.disabled = false;
+            }
+        }
+
+        // --- ACTUALIZAR USUARIO (VERSIÓN MEJORADA) ---
+        async function actualizarUsuario(id, btn) {
+            deshabilitarBoton(btn);
+
+            const estatusSelect = document.getElementById(`user-est-${id}`);
+            if (!estatusSelect) {
+                alert("Error: No se encontró el selector de estatus");
+                return;
+            }
+
+            const nuevoEstatus = estatusSelect.value; // "1" o "0"
+            const estadoTexto = nuevoEstatus == 1 ? 'activado' : 'desactivado';
+
+            // Confirmar con el usuario
+            if (!confirm(`¿Está seguro de ${estadoTexto} este usuario?`)) {
+                btn.disabled = false;
+                return;
+            }
+
+            // Cambiar texto del botón mientras procesa
+            const btnOriginal = btn.innerHTML;
+            btn.innerHTML = '⏳ Actualizando...';
+
+            try {
+                const response = await fetch(`/api/usuarios/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ Estatus: parseInt(nuevoEstatus) }) // Asegurar que sea número
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `Error HTTP: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Mostrar notificación de éxito
+                    mostrarNotificacion(`✅ Usuario ${estadoTexto} correctamente`, 'success');
+
+                    // Opcional: cambiar color de la fila para indicar cambio
+                    const fila = document.getElementById(`usuario-fila-${id}`);
+                    if (fila) {
+                        fila.style.transition = "background-color 0.5s ease";
+                        fila.style.backgroundColor = nuevoEstatus == 1 ? 'rgba(0,255,0,0.1)' : 'rgba(255,68,68,0.1)';
+                        setTimeout(() => {
+                            fila.style.backgroundColor = '';
+                        }, 2000);
+                    }
+                } else {
+                    throw new Error(result.message || 'Error al actualizar');
+                }
+
+            } catch (error) {
+                console.error('Error actualizando usuario:', error);
+                mostrarNotificacion(`❌ Error: ${error.message}`, 'error');
+            } finally {
+                // Restaurar botón
+                btn.innerHTML = btnOriginal;
+                setTimeout(() => { btn.disabled = false; }, 1500);
+            }
+        }
+
+        async function borrarUsuario(id, btn) {
+            if (!confirm("¿Eliminar usuario permanentemente? Esta acción eliminará todos sus registros relacionados (compras, reservas, membresías).")) return;
+            deshabilitarBoton(btn);
+
+            try {
+                // Mostrar indicador de carga
+                const fila = document.getElementById(`usuario-fila-${id}`);
+                if (fila) {
+                    fila.style.opacity = "0.5";
+                }
+
+                // 1. Primero eliminar registros relacionados (orden correcto)
+                console.log('Eliminando registros relacionados del usuario:', id);
+
+                // Eliminar de Reserva (si existe)
+                await fetch(`/api/eliminar-reservas-usuario/${id}`, { method: 'DELETE' });
+
+                // Eliminar de Membresia (si existe)
+                await fetch(`/api/eliminar-membresias-usuario/${id}`, { method: 'DELETE' });
+
+                // Eliminar de Comprador (si existe)
+                await fetch(`/api/eliminar-comprador/${id}`, { method: 'DELETE' });
+
+                // Finalmente eliminar el Usuario
+                const res = await fetch(`/api/usuarios/${id}`, { method: 'DELETE' });
+
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    throw new Error(errorText || 'Error al eliminar');
+                }
+
+                // Animación de eliminación
+                if (fila) {
+                    fila.style.transition = "all 0.4s ease";
+                    fila.style.opacity = "0";
+                    fila.style.transform = "translateX(-20px)";
+                    setTimeout(() => fila.remove(), 400);
+                }
+
+                alert("✅ Usuario y todos sus registros asociados eliminados correctamente");
+
+            } catch (error) {
+                console.error('Error eliminando usuario:', error);
+                alert("❌ Error al eliminar: " + error.message);
+
+                // Restaurar opacidad
+                const fila = document.getElementById(`usuario-fila-${id}`);
+                if (fila) {
+                    fila.style.opacity = "1";
+                }
+            }
+        }
+
+        // --- USUARIOS PENDIENTES ---
+        async function cargarUsuariosPendientes() {
+            try {
+                const res = await fetch('/api/usuarios-pendientes');
+                const usuarios = await res.json();
+                const tbody = document.getElementById('lista-usuarios-pendientes');
+
+                if (usuarios.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:30px;">No hay usuarios pendientes de registro</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = usuarios.map(u => `
+                    <tr id="usuario-pendiente-${u.id_usuario}">
+                        <td>${u.id_usuario}</td>
+                        <td>${u.Email || ''}</td>
+                        <td>${u.CodigoVerificacion || 'N/A'}</td>
+                        <td>
+                            <button class="btn btn-green" onclick="aprobarUsuarioRegistro(${u.id_usuario}, this)">✅ Aprobar Registro</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error cargando usuarios pendientes:', error);
+            }
+        }
+
+        async function aprobarUsuarioRegistro(id, btn) {
+            if (!confirm("¿Aprobar este usuario?")) return;
+            deshabilitarBoton(btn);
+
+            try {
+                const res = await fetch(`/aprobar-usuario/${id}`, { method: 'PATCH' });
+                if (res.ok) {
+                    const fila = document.getElementById(`usuario-pendiente-${id}`);
+                    if (fila) {
+                        fila.style.transition = "all 0.4s ease";
+                        fila.style.opacity = "0";
+                        fila.style.transform = "translateX(-20px)";
+                        setTimeout(() => {
+                            fila.remove();
+                            if (document.querySelector('#lista-usuarios-pendientes tr') === null) {
+                                document.getElementById('lista-usuarios-pendientes').innerHTML =
+                                    `<tr><td colspan="4" style="text-align:center; padding:30px;">No hay usuarios pendientes de registro</td></tr>`;
+                            }
+                        }, 400);
+                    }
+                    alert('✅ Usuario aprobado y activado');
+                    cargarUsuariosGestion();
+                }
+            } catch (error) {
+                console.error('Error aprobando usuario:', error);
+                alert("❌ Error al aprobar usuario");
+            }
+        }
+
+        // --- PAGOS MEMBRESÍA ---
+        async function cargarPagos() {
+            try {
+                const res = await fetch('/api/solicitudes-pago');
+                const pagos = await res.json();
+                const tbody = document.getElementById('lista-pagos');
+
+                if (pagos.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding:30px;">No hay solicitudes de pago pendientes</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = pagos.map(p => `
+                    <tr id="pago-fila-${p.id_solicitud}">
+                        <td>${p.Email}</td>
+                        <td>
+                            <button class="btn btn-green" onclick="aprobarPagoRegistro(${p.id_solicitud}, ${p.id_usuario}, this)">✅ Confirmar Pago</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error cargando pagos:', error);
+            }
+        }
+
+        async function aprobarPagoRegistro(id_solicitud, id_usuario, btn) {
+            if (!confirm("¿Confirmar recepción de pago y activar membresía?")) return;
+            deshabilitarBoton(btn);
+
+            try {
+                const res = await fetch('/aprobar-pago', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id_solicitud, id_usuario })
+                });
+
+                if (res.ok) {
+                    const fila = document.getElementById(`pago-fila-${id_solicitud}`);
+                    if (fila) {
+                        fila.style.transition = "all 0.4s ease";
+                        fila.style.opacity = "0";
+                        fila.style.transform = "translateX(-20px)";
+                        setTimeout(() => {
+                            fila.remove();
+                            if (document.querySelector('#lista-pagos tr') === null) {
+                                document.getElementById('lista-pagos').innerHTML =
+                                    `<tr><td colspan="2" style="text-align:center; padding:30px;">No hay solicitudes de pago pendientes</td></tr>`;
+                            }
+                        }, 400);
+                    }
+                    alert("✅ Membresía activada correctamente");
+                }
+            } catch (error) {
+                console.error('Error aprobando pago:', error);
+                alert("❌ Error al aprobar pago");
+            }
+        }
+
+        function filtrarFacturacion() {
+            const q = document.getElementById('buscador-facturacion').value.toLowerCase();
+            const filtradas = facturacionData.filter(o =>
+                String(o.id_Obra).includes(q) || (o.Nombre || '').toLowerCase().includes(q)
+            );
+            renderizarFacturacion(filtradas);
+        }
+
+        function renderizarFacturacion(data) {
+            if (data.length === 0) {
+                document.getElementById('lista-reservadas').innerHTML = `
+                    <tr>
+                        <td colspan="4" style="text-align:center; padding:30px;">
+                            No hay obras reservadas en este momento
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            document.getElementById('lista-reservadas').innerHTML = data.map(obra => {
+                const nombreObraEscapado = (obra.Nombre || '').replace(/'/g, "\\'");
+                return `
+                    <tr>
+                        <td>${obra.id_Obra}</td>
+                        <td>${obra.Nombre || 'Sin nombre'}</td>
+                        <td>$${(obra.Precio || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td>
+                            <button class="btn btn-green" onclick="prepararFactura(
+                                ${obra.id_Obra}, 
+                                ${obra.Precio || 0}, 
+                                '${nombreObraEscapado}', 
+                                this
+                            )">🧾 Facturar</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // --- FACTURACIÓN DE RESERVAS ---
+        async function cargarReservadas() {
+            try {
+                console.log('Cargando obras reservadas...');
+                const res = await fetch('/api/obras-reservadas');
+
+                if (!res.ok) {
+                    throw new Error(`Error HTTP: ${res.status}`);
+                }
+
+                facturacionData = await res.json();
+                console.log('Obras reservadas obtenidas:', facturacionData);
+
+                document.getElementById('buscador-facturacion').value = '';
+                renderizarFacturacion(facturacionData);
+
+            } catch (error) {
+                console.error('Error cargando reservas:', error);
+                document.getElementById('lista-reservadas').innerHTML = `
+                    <tr>
+                        <td colspan="4" style="text-align:center; padding:30px; color: #e53e3e;">
+                            Error al cargar las obras reservadas: ${error.message}
+                            <br>
+                            <button class="btn btn-blue" onclick="cargarReservadas()" style="margin-top:10px;">🔄 Reintentar</button>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Función para generar PDF de factura en el frontend
+        function generarPDFFactura(datos) {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                // Configuración de colores
+                const colors = {
+                    primary: [26, 32, 44], // #1a202c
+                    secondary: [85, 85, 85], // #555
+                    accent: [0, 255, 0], // #00ff00
+                    border: [34, 34, 34] // #222
+                };
+
+                // Encabezado
+                doc.setFontSize(20);
+                doc.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+                doc.text('MUSEO', 105, 20, { align: 'center' });
+
+                doc.setFontSize(16);
+                doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+                doc.text('FACTURA DE VENTA', 105, 30, { align: 'center' });
+
+                // Línea decorativa
+                doc.setDrawColor(colors.border[0], colors.border[1], colors.border[2]);
+                doc.setLineWidth(1);
+                doc.line(20, 35, 190, 35);
+
+                // Información de la factura
+                doc.setFontSize(12);
+                doc.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+                doc.text(`Factura N°: ${datos.id_factura}`, 20, 45);
+                doc.text(`Fecha: ${datos.fecha || new Date().toLocaleDateString()}`, 20, 52);
+                doc.text(`Hora: ${datos.hora || new Date().toLocaleTimeString()}`, 20, 59);
+
+                // Datos del comprador
+                doc.setFontSize(14);
+                doc.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+                doc.text('DATOS DEL COMPRADOR', 20, 75);
+
+                doc.setFontSize(12);
+                doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+                doc.text(`ID: ${datos.id_comprador || 'N/A'}`, 20, 83);
+                doc.text(`Nombre: ${datos.nombreComprador || 'No disponible'}`, 20, 90);
+                doc.text(`Email: ${datos.emailComprador || 'No disponible'}`, 20, 97);
+
+                // Datos de la obra
+                doc.setFontSize(14);
+                doc.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+                doc.text('DATOS DE LA OBRA', 20, 115);
+
+                doc.setFontSize(12);
+                doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+                doc.text(`ID Obra: ${datos.id_obra}`, 20, 123);
+                doc.text(`Nombre: ${datos.nombreObra || 'No disponible'}`, 20, 130);
+
+                // Tabla de detalles
+                const tableBody = [
+                    ['Precio Base', 'Valor de la obra', `$${datos.precio_neto.toFixed(2)}`],
+                    ['IVA', '12%', `$${datos.iva.toFixed(2)}`],
+                    ['Comisión Museo', `${datos.porcentaje_comision}%`, `$${datos.ganancia_museo.toFixed(2)}`],
+                    ['TOTAL A PAGAR', '', `$${datos.total.toFixed(2)}`]
+                ];
+
+                doc.autoTable({
+                    startY: 140,
+                    head: [['Concepto', 'Detalle', 'Monto']],
+                    body: tableBody,
+                    theme: 'striped',
+                    headStyles: {
+                        fillColor: [49, 130, 206],
+                        textColor: 255,
+                        fontStyle: 'bold'
+                    },
+                    styles: {
+                        fontSize: 11,
+                        cellPadding: 5
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 70 },
+                        1: { cellWidth: 70 },
+                        2: { cellWidth: 50, halign: 'right' }
+                    },
+                    foot: [['', '', '']],
+                    footStyles: { fillColor: [255, 255, 255] }
+                });
+
+                // Mensaje de agradecimiento
+                const finalY = doc.lastAutoTable.finalY + 10;
+                doc.setFontSize(12);
+                doc.setTextColor(colors.accent[0], colors.accent[1], colors.accent[2]);
+                doc.text('¡Gracias por su compra!', 105, finalY, { align: 'center' });
+
+                doc.setFontSize(10);
+                doc.setTextColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+                doc.text('Esta factura es un documento oficial del Museo UNEG', 105, finalY + 7, { align: 'center' });
+
+                // Guardar el PDF
+                doc.save(`Factura_${datos.id_factura}.pdf`);
+
+                return true;
+            } catch (error) {
+                console.error('Error generando PDF:', error);
+                throw error;
+            }
+        }
+
+        async function prepararFactura(id_obra, precio, nombreObra, btn) {
+            const admin_id = prompt("Ingrese su ID de Administrador:");
+            if (!admin_id || admin_id.trim() === '') {
+                alert("Debe ingresar un ID de administrador");
+                return;
+            }
+
+            let comision = prompt("Ingrese % de comisión (5-10):", "10");
+            comision = parseFloat(comision);
+            if (isNaN(comision) || comision < 5 || comision > 10) {
+                alert("Error: El porcentaje debe estar entre 5 y 10");
+                return;
+            }
+
+            deshabilitarBoton(btn);
+
+            try {
+                const precioNum = parseFloat(precio) || 0;
+
+                const enviarFactura = async (datosExtra) => {
+                    const body = {
+                        id_obra,
+                        id_admin: parseInt(admin_id),
+                        precio_neto: precioNum,
+                        porcentaje_comision: comision,
+                        ...datosExtra
+                    };
+
+                    const response = await fetch('/generar-factura', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(errorText || `Error HTTP: ${response.status}`);
+                    }
+
+                    return await response.json();
+                };
+
+                let result = await enviarFactura({});
+
+                if (result.needsBuyerData) {
+                    datosFacturaPendiente = { btn, enviarFactura };
+                    abrirModalComprador();
+                    return;
+                }
+
+                if (result.success) {
+                    generarPDFFactura(result.datos);
+
+                    if (result.mostrarEnvio) {
+                        const registrarEnvio = confirm(
+                            `✅ Factura #${result.id_factura} generada con éxito.\n\n` +
+                            `¿Desea registrar el envío de esta obra ahora?`
+                        );
+
+                        if (registrarEnvio) {
+                            window.open(`/private/shipping-address.html?id_factura=${result.id_factura}`, '_blank');
+                        }
+                    } else {
+                        alert(`✅ Factura #${result.id_factura} generada con éxito`);
+                    }
+
+                    setTimeout(() => cargarReservadas(), 500);
+                } else {
+                    throw new Error(result.message || "Error al generar factura");
+                }
+
+            } catch (error) {
+                console.error('Error generando factura:', error);
+                alert("❌ Error al generar factura: " + error.message);
+            } finally {
+                setTimeout(() => { if (btn) btn.disabled = false; }, 2000);
+            }
+        }
+        // --- REPORTES ---
+        function renderizarReporte(tablaId, datos, columnas) {
+            const tbody = document.querySelector(`#${tablaId} tbody`);
+            if (!datos || datos.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${columnas}" style="text-align:center;padding:30px;color:#718096;">No hay datos en el período seleccionado</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = datos;
+        }
+
+        async function consultarObras() {
+            const inicio = document.getElementById('obras-inicio').value;
+            const fin = document.getElementById('obras-fin').value;
+            if (!inicio || !fin) {
+                alert("Seleccione ambas fechas");
+                return;
+            }
+            const tbody = document.querySelector('#tabla-obras-vendidas tbody');
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Consultando...</td></tr>';
+
+            try {
+                const res = await fetch(`/consultas/obras-vendidas?fecha_inicio=${inicio}&fecha_fin=${fin}`);
+                if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+                const data = await res.json();
+                renderizarReporte('tabla-obras-vendidas', data.map(d =>
+                    `<tr><td>${d.id_factura}</td><td>${d.Obra || ''}</td><td>$${(d.Total_Pagado || 0).toLocaleString()}</td><td>${d.Fecha || ''}</td></tr>`
+                ).join(''), 4);
+            } catch (error) {
+                console.error('Error consultando obras:', error);
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:30px;color:#c53030;">Error al consultar: ${error.message}</td></tr>`;
+            }
+        }
+
+        async function consultarFacturacion() {
+            const inicio = document.getElementById('fact-inicio').value;
+            const fin = document.getElementById('fact-fin').value;
+            if (!inicio || !fin) {
+                alert("Seleccione ambas fechas");
+                return;
+            }
+            const tbody = document.querySelector('#tabla-facturacion tbody');
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Consultando...</td></tr>';
+
+            try {
+                const res = await fetch(`/consultas/resumen-facturacion?fecha_inicio=${inicio}&fecha_fin=${fin}`);
+                if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+                const data = await res.json();
+                renderizarReporte('tabla-facturacion', data.map(d =>
+                    `<tr><td>${d.id_factura}</td><td>${d.Obra || ''}</td><td>$${(d.Precio_Obra || 0).toLocaleString()}</td><td>${d.Porcentaje_Museo || 0}%</td><td>$${(d.Ganancia_Museo || 0).toLocaleString()}</td><td>$${(d.Total_Recaudado || 0).toLocaleString()}</td><td>${d.Fecha || ''}</td></tr>`
+                ).join(''), 7);
+            } catch (error) {
+                console.error('Error consultando facturación:', error);
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:#c53030;">Error al consultar: ${error.message}</td></tr>`;
+            }
+        }
+
+        // --- REPORTE DE MEMBRESÍAS (CORREGIDO) ---
+        async function consultarMembresias() {
+            const inicio = document.getElementById('mem-inicio').value;
+            const fin = document.getElementById('mem-fin').value;
+
+            if (!inicio || !fin) {
+                alert("Seleccione ambas fechas");
+                return;
+            }
+
+            try {
+                console.log('Consultando membresías desde:', inicio, 'hasta:', fin);
+                const res = await fetch(`/consultas/resumen-membresias?fecha_inicio=${inicio}&fecha_fin=${fin}`);
+
+                if (!res.ok) {
+                    throw new Error(`Error HTTP: ${res.status}`);
+                }
+
+                const data = await res.json();
+                console.log('Datos de membresías recibidos:', data);
+
+                const tbody = document.querySelector('#tabla-membresias tbody');
+
+                if (data.length === 0) {
+                    tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" style="text-align:center; padding:30px;">
+                        No hay datos de membresías en el período seleccionado
+                    </td>
+                </tr>
+            `;
+                } else {
+                    tbody.innerHTML = data.map(d =>
+                        `<tr>
+                    <td>${d.idMembresia}</td>
+                    <td>${d.Email || 'N/A'}</td>
+                    <td>${d.FechaPago || 'N/A'}</td>
+                    <td>$${(d.MontoPagado || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                </tr>`
+                    ).join('');
+                }
+            } catch (error) {
+                console.error('Error consultando membresías:', error);
+                document.querySelector('#tabla-membresias tbody').innerHTML = `
+            <tr>
+                <td colspan="4" style="text-align:center; padding:30px; color: #e53e3e;">
+                    Error al consultar: ${error.message}
+                </td>
+            </tr>
+        `;
+            }
+        }
+
+        function generarPDF(tablaId, titulo) {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                doc.text(titulo, 14, 15);
+                doc.autoTable({ html: '#' + tablaId, startY: 20 });
+                doc.save(`${titulo}.pdf`);
+            } catch (error) {
+                console.error('Error generando PDF:', error);
+                alert('Error al generar PDF: ' + error.message);
+            }
+        }
+        // Función para mostrar notificaciones
+        function mostrarNotificacion(mensaje, tipo = 'info') {
+            // Crear o reutilizar elemento de notificación
+            let notificacion = document.getElementById('notificacion-toast');
+            if (!notificacion) {
+                notificacion = document.createElement('div');
+                notificacion.id = 'notificacion-toast';
+                notificacion.style.position = 'fixed';
+                notificacion.style.top = '20px';
+                notificacion.style.right = '20px';
+                notificacion.style.padding = '12px 24px';
+                notificacion.style.borderRadius = '8px';
+                notificacion.style.color = 'white';
+                notificacion.style.fontWeight = 'bold';
+                notificacion.style.zIndex = '9999';
+                notificacion.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                notificacion.style.transition = 'all 0.3s ease';
+                document.body.appendChild(notificacion);
+            }
+
+            // Configurar color según tipo
+            const colores = {
+                success: '#00ff00',
+                error: '#e53e3e',
+                warning: '#ecc94b',
+                info: '#00ff00'
+            };
+
+            notificacion.style.backgroundColor = colores[tipo] || colores.info;
+            notificacion.innerHTML = mensaje;
+            notificacion.style.opacity = '1';
+            notificacion.style.transform = 'translateX(0)';
+
+            // Ocultar después de 3 segundos
+            setTimeout(() => {
+                notificacion.style.opacity = '0';
+                notificacion.style.transform = 'translateX(50px)';
+            }, 3000);
+        }
+
+        // --- CRUD GÉNEROS (MongoDB) ---
+        async function cargarGeneros() {
+            try {
+                const res = await fetch('/api/generos');
+                const generos = await res.json();
+                const tbody = document.getElementById('body-generos');
+                if (generos.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:30px;">No hay géneros registrados</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = generos.map(g => `
+                    <tr id="genero-fila-${g.id}">
+                        <td>${g.id}</td>
+                        <td>${g.nombre}</td>
+                        <td>${g.atributos && g.atributos.length
+                            ? g.atributos.map(a => `<span style="display:inline-block;background:#222;color:#ccc;padding:2px 8px;border-radius:10px;margin:2px;font-size:0.8rem;">${a.nombre} (${a.tipo}${a.requerido ? ', req' : ''})</span>`).join(' ')
+                            : '<span style="color:#a0aec0;">—</span>'}
+                        </td>
+                        <td>
+                            <button class="btn btn-red" onclick="eliminarGenero(${g.id}, this)">🗑️ Eliminar</button>
+                        </td>
+                    </tr>
+                `).join('');
+                // Reset atributos form for new genre
+                document.getElementById('body-atributos').innerHTML = '';
+            } catch (error) {
+                console.error('Error cargando géneros:', error);
+            }
+        }
+
+        async function agregarGenero() {
+            const nombre = document.getElementById('input-genero-nombre').value.trim();
+            if (!nombre) { alert('Por favor ingrese un nombre para el género'); return; }
+
+            const filas = document.querySelectorAll('#body-atributos tr');
+            const atributos = [];
+            filas.forEach(fila => {
+                const input = fila.querySelector('input[id^="attr-nombre-"]');
+                const select = fila.querySelector('select[id^="attr-tipo-"]');
+                const checkbox = fila.querySelector('input[id^="attr-req-"]');
+                if (input && select) {
+                    const val = input.value.trim();
+                    if (val) atributos.push({ nombre: val, tipo: select.value, requerido: checkbox ? checkbox.checked : false });
+                }
+            });
+
+            try {
+                const res = await fetch('/api/generos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, atributos: atributos.length ? atributos : undefined })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    document.getElementById('input-genero-nombre').value = '';
+                    document.getElementById('body-atributos').innerHTML = '';
+                    await cargarGeneros();
+                } else {
+                    alert('❌ ' + (result.message || 'Error al agregar género'));
+                }
+            } catch (error) {
+                console.error('Error agregando género:', error);
+                alert('❌ Error al agregar género');
+            }
+        }
+
+        async function eliminarGenero(id, btn) {
+            if (!confirm('¿Eliminar este género?')) return;
+            btn.disabled = true;
+            try {
+                const res = await fetch(`/api/generos/${id}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (result.success) {
+                    const fila = document.getElementById(`genero-fila-${id}`);
+                    if (fila) {
+                        fila.style.transition = 'all 0.4s ease';
+                        fila.style.opacity = '0';
+                        fila.style.transform = 'translateX(-20px)';
+                        setTimeout(() => fila.remove(), 400);
+                    }
+                } else {
+                    alert('❌ ' + (result.message || 'Error al eliminar'));
+                }
+            } catch (error) {
+                console.error('Error eliminando género:', error);
+                alert('❌ Error al eliminar género');
+            } finally { btn.disabled = false; }
+        }
+
+        // --- CRUD AUTORES (MongoDB) ---
+        let todosLosAutores = [];
+
+        async function cargarAutores() {
+            try {
+                const res = await fetch('/api/autores-admin');
+                const data = await res.json();
+                todosLosAutores = data;
+                const tbody = document.getElementById('body-autores');
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;">No hay autores registrados</td></tr>';
+                    document.getElementById('autores-count').textContent = '';
+                    return;
+                }
+                renderizarAutores(data);
+            } catch (error) {
+                console.error('Error cargando autores:', error);
+            }
+        }
+
+        function renderizarAutores(lista) {
+            const tbody = document.getElementById('body-autores');
+            tbody.innerHTML = lista.map(a => `
+                <tr>
+                    <td>${a.id}</td>
+                    <td>${a.fotografia ? `<img src="${a.fotografia}" alt="Foto" style="width:50px;height:50px;object-fit:cover;border-radius:4px;">` : '—'}</td>
+                    <td>${a.nombre}</td>
+                    <td>${a.apellido}</td>
+                    <td>${a.nacionalidad || '—'}</td>
+                    <td>${a.biografia || '—'}</td>
+                    <td>
+                        <button class="btn btn-red" onclick="eliminarAutor(${a.id}, this)">🗑️ Eliminar</button>
+                    </td>
+                </tr>
+            `).join('');
+            document.getElementById('autores-count').textContent = `${lista.length} de ${todosLosAutores.length} autor(es)`;
+        }
+
+        function filtrarAutores() {
+            const q = document.getElementById('buscador-autores').value.toLowerCase();
+            if (!q) return renderizarAutores(todosLosAutores);
+            const filtrados = todosLosAutores.filter(a =>
+                (a.nombre + ' ' + a.apellido).toLowerCase().includes(q) ||
+                (a.nacionalidad || '').toLowerCase().includes(q)
+            );
+            renderizarAutores(filtrados);
+        }
+
+        function limpiarFormAutor() {
+            document.getElementById('input-autor-nombre').value = '';
+            document.getElementById('input-autor-apellido').value = '';
+            document.getElementById('input-autor-nacionalidad').value = '';
+            document.getElementById('input-autor-biografia').value = '';
+            const fi = document.getElementById('input-autor-foto');
+            if (fi) fi.value = '';
+        }
+
+        async function agregarAutor() {
+            const nombre = document.getElementById('input-autor-nombre').value.trim();
+            const apellido = document.getElementById('input-autor-apellido').value.trim();
+            const nacionalidad = document.getElementById('input-autor-nacionalidad').value.trim();
+            const biografia = document.getElementById('input-autor-biografia').value.trim();
+            const fotoInput = document.getElementById('input-autor-foto');
+
+            if (!nombre || !apellido) {
+                alert('Por favor ingrese nombre y apellido del autor');
+                return;
+            }
+
+            const body = { nombre, apellido, nacionalidad, biografia };
+
+            if (fotoInput.files && fotoInput.files[0]) {
+                const file = fotoInput.files[0];
+                const reader = new FileReader();
+                reader.onload = async function (e) {
+                    body.fotografia_base64 = e.target.result;
+                    body.fotografia_nombre = file.name;
+                    await enviarAutor(body);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                await enviarAutor(body);
+            }
+        }
+
+        async function enviarAutor(body) {
+            try {
+                const res = await fetch('/api/autores-admin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('✅ Autor agregado correctamente');
+                    document.getElementById('input-autor-nombre').value = '';
+                    document.getElementById('input-autor-apellido').value = '';
+                    document.getElementById('input-autor-nacionalidad').value = '';
+                    document.getElementById('input-autor-biografia').value = '';
+                    document.getElementById('input-autor-foto').value = '';
+                    cargarAutores();
+                } else {
+                    alert('❌ ' + (result.message || 'Error al agregar autor'));
+                }
+            } catch (error) {
+                console.error('Error agregando autor:', error);
+                alert('❌ Error al agregar autor');
+            }
+        }
+
+        async function eliminarAutor(id, btn) {
+            if (!confirm('¿Eliminar este autor? Las obras vinculadas podrían verse afectadas.')) return;
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`/api/autores-admin/${id}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (result.success) {
+                    const fila = document.getElementById(`autor-fila-${id}`);
+                    if (fila) {
+                        fila.style.transition = 'all 0.4s ease';
+                        fila.style.opacity = '0';
+                        fila.style.transform = 'translateX(-20px)';
+                        setTimeout(() => fila.remove(), 400);
+                    }
+                } else {
+                    alert('❌ ' + (result.message || 'Error al eliminar'));
+                }
+            } catch (error) {
+                console.error('Error eliminando autor:', error);
+                alert('❌ Error al eliminar autor');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // --- CARGAR NACIONALIDADES (MySQL) ---
+        async function cargarNacionalidades() {
+            try {
+                const res = await fetch('/api/nacionalidades');
+                const data = await res.json();
+                const sel = document.getElementById('input-autor-nacionalidad');
+                sel.innerHTML = '<option value="">— Seleccione —</option>' +
+                    data.map(n => `<option value="${n.descripcion}">${n.descripcion}</option>`).join('');
+            } catch (error) {
+                console.error('Error cargando nacionalidades:', error);
+            }
+        }
+
+        // --- CARGAR SELECTS PARA OBRAS ---
+        async function cargarGenerosSelect() {
+            try {
+                const res = await fetch('/api/generos');
+                const data = await res.json();
+                const sel = document.getElementById('input-obra-genero');
+                sel.innerHTML = '<option value="">— Seleccione —</option>' +
+                    data.map(g => `<option value="${g.nombre}">${g.nombre}</option>`).join('');
+            } catch (error) {
+                console.error('Error cargando géneros:', error);
+            }
+        }
+
+        let autoresDropdownData = [];
+        let autoresSeleccionados = [];
+
+        async function cargarAutoresSelect() {
+            try {
+                const res = await fetch('/api/autores-admin');
+                const data = await res.json();
+                autoresDropdownData = data;
+            } catch (error) {
+                console.error('Error cargando autores:', error);
+            }
+        }
+
+        function abrirDropdownAutores() {
+            const dd = document.getElementById('autor-dropdown');
+            if (autoresDropdownData.length === 0) return;
+            filtrarDropdownAutores();
+            dd.style.display = 'block';
+        }
+
+        function cerrarDropdownAutores() {
+            document.getElementById('autor-dropdown').style.display = 'none';
+        }
+
+        function filtrarDropdownAutores() {
+            const q = document.getElementById('input-buscar-autor').value.toLowerCase();
+            const dd = document.getElementById('autor-dropdown');
+            const idsSel = new Set(autoresSeleccionados.map(a => a.id));
+            const filtrados = autoresDropdownData.filter(a =>
+                !idsSel.has(a.id) &&
+                (!q || (a.nombre + ' ' + a.apellido).toLowerCase().includes(q))
+            );
+            if (filtrados.length === 0) {
+                dd.innerHTML = '<div style="padding:10px;color:#718096;">Sin resultados</div>';
+            } else {
+                dd.innerHTML = filtrados.map(a =>
+                    `<div onclick="seleccionarAutor(${a.id},'${a.nombre.replace(/'/g,"\\'")}','${a.apellido.replace(/'/g,"\\'")}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid #2d3748;transition:background 0.15s;" onmouseover="this.style.background='#1f2937'" onmouseout="this.style.background='transparent'">${a.nombre} ${a.apellido}</div>`
+                ).join('');
+            }
+            dd.style.display = 'block';
+        }
+
+        function seleccionarAutor(id, nombre, apellido) {
+            const a = autoresDropdownData.find(x => x.id === id);
+            if (!a) return;
+            if (autoresSeleccionados.some(x => x.id === id)) return;
+            autoresSeleccionados.push(a);
+            document.getElementById('input-buscar-autor').value = '';
+            renderizarTagsAutores();
+            cerrarDropdownAutores();
+            document.getElementById('input-buscar-autor').focus();
+        }
+
+        function removerAutorSeleccionado(id) {
+            autoresSeleccionados = autoresSeleccionados.filter(a => a.id !== id);
+            renderizarTagsAutores();
+        }
+
+        function renderizarTagsAutores() {
+            const container = document.getElementById('autores-seleccionados');
+            container.innerHTML = autoresSeleccionados.map(a =>
+                `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#1f2937;border:1px solid #374151;border-radius:20px;font-size:0.85rem;color:#e2e8f0;">${a.nombre} ${a.apellido} <span onclick="removerAutorSeleccionado(${a.id})" style="cursor:pointer;color:#ef4444;font-weight:bold;margin-left:2px;">&times;</span></span>`
+            ).join('');
+        }
+
+        function obtenerIdsAutoresSeleccionados() {
+            return autoresSeleccionados.map(a => a.id);
+        }
+
+        // --- CRUD OBRAS (MongoDB) ---
+        let todasLasObras = [];
+
+        async function cargarObrasAdmin() {
+            try {
+                const res = await fetch('/api/obras-admin');
+                const data = await res.json();
+                todasLasObras = data;
+                const tbody = document.getElementById('body-obras');
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;">No hay obras registradas</td></tr>';
+                    document.getElementById('obras-count').textContent = '';
+                    return;
+                }
+                renderizarObras(data);
+            } catch (error) {
+                console.error('Error cargando obras:', error);
+            }
+        }
+
+        function renderizarObras(lista) {
+            const tbody = document.getElementById('body-obras');
+            tbody.innerHTML = lista.map(o => `
+                <tr>
+                    <td>${o.id}</td>
+                    <td>${o.nombre}</td>
+                    <td>$${o.precio?.toLocaleString() || '0'}</td>
+                    <td>${o.estado_obra}</td>
+                    <td>${o.genero_nombre || '—'}</td>
+                    <td>
+                        <button class="btn btn-red" onclick="eliminarObra(${o.id}, this)">🗑️ Eliminar</button>
+                    </td>
+                </tr>
+            `).join('');
+            document.getElementById('obras-count').textContent = `${lista.length} de ${todasLasObras.length} obra(s)`;
+        }
+
+        function filtrarObras() {
+            const q = document.getElementById('buscador-obras').value.toLowerCase();
+            if (!q) return renderizarObras(todasLasObras);
+            const filtrados = todasLasObras.filter(o =>
+                o.nombre.toLowerCase().includes(q) ||
+                (o.genero_nombre || '').toLowerCase().includes(q) ||
+                (o.estado_obra || '').toLowerCase().includes(q)
+            );
+            renderizarObras(filtrados);
+        }
+
+        function limpiarFormObra() {
+            document.getElementById('input-obra-nombre').value = '';
+            document.getElementById('input-obra-fecha').value = '';
+            document.getElementById('input-obra-precio').value = '';
+            document.getElementById('input-obra-estado').value = 'Disponible';
+            document.getElementById('input-obra-genero').value = '';
+            document.getElementById('input-buscar-autor').value = '';
+            autoresSeleccionados = [];
+            renderizarTagsAutores();
+            const fi = document.getElementById('input-obra-foto');
+            if (fi) fi.value = '';
+        }
+
+        async function agregarObra() {
+            const nombre = document.getElementById('input-obra-nombre').value.trim();
+            const fecha_creacion = document.getElementById('input-obra-fecha').value;
+            const precio = document.getElementById('input-obra-precio').value;
+            const estado_obra = document.getElementById('input-obra-estado').value;
+            const genero_nombre = document.getElementById('input-obra-genero').value;
+            const fotoInput = document.getElementById('input-obra-foto');
+            const autores_ids = obtenerIdsAutoresSeleccionados();
+
+            if (!nombre) {
+                alert('Por favor ingrese el nombre de la obra');
+                return;
+            }
+            if (!precio || isNaN(precio)) {
+                alert('Por favor ingrese un precio válido');
+                return;
+            }
+
+            const body = { nombre, fecha_creacion, precio, estado_obra, genero_nombre, autores_ids };
+
+            if (fotoInput.files && fotoInput.files[0]) {
+                const file = fotoInput.files[0];
+                const reader = new FileReader();
+                reader.onload = async function (e) {
+                    body.fotografia_base64 = e.target.result;
+                    body.fotografia_nombre = file.name;
+                    await enviarObra(body);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                await enviarObra(body);
+            }
+        }
+
+        async function enviarObra(body) {
+            try {
+                const res = await fetch('/api/obras-admin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('✅ Obra agregada correctamente');
+                    document.getElementById('input-obra-nombre').value = '';
+                    document.getElementById('input-obra-fecha').value = '';
+                    document.getElementById('input-obra-precio').value = '';
+                    document.getElementById('input-obra-foto').value = '';
+                    document.getElementById('input-obra-estado').value = 'Disponible';
+                    document.getElementById('input-obra-genero').value = '';
+                    Array.from(document.getElementById('input-obra-autores').options).forEach(o => o.selected = false);
+                    cargarObrasAdmin();
+                } else {
+                    alert('❌ ' + (result.message || 'Error al agregar obra'));
+                }
+            } catch (error) {
+                console.error('Error agregando obra:', error);
+                alert('❌ Error al agregar obra');
+            }
+        }
+
+        async function eliminarObra(id, btn) {
+            if (!confirm('¿Eliminar esta obra?')) return;
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`/api/obras-admin/${id}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (result.success) {
+                    const fila = document.getElementById(`obra-fila-${id}`);
+                    if (fila) {
+                        fila.style.transition = 'all 0.4s ease';
+                        fila.style.opacity = '0';
+                        fila.style.transform = 'translateX(-20px)';
+                        setTimeout(() => fila.remove(), 400);
+                    }
+                } else {
+                    alert('❌ ' + (result.message || 'Error al eliminar'));
+                }
+            } catch (error) {
+                console.error('Error eliminando obra:', error);
+                alert('❌ Error al eliminar obra');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // --- CRUD ESPECIALIZACIONES (MongoDB) ---
+        let contadorAtributos = 0;
+
+        const PRECARGAS_ATRIBUTOS = {
+            'Pintura': [
+                { nombre: 'tecnica_principal', tipo: 'string', requerido: true },
+                { nombre: 'soporte_base', tipo: 'string', requerido: true },
+                { nombre: 'requiere_enmarcado', tipo: 'boolean', requerido: false }
+            ],
+            'Escultura': [
+                { nombre: 'material_predominante', tipo: 'string', requerido: true },
+                { nombre: 'requiere_pedestal', tipo: 'boolean', requerido: false },
+                { nombre: 'clasificacion_espacio', tipo: 'string', requerido: false }
+            ],
+            'Fotografía': [
+                { nombre: 'formato_origen', tipo: 'string', requerido: true },
+                { nombre: 'tipo_impresion_estandar', tipo: 'string', requerido: false },
+                { nombre: 'requiere_revelado_quimico', tipo: 'boolean', requerido: false }
+            ],
+            'Orfebreria': [
+                { nombre: 'metal_base_dominante', tipo: 'string', requerido: true },
+                { nombre: 'kilataje_estandar', tipo: 'string', requerido: false },
+                { nombre: 'requiere_certificado_autenticidad', tipo: 'boolean', requerido: false }
+            ],
+            'Ceramica': [
+                { nombre: 'tecnica_acabado', tipo: 'string', requerido: false },
+                { nombre: 'tipo_arcilla_base', tipo: 'string', requerido: true },
+                { nombre: 'temperatura_coccion_promedio_celsius', tipo: 'number', requerido: false }
+            ]
+        };
+
+        function agregarFilaAtributo(nombre, tipo, requerido) {
+            contadorAtributos++;
+            const idx = contadorAtributos;
+            const tbody = document.getElementById('body-atributos');
+            const tr = document.createElement('tr');
+            tr.id = `fila-atributo-${idx}`;
+            tr.innerHTML = `
+                <td><input type="text" id="attr-nombre-${idx}" class="edit-input" value="${nombre || ''}" placeholder="Ej: material_predominante" style="width:90%;"></td>
+                <td>
+                    <select id="attr-tipo-${idx}" class="edit-input" style="width:90%;">
+                        <option value="string" ${tipo === 'string' ? 'selected' : ''}>Texto (string)</option>
+                        <option value="number" ${tipo === 'number' ? 'selected' : ''}>Número (number)</option>
+                        <option value="boolean" ${tipo === 'boolean' ? 'selected' : ''}>Sí/No (boolean)</option>
+                    </select>
+                </td>
+                <td style="text-align:center;">
+                    <input type="checkbox" id="attr-req-${idx}" ${requerido ? 'checked' : ''} style="width:20px;height:20px;">
+                </td>
+                <td><button class="btn btn-red" onclick="eliminarFilaAtributo(${idx})" style="padding:4px 10px;">❌</button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        function eliminarFilaAtributo(idx) {
+            const fila = document.getElementById(`fila-atributo-${idx}`);
+            if (fila) fila.remove();
+        }
+
+        function marcarCampoCompleto(el) {
+            const val = el.type === 'checkbox' ? el.checked : el.value;
+            if (val !== '' && val !== undefined && val !== null) {
+                el.style.border = '';
+                el.style.background = '';
+            }
+        }
+
+        function escHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function cargarObrasConHistorial() {
+            const sel = document.getElementById('he-obra-select');
+            sel.innerHTML = '<option value="">Cargando...</option>';
+            fetch('/cassandra/obras-con-historial')
+                .then(r => r.json())
+                .then(res => {
+                    sel.innerHTML = '<option value="">-- Seleccione una obra --</option>';
+                    if (res.success && res.data.length > 0) {
+                        res.data.forEach(o => {
+                            const st = (o.estado_actual || '').toLowerCase();
+                            sel.innerHTML += `<option value="${o.id_obra}">#${o.id_obra} - ${o.nombre_obra} (${o.estado_actual})</option>`;
+                        });
+                    } else {
+                        sel.innerHTML += '<option value="">(sin registros en Cassandra)</option>';
+                    }
+                })
+                .catch(() => {
+                    sel.innerHTML = '<option value="">Error al cargar</option>';
+                });
+        }
+
+        function cargarHistorialEstatus() {
+            const idObra = document.getElementById('he-obra-select').value;
+            if (!idObra) { alert('Seleccione una obra'); return; }
+            const tbody = document.querySelector('#tabla-historial-estatus tbody');
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Cargando...</td></tr>';
+            fetch(`/cassandra/historial-estatus-obra?id_obra=${idObra}`)
+                .then(r => r.json())
+                .then(res => {
+                    if (!res.success || !res.data || res.data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#718096;">Sin registros de cambios de estatus</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = '';
+                    res.data
+                        .sort((a, b) => new Date(b.fecha_cambio) - new Date(a.fecha_cambio))
+                        .forEach(row => {
+                            const f = new Date(row.fecha_cambio);
+                            const fechaStr = f.toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }) + ' ' +
+                                f.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                            const antCls = 'status-' + (row.estatus_anterior || '').toLowerCase();
+                            const nueCls = 'status-' + (row.estatus_nuevo || '').toLowerCase();
+                            tbody.innerHTML += `<tr>
+                                <td>${row.id_obra}</td>
+                                <td>${row.nombre_obra || 'Obra #' + row.id_obra}</td>
+                                <td>${fechaStr}</td>
+                                <td class="${antCls}">${row.estatus_anterior}</td>
+                                <td class="${nueCls}">${row.estatus_nuevo}</td>
+                                <td>${row.modificado_por || '-'}</td>
+                                <td>${row.motivo || '-'}</td>
+                            </tr>`;
+                        });
+                })
+                .catch(err => {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#c53030;">Error al consultar historial</td></tr>';
+                });
+        }
+
+        function cerrarSesion() {
+            if (confirm("¿Cerrar sesión?")) {
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.href = '/logout';
+            }
+        }
+
+        function cargarLogsSeguridad() {
+            const tbody = document.getElementById('tabla-logs-seguridad');
+            const filtro = document.getElementById('log-filtro-tipo').value;
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Cargando registros...</td></tr>';
+
+            fetch('/api/logs-seguridad')
+                .then(r => r.json())
+                .then(res => {
+                    if (!res.success || !res.data || res.data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#718096;">No hay registros de seguridad en Cassandra</td></tr>';
+                        return;
+                    }
+
+                    let logs = res.data;
+                    if (filtro) logs = logs.filter(l => l.tipo_evento === filtro);
+
+                    tbody.innerHTML = '';
+                    if (logs.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#718096;">Sin resultados para el filtro seleccionado</td></tr>';
+                        return;
+                    }
+
+                    logs.forEach(l => {
+                        const f = new Date(l.fecha_evento);
+                        const fechaStr = f.toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }) + ' ' +
+                            f.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+                        let tipoClase = '';
+                        if (l.tipo_evento === 'INICIO_SESION' || l.tipo_evento === 'APROBACION_USUARIO' || l.tipo_evento === 'APROBACION_PAGO') tipoClase = 'color: #00ff00;';
+                        else if (l.tipo_evento === 'CIERRE_SESION' || l.tipo_evento === 'CAMBIO_CONTRASENA') tipoClase = 'color: #e53e3e;';
+
+                        tbody.innerHTML += `<tr>
+                            <td style="white-space:nowrap;">${fechaStr}</td>
+                            <td><strong>${l.nombre_usuario}</strong></td>
+                            <td style="${tipoClase} font-weight:600;">${l.tipo_evento}</td>
+                            <td>${l.descripcion || '-'}</td>
+                            <td style="font-family:monospace; font-size:0.85rem;">${l.ip_origen || '-'}</td>
+                            <td style="font-size:0.8rem; color:#718096; max-width:200px; overflow:hidden; text-overflow:ellipsis;">${l.dispositivo || '-'}</td>
+                        </tr>`;
+                    });
+                })
+                .catch(err => {
+                    console.error('Error cargando logs:', err);
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#c53030;">Error al cargar registros de seguridad</td></tr>';
+                });
+        }
+
+        window.onload = () => {
+            console.log('Panel administrativo cargado');
+            mostrarTab('gestion');
+        };
+        async function cargarTendencias() {
+            try {
+                // Artistas populares
+                const resArtistas = await fetch('/api/recomendaciones/artistas-populares');
+                if (resArtistas.ok) {
+                    const artistas = await resArtistas.json();
+                    const container = document.getElementById('pop-artistas');
+                    if (artistas.length === 0) {
+                        container.innerHTML = '<p style="color:#a0aec0;">Sin datos aún</p>';
+                    } else {
+                        container.innerHTML = artistas.slice(0, 5).map(a =>
+                            `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #222;">
+                        <span>${a.Artista}</span>
+                        <span style="color:#00ff00;font-weight:bold;">${a.ObrasVendidas} ventas</span>
+                    </div>`
+                        ).join('');
+                    }
+                }
+
+                // Géneros populares
+                const resGeneros = await fetch('/api/recomendaciones/generos-populares');
+                if (resGeneros.ok) {
+                    const generos = await resGeneros.json();
+                    const container = document.getElementById('pop-generos');
+                    if (generos.length === 0) {
+                        container.innerHTML = '<p style="color:#a0aec0;">Sin datos aún</p>';
+                    } else {
+                        container.innerHTML = generos.slice(0, 5).map(g =>
+                            `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #222;">
+                        <span>${g.Genero}</span>
+                        <span style="color:#00ff00;font-weight:bold;">${g.ObrasVendidas} vendidas</span>
+                    </div>`
+                        ).join('');
+                    }
+                }
+
+                // Estadísticas del grafo
+                const resStats = await fetch('/api/grafo/estadisticas');
+                if (resStats.ok) {
+                    const stats = await resStats.json();
+                    const container = document.getElementById('grafo-stats');
+                    let html = '';
+                    if (stats.nodos) {
+                        stats.nodos.forEach(n => {
+                            html += `<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:0.85rem;">
+                        <span>${n.tipo}</span>
+                        <span style="color:#00ff00;">${n.cantidad}</span>
+                    </div>`;
+                        });
+                    }
+                    if (stats.relaciones) {
+                        stats.relaciones.forEach(r => {
+                            html += `<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:0.85rem;">
+                        <span>${r.tipo}</span>
+                        <span style="color:#718096;">${r.cantidad}</span>
+                    </div>`;
+                        });
+                    }
+                    container.innerHTML = html || '<p style="color:#a0aec0;">Grafo vacío</p>';
+                }
+            } catch (e) {
+                console.error('Error cargando tendencias:', e);
+            }
+        }
+    </script>
+
+    <!-- Modal para datos del comprador (facturación manual) -->
+    <div id="modal-comprador" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">Datos del Comprador</h3>
+            <p class="modal-description">Ingrese el email o cédula para buscar al usuario, o complete los datos manualmente.</p>
+            <div class="modal-search-row">
+                <input type="text" id="modal-buscar-input" placeholder="Email o cédula..." class="modal-search-input">
+                <button onclick="buscarCompradorModal()" class="btn btn-blue text-nowrap">🔍 Buscar</button>
+            </div>
+            <div id="modal-buscar-resultado" class="modal-search-result"></div>
+            <div class="modal-grid-2col">
+                <div>
+                    <label class="modal-form-label">Nombre</label>
+                    <input type="text" id="modal-nombre" placeholder="Nombre" class="modal-input">
+                </div>
+                <div>
+                    <label class="modal-form-label">Apellido</label>
+                    <input type="text" id="modal-apellido" placeholder="Apellido" class="modal-input">
+                </div>
+                <div>
+                    <label class="modal-form-label">Email</label>
+                    <input type="email" id="modal-email" placeholder="Email" class="modal-input">
+                </div>
+                <div>
+                    <label class="modal-form-label">Cédula</label>
+                    <input type="text" id="modal-cedula" placeholder="Cédula" class="modal-input">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button onclick="cerrarModalComprador()" class="btn btn-cancel">Cancelar</button>
+                <button onclick="confirmarCompradorModal()" class="btn btn-green" id="btn-confirmar-comprador">✅ Facturar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let datosFacturaPendiente = null;
+
+        function abrirModalComprador() {
+            document.getElementById('modal-comprador').style.display = 'flex';
+            document.getElementById('modal-buscar-input').value = '';
+            document.getElementById('modal-nombre').value = '';
+            document.getElementById('modal-apellido').value = '';
+            document.getElementById('modal-email').value = '';
+            document.getElementById('modal-cedula').value = '';
+            document.getElementById('modal-buscar-resultado').innerHTML = '';
+            document.getElementById('modal-buscar-input').focus();
+        }
+
+        function cerrarModalComprador() {
+            document.getElementById('modal-comprador').style.display = 'none';
+            if (datosFacturaPendiente && datosFacturaPendiente.btn) {
+                datosFacturaPendiente.btn.disabled = false;
+            }
+            datosFacturaPendiente = null;
+        }
+
+        async function buscarCompradorModal() {
+            const q = document.getElementById('modal-buscar-input').value.trim();
+            const resultadoDiv = document.getElementById('modal-buscar-resultado');
+            if (!q) { resultadoDiv.innerHTML = '<span style="color:#e53e3e;">Ingrese un email o cédula</span>'; return; }
+
+            resultadoDiv.innerHTML = '<span style="color:#a0aec0;">Buscando...</span>';
+
+            const isEmail = q.includes('@');
+            const body = isEmail ? { email: q } : { cedula: q };
+
+            try {
+                const res = await fetch('/api/buscar-comprador', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                if (data.success && data.found) {
+                    const u = data.usuario;
+                    document.getElementById('modal-nombre').value = u.Nombre || '';
+                    document.getElementById('modal-apellido').value = u.Apellido || '';
+                    document.getElementById('modal-email').value = u.Email || '';
+                    document.getElementById('modal-cedula').value = u.Cedula || '';
+                    resultadoDiv.innerHTML = `<span style="color:#00ff00;">✅ Usuario encontrado: ${u.Nombre || ''} ${u.Apellido || ''} (${u.Email})</span>`;
+                } else {
+                    resultadoDiv.innerHTML = '<span style="color:#e53e3e;">❌ Usuario no registrado. Complete los datos manualmente o verifique.</span>';
+                }
+            } catch (err) {
+                resultadoDiv.innerHTML = `<span style="color:#e53e3e;">Error al buscar: ${err.message}</span>`;
+            }
+        }
+
+        async function confirmarCompradorModal() {
+            const nombre = document.getElementById('modal-nombre').value.trim();
+            const apellido = document.getElementById('modal-apellido').value.trim();
+            const email = document.getElementById('modal-email').value.trim();
+            const cedula = document.getElementById('modal-cedula').value.trim();
+
+            if (!nombre || !apellido) {
+                alert("Nombre y Apellido son obligatorios");
+                return;
+            }
+
+            if (!datosFacturaPendiente) return;
+            const btn = datosFacturaPendiente.btn;
+            const enviarFactura = datosFacturaPendiente.enviarFactura;
+
+            try {
+                document.getElementById('btn-confirmar-comprador').disabled = true;
+                document.getElementById('btn-confirmar-comprador').innerHTML = '⏳ Facturando...';
+
+                const result = await enviarFactura({
+                    buyer_nombre: nombre,
+                    buyer_apellido: apellido,
+                    buyer_email: email,
+                    buyer_cedula: cedula || null
+                });
+
+                cerrarModalComprador();
+
+                if (result.success) {
+                    generarPDFFactura(result.datos);
+                    if (result.mostrarEnvio) {
+                        if (confirm(`✅ Factura #${result.id_factura} generada con éxito.\n\n¿Desea registrar el envío de esta obra ahora?`)) {
+                            window.open(`/private/shipping-address.html?id_factura=${result.id_factura}`, '_blank');
+                        }
+                    } else {
+                        alert(`✅ Factura #${result.id_factura} generada con éxito`);
+                    }
+                    setTimeout(() => cargarReservadas(), 500);
+                } else {
+                    throw new Error(result.message || "Error al generar factura");
+                }
+            } catch (error) {
+                console.error('Error generando factura:', error);
+                alert("❌ Error al generar factura: " + error.message);
+            } finally {
+                document.getElementById('btn-confirmar-comprador').disabled = false;
+                document.getElementById('btn-confirmar-comprador').innerHTML = '✅ Facturar';
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            const c = document.getElementById('autor-selector-container');
+            if (c && !c.contains(e.target)) cerrarDropdownAutores();
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Museo Virtual</title>
+    <link rel="stylesheet" href="/styles/register-style.css">
+    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+</head>
+<body>
+    <div class="login-container register-container">
+        <!-- FORM VIEW -->
+        <div id="formView" class="form-view">
+            <form class="login-form" action="/registrar" method="POST">
+                <h2>Crear Cuenta</h2>
+                
+                <div class="input-row">
+                    <div class="input-group">
+                        <input type="text" name="nombre" maxlength="16" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñüÜ ]+" required placeholder=" "> 
+                        <label>Nombre</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" name="apellido" maxlength="16" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñüÜ ]+" required placeholder=" "> 
+                        <label>Apellido</label>
+                    </div>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group col-75">
+                        <select name="tipo_cedula" id="tipo-cedula" required>
+                            <option value="V" selected>V</option>
+                            <option value="E">E</option>
+                        </select>
+                        <label for="tipo-cedula">Tipo</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" name="cedula" id="cedula" maxlength="10" required placeholder=" ">
+                        <label for="cedula">Cédula</label>
+                    </div>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group col-100">
+                        <select name="prefijo_telefono" id="prefijo-telefono" required>
+                            <option value="0412">0412</option>
+                            <option value="0414">0414</option>
+                            <option value="0416">0416</option>
+                            <option value="0424">0424</option>
+                            <option value="0426">0426</option>
+                            <option value="0286">0286</option>
+                        </select>
+                        <label for="prefijo-telefono">Prefijo</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" name="telefono" id="telefono" maxlength="8" required placeholder=" ">
+                        <label for="telefono">Teléfono</label>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <input type="email" name="correo" required placeholder=" "> 
+                    <label>Correo Electrónico</label>
+                </div>
+
+                <div class="input-group">
+                    <input type="password" name="password" minlength="6" required placeholder=" "> 
+                    <label>Contraseña</label>
+                </div>
+
+                <div class="input-group">
+                    <select name="estado" id="select-estado" required>
+                        <option value="" disabled selected>Seleccione el Estado</option>
+                    </select>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group">
+                        <select name="municipio" id="select-municipio" required disabled>
+                            <option value="" disabled selected>Municipio</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <select name="parroquia" id="select-parroquia" required disabled>
+                            <option value="" disabled selected>Parroquia</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <input type="text" name="calle" required placeholder=" "> 
+                    <label>Calle / Avenida / Referencia</label>
+                </div>
+
+                <div class="payment-section">
+                    <h3 class="electric-title">Información de Pago</h3>
+                    <br>
+                    <div class="order-summary">
+                        <div class="order-info">
+                            <span>Total a pagar</span>
+                            <strong>Suscripción Digital</strong>
+                        </div>
+                        <div class="price-tag">$10.00</div>
+                        <input type="hidden" name="monto" value="10.00">
+                    </div>
+
+                    <div class="input-group">
+                        <input type="text" name="tarjeta" id="card-number" maxlength="19" required placeholder=" ">
+                        <label>Número de Tarjeta</label>
+                    </div>
+
+                    <div class="input-row no-stack">
+                        <div class="input-group small col-110">
+                            <select name="exp_mes" id="exp-mes" required>
+                                <option value="" disabled selected>Mes</option>
+                                <option value="01">01 - Enero</option>
+                                <option value="02">02 - Febrero</option>
+                                <option value="03">03 - Marzo</option>
+                                <option value="04">04 - Abril</option>
+                                <option value="05">05 - Mayo</option>
+                                <option value="06">06 - Junio</option>
+                                <option value="07">07 - Julio</option>
+                                <option value="08">08 - Agosto</option>
+                                <option value="09">09 - Septiembre</option>
+                                <option value="10">10 - Octubre</option>
+                                <option value="11">11 - Noviembre</option>
+                                <option value="12">12 - Diciembre</option>
+                            </select>
+                            <label for="exp-mes">Mes</label>
+                        </div>
+                        <div class="input-group small col-90">
+                            <select name="exp_anio" id="exp-anio" required>
+                                <option value="" disabled selected>Año</option>
+                            </select>
+                            <label for="exp-anio">Año</label>
+                        </div>
+                        <div class="input-group small">
+                            <input type="password" name="cvv" id="cvv" maxlength="3" required placeholder=" ">
+                            <label>CVV</label>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="login-btn">Finalizar Registro y Pagar</button>
+                
+                <div class="register-link">
+                    <p>¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a></p>
+                </div>
+            </form>
+            <a href="/public/home.html" class="back-link">← Inicio</a>
+        </div>
+
+        <!-- SUCCESS VIEW -->
+        <div id="successView" class="success-view">
+            <div class="login-form success-view-form">
+                <div class="success-icon">✔</div>
+                <h2>¡Registro Exitoso!</h2>
+                <p class="welcome-text">Bienvenido, <span id="successNombre"></span>.</p>
+                <div class="info-box">
+                    <p>Se ha enviado un código de seguridad a:</p>
+                    <p id="successCorreo" class="email-display"></p>
+                </div>
+                <p class="success-note">(Revisa tu bandeja de entrada o spam)</p>
+                <a href="/public/login.html" class="login-btn inline-link">Ir al Login</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- VALIDACIONES EN ESPAÑOL ---
+        document.querySelector('input[name="nombre"]').addEventListener('invalid', function () {
+            if (this.validity.patternMismatch) {
+                this.setCustomValidity('Solo se permiten letras.');
+            }
+        });
+        document.querySelector('input[name="nombre"]').addEventListener('input', function () {
+            this.value = this.value.replace(/[0-9]/g, '');
+            this.setCustomValidity('');
+        });
+
+        document.querySelector('input[name="apellido"]').addEventListener('invalid', function () {
+            if (this.validity.patternMismatch) {
+                this.setCustomValidity('Solo se permiten letras.');
+            }
+        });
+        document.querySelector('input[name="apellido"]').addEventListener('input', function () {
+            this.value = this.value.replace(/[0-9]/g, '');
+            this.setCustomValidity('');
+        });
+
+        document.querySelector('input[name="correo"]').addEventListener('invalid', function () {
+            this.setCustomValidity('Ingrese un correo electrónico válido.');
+        });
+        document.querySelector('input[name="correo"]').addEventListener('input', function () {
+            this.setCustomValidity('');
+        });
+
+        document.querySelector('input[name="password"]').addEventListener('invalid', function () {
+            if (this.value.length === 0) {
+                this.setCustomValidity('La contraseña es obligatoria.');
+            } else if (this.value.length < 6) {
+                this.setCustomValidity('La contraseña debe tener al menos 6 caracteres.');
+            }
+        });
+        document.querySelector('input[name="password"]').addEventListener('input', function () {
+            this.setCustomValidity('');
+        });
+
+        // --- CÉDULA: SOLO NÚMEROS Y PUNTOS ---
+        const cedulaInput = document.getElementById('cedula');
+        cedulaInput.addEventListener('input', (e) => {
+            let digits = e.target.value.replace(/\D/g, '').slice(0, 8);
+            if (digits.length <= 3) {
+                e.target.value = digits;
+            } else {
+                let last3 = digits.slice(-3);
+                let rest = digits.slice(0, -3);
+                if (rest.length <= 3) {
+                    e.target.value = rest + '.' + last3;
+                } else {
+                    let restLast3 = rest.slice(-3);
+                    let restFirst = rest.slice(0, -3);
+                    e.target.value = restFirst + '.' + restLast3 + '.' + last3;
+                }
+            }
+        });
+        cedulaInput.addEventListener('invalid', function () {
+            if (this.value.length === 0) {
+                this.setCustomValidity('La cédula es obligatoria.');
+            }
+        });
+        cedulaInput.addEventListener('input', function () {
+            this.setCustomValidity('');
+        });
+
+        // --- TELÉFONO: SOLO NÚMEROS Y GUION ---
+        const telefonoInput = document.getElementById('telefono');
+        telefonoInput.addEventListener('input', (e) => {
+            let digits = e.target.value.replace(/\D/g, '').slice(0, 7);
+            if (digits.length <= 3) {
+                e.target.value = digits;
+            } else {
+                e.target.value = digits.slice(0, 3) + '-' + digits.slice(3);
+            }
+        });
+        telefonoInput.addEventListener('invalid', function () {
+            if (this.value.length === 0) {
+                this.setCustomValidity('El teléfono es obligatorio.');
+            }
+        });
+        telefonoInput.addEventListener('input', function () {
+            this.setCustomValidity('');
+        });
+
+        // --- COMBINAR PREFIJOS Y NÚMEROS AL ENVIAR ---
+        document.querySelector('.login-form').addEventListener('submit', function (e) {
+            const tipo = document.getElementById('tipo-cedula').value;
+            const cedula = document.getElementById('cedula');
+            const cedDigits = cedula.value.replace(/\D/g, '');
+            if (cedDigits.length === 0) {
+                e.preventDefault();
+                cedula.setCustomValidity('La cédula es obligatoria.');
+                cedula.reportValidity();
+                return;
+            }
+            cedula.value = cedDigits;
+
+            const prefijo = document.getElementById('prefijo-telefono').value;
+            const telefono = document.getElementById('telefono');
+            const telDigits = telefono.value.replace(/\D/g, '');
+            if (telDigits.length === 0) {
+                e.preventDefault();
+                telefono.setCustomValidity('El teléfono es obligatorio.');
+                telefono.reportValidity();
+                return;
+            }
+            telefono.value = prefijo + '-' + telDigits;
+
+            // --- VALIDAR PAGO ---
+            const tarjeta = document.getElementById('card-number');
+            const cardDigits = tarjeta.value.replace(/\s/g, '');
+            if (cardDigits.length === 0) {
+                e.preventDefault();
+                tarjeta.setCustomValidity('El número de tarjeta es obligatorio.');
+                tarjeta.reportValidity();
+                return;
+            }
+            if (cardDigits.length !== 16 || /[^0-9]/.test(cardDigits)) {
+                e.preventDefault();
+                tarjeta.setCustomValidity('La tarjeta debe tener 16 dígitos.');
+                tarjeta.reportValidity();
+                return;
+            }
+
+            const expMes = document.getElementById('exp-mes');
+            const expAnio = document.getElementById('exp-anio');
+            if (!expMes.value || !expAnio.value) {
+                e.preventDefault();
+                (expMes.value ? expAnio : expMes).setCustomValidity('Seleccione mes y año de vencimiento.');
+                (expMes.value ? expAnio : expMes).reportValidity();
+                return;
+            }
+            const mes = parseInt(expMes.value, 10);
+            const anio = parseInt(expAnio.value, 10) + 2000;
+            const vence = new Date(anio, mes, 0);
+            if (vence < new Date()) {
+                e.preventDefault();
+                expAnio.setCustomValidity('La tarjeta está vencida.');
+                expAnio.reportValidity();
+                return;
+            }
+
+            const cvv = document.querySelector('input[name="cvv"]');
+            if (cvv.value.length === 0) {
+                e.preventDefault();
+                cvv.setCustomValidity('El CVV es obligatorio.');
+                cvv.reportValidity();
+                return;
+            }
+            if (cvv.value.length !== 3) {
+                e.preventDefault();
+                cvv.setCustomValidity('El CVV debe tener 3 dígitos.');
+                cvv.reportValidity();
+                return;
+            }
+        });
+
+        // --- AÑOS PARA VENCIMIENTO ---
+        const selectAnio = document.getElementById('exp-anio');
+        const anioActual = new Date().getFullYear();
+        for (let i = anioActual; i <= 2100; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            selectAnio.appendChild(option);
+        }
+
+        document.getElementById('exp-mes').addEventListener('change', function () {
+            this.setCustomValidity('');
+        });
+        document.getElementById('exp-anio').addEventListener('change', function () {
+            this.setCustomValidity('');
+        });
+
+        // --- FORMATEO DE TARJETA Y CVV ---
+        const cardInput = document.getElementById('card-number');
+        cardInput.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '').slice(0, 16);
+            e.target.value = value.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
+        });
+
+        const cvvInput = document.querySelector('input[name="cvv"]');
+        cvvInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 3);
+        });
+
+        // --- LÓGICA DE UBICACIÓN (API) ---
+        const selectEstado = document.getElementById('select-estado');
+        const selectMunicipio = document.getElementById('select-municipio');
+        const selectParroquia = document.getElementById('select-parroquia');
+
+        // 1. Cargar Estados
+        fetch('/api/estados')
+            .then(res => res.json())
+            .then(data => {
+                data.forEach(est => {
+                    const nombre = est.Nombre || est.nombre;
+                    selectEstado.innerHTML += `<option value="${est.id_estado}">${nombre}</option>`;
+                });
+            })
+            .catch(err => console.error("Error al cargar estados:", err));
+
+        // 2. Al cambiar Estado -> Municipios
+        selectEstado.addEventListener('change', (e) => {
+            const idEstado = e.target.value;
+            
+            selectMunicipio.disabled = false;
+            selectMunicipio.innerHTML = '<option value="" disabled selected>Cargando municipios...</option>';
+            selectParroquia.innerHTML = '<option value="" disabled selected>Parroquia</option>';
+            selectParroquia.disabled = true;
+
+            fetch(`/api/municipios/${idEstado}`)
+                .then(res => res.json())
+                .then(data => {
+                    selectMunicipio.innerHTML = '<option value="" disabled selected>Seleccione Municipio</option>';
+                    data.forEach(mun => {
+                        const nombre = mun.Nombre || mun.nombre;
+                        selectMunicipio.innerHTML += `<option value="${mun.id_municipio}">${nombre}</option>`;
+                    });
+                });
+        });
+
+        // 3. Al cambiar Municipio -> Parroquias
+        selectMunicipio.addEventListener('change', (e) => {
+            const idMunicipio = e.target.value;
+            
+            selectParroquia.disabled = false;
+            selectParroquia.innerHTML = '<option value="" disabled selected>Cargando parroquias...</option>';
+
+            fetch(`/api/parroquias/${idMunicipio}`)
+                .then(res => res.json())
+                .then(data => {
+                    selectParroquia.innerHTML = '<option value="" disabled selected>Seleccione Parroquia</option>';
+                    data.forEach(par => {
+                        const nombre = par.Nombre || par.nombre;
+                        selectParroquia.innerHTML += `<option value="${par.id_parroquia}">${nombre}</option>`;
+                    });
+                });
+        });
+
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('success') === '1') {
+            document.getElementById('formView').style.display = 'none';
+            document.getElementById('successView').style.display = 'block';
+            document.getElementById('successNombre').textContent = params.get('nombre') || 'Usuario';
+            document.getElementById('successCorreo').textContent = params.get('correo') || '';
+        }
+    </script>
+</body>
+</html>
