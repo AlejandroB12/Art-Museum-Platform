@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server/server.js",
     "dev": "node --watch server/server.js",
-    "gateway": "node api-gateway/src/index.js",
+    "gateway": "node api/src/index.js",
     "seed": "node scripts/seed-mongodb.js",
     "seed:cassandra": "node scripts/seed-cassandra.js",
     "migrate:cassandra": "node scripts/migrate-cassandra.js",
