@@ -1,7 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 body {
-    background: #050505;
+    background: #0F0F0F;
     color: white;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: 'Inter', sans-serif;
     margin: 0;
     display: flex;
     justify-content: center;
@@ -9,8 +10,8 @@ body {
     min-height: 100vh;
 }
 .checkout-box {
-    background: #0a0a0a;
-    border: 1px solid #111;
+    background: #0F0F0F;
+    border: 1px solid #222;
     padding: 40px;
     width: 100%;
     max-width: 500px;
@@ -39,7 +40,7 @@ body {
     color: #00ff00;
 }
 .datos-usuario {
-    background: #0e0e0e;
+    background: #0F0F0F;
     padding: 15px;
     border-radius: 2px;
     border-left: 3px solid #00ff00;
@@ -49,8 +50,8 @@ body {
 .checkout-box input {
     width: 100%;
     padding: 12px;
-    background: #111;
-    border: 1px solid #333;
+    background: #0F0F0F;
+    border: 1px solid #222;
     color: white;
     margin: 8px 0;
     border-radius: 2px;
@@ -58,7 +59,7 @@ body {
 }
 .btn-pagar {
     background: #00ff00;
-    color: #000;
+    color: #0F0F0F;
     border: none;
     padding: 15px;
     width: 100%;

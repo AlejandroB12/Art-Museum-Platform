@@ -144,7 +144,7 @@ async function testFullDriver(config) {
     console.log(`\n${BOLD}[5/5] Conexión completa con cassandra-driver${RESET}`);
     if (!config) { console.log(`  ${SKIP} Saltado (sin configuración)`); return; }
     try {
-        const { client, connectCassandra } = require('../config/cassandra');
+        const { client, connectCassandra } = require('../config/database');
         client.options.socketOptions = { ...client.options.socketOptions, connectTimeout: 30000, readTimeout: 30000 };
         console.log('  Conectando (timeout: 30s)...');
         await connectCassandra();

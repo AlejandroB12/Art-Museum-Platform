@@ -1,8 +1,8 @@
 require('dotenv').config();
-const { getSession, connectNeo4j, closeNeo4j } = require('../config/neo4j');
+const { getSession, connectNeo4j, closeNeo4j } = require('../config/database');
 const mongoose = require('mongoose');
-const Obra = require('../models/Obra');
-const Autor = require('../models/Autor');
+const Obra = require('../backend/models/obra_model');
+const Autor = require('../backend/models/autor_model');
 
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGO_URI_FALLBACK;
 

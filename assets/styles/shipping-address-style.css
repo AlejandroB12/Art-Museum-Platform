@@ -1,5 +1,6 @@
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-body { min-height: 100vh; display: flex; justify-content: center; align-items: center; background-color: #121212; padding: 20px; color: white; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+body { min-height: 100vh; display: flex; justify-content: center; align-items: center; background-color: #0F0F0F; padding: 20px; color: white; }
 .register-container { background: #1e1e1e; padding: 50px 40px 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #333; width: 100%; max-width: 500px; margin: 0 auto; }
 .login-form { width: 100%; }
 .login-form h2 { text-align: center; color: #00ff00; font-size: 30px; font-weight: 800; margin-bottom: 8px; letter-spacing: -1px; }
@@ -13,7 +14,7 @@ body { min-height: 100vh; display: flex; justify-content: center; align-items: c
 .address-card select, .address-card input { width: 100%; background: #333; border: 1px solid #555; color: white; padding: 8px; border-radius: 4px; margin-bottom: 12px; font-size: 1rem; }
 .address-card select option { background: #333; color: white; }
 .address-card select:focus, .address-card input:focus { outline: none; border-color: #00ff00; box-shadow: 0 0 5px rgba(0,255,0,0.3); }
-.login-btn { width: 100%; padding: 16px; margin: 10px 0; background: #00ff00; border: none; border-radius: 5px; color: #121212; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; display: inline-block; text-align: center; }
+.login-btn { width: 100%; padding: 16px; margin: 10px 0; background: #00ff00; border: none; border-radius: 5px;     color: #0F0F0F; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; display: inline-block; text-align: center; }
 .login-btn:hover { background: #00cc00; transform: translateY(-2px); box-shadow: 0 0 20px rgba(0,255,0,0.3); }
 .login-btn:disabled { background: #666; cursor: not-allowed; transform: none; box-shadow: none; }
 .back-link { display: block; text-align: center; margin-top: 25px; color: #888; text-decoration: none; font-size: 0.9rem; transition: 0.3s; }

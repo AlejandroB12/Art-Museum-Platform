@@ -381,31 +381,13 @@
                     return;
                 }
                 datos.forEach(pago => {
-                    let estadoColor = '#ff0000';
-                    let estadoTexto = pago.EstadoPago;
-                    let diasRestantes = '-';
-                    let estiloFila = '';
-
-                    if (pago.Tipo === 'solicitud') {
-                        if (pago.EstadoPago === 'Pendiente') {
-                            estadoColor = '#ffaa00';
-                        } else if (pago.EstadoPago === 'Aprobado') {
-                            estadoColor = '#00ff00';
-                        }
-                    } else if (pago.Tipo === 'total') {
-                        estiloFila = 'font-weight: bold; border-top: 2px solid #333;';
-                        estadoColor = pago.EstadoPago === 'Activa' ? '#00ff00' : '#ff0000';
-                        diasRestantes = (pago.DiasRestantes > 0 ? pago.DiasRestantes : 0) + ' días';
-                    } else if (pago.Tipo === 'detalle') {
-                        estadoColor = '#00ff00';
-                        diasRestantes = pago.DiasRestantes + ' días';
-                    }
+                    const { estadoColor = '#ff0000', diasLabel = '-', estiloFila = '' } = pago;
 
                     if (pago.Tipo === 'total') {
                         tbody.innerHTML += `
                             <tr style="${estiloFila}">
                                 <td colspan="3" style="text-align: right; padding-right: 20px;">${pago.Concepto}:</td>
-                                <td style="color: ${estadoColor}; font-size: 1.1rem; font-weight: bold;">${diasRestantes}</td>
+                                <td style="color: ${estadoColor}; font-size: 1.1rem; font-weight: bold;">${diasLabel}</td>
                             </tr>
                         `;
                     } else if (pago.Tipo === 'detalle') {
@@ -413,8 +395,8 @@
                             <tr>
                                 <td>${pago.Concepto}</td>
                                 <td>${pago.FechaInicio ? new Date(pago.FechaInicio).toLocaleDateString() : '-'}</td>
-                                <td style="color: #00ff00;">${estadoTexto}</td>
-                                <td>${diasRestantes}</td>
+                                <td style="color: #00ff00;">${pago.EstadoPago}</td>
+                                <td>${diasLabel}</td>
                             </tr>
                         `;
                     } else {
@@ -422,7 +404,7 @@
                             <tr>
                                 <td>${pago.Concepto}</td>
                                 <td>${pago.FechaInicio ? new Date(pago.FechaInicio).toLocaleDateString() : '-'}</td>
-                                <td style="color: ${estadoColor}">${estadoTexto}</td>
+                                <td style="color: ${estadoColor}">${pago.EstadoPago}</td>
                                 <td>-</td>
                             </tr>
                         `;

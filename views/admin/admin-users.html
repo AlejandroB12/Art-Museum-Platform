@@ -1,0 +1,414 @@
+<!-- Usuarios -->
+<div id="tab-usuarios" class="tab-content d-none">
+    <div class="card">
+        <h3>👥 Administradores</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Email</th>
+                    <th>Estatus</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="body-gestion-admins"></tbody>
+        </table>
+    </div>
+    <div class="card">
+        <h3>👤 Compradores</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Email</th>
+                    <th>Estatus</th>
+                    <th>Membresía</th>
+                    <th>Puede Adquirir</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="body-gestion-compradores"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagos Membresía -->
+<div id="tab-usuarios-pagos" class="tab-content d-none">
+    <div class="card">
+        <h3>💳 Solicitudes de Pago Pendientes</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Usuario (Email)</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody id="lista-pagos"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Validar Usuarios -->
+<div id="tab-validar-usuarios" class="tab-content d-none">
+    <div class="card">
+        <h3>👤 Usuarios Pendientes de Registro</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Correo</th>
+                    <th>Código</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody id="lista-usuarios-pendientes"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // ===== HELPERS =====
+    function deshabilitarBoton(btn, tiempo = 1500) {
+        if (!btn) return;
+        btn.disabled = true;
+        setTimeout(() => { btn.disabled = false; }, tiempo);
+    }
+
+    function mostrarNotificacion(mensaje, tipo = 'info') {
+        let notificacion = document.getElementById('notificacion-toast');
+        if (!notificacion) {
+            notificacion = document.createElement('div');
+            notificacion.id = 'notificacion-toast';
+            notificacion.style.position = 'fixed';
+            notificacion.style.top = '20px';
+            notificacion.style.right = '20px';
+            notificacion.style.padding = '12px 24px';
+            notificacion.style.borderRadius = '8px';
+            notificacion.style.color = 'white';
+            notificacion.style.fontWeight = 'bold';
+            notificacion.style.zIndex = '9999';
+            notificacion.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            notificacion.style.transition = 'all 0.3s ease';
+            document.body.appendChild(notificacion);
+        }
+
+        const colores = {
+            success: '#00ff00',
+            error: '#e53e3e',
+            warning: '#ecc94b',
+            info: '#00ff00'
+        };
+
+        notificacion.style.backgroundColor = colores[tipo] || colores.info;
+        notificacion.innerHTML = mensaje;
+        notificacion.style.opacity = '1';
+        notificacion.style.transform = 'translateX(0)';
+
+        setTimeout(() => {
+            notificacion.style.opacity = '0';
+            notificacion.style.transform = 'translateX(50px)';
+        }, 3000);
+    }
+
+    // === USUARIOS ===
+    async function cargarUsuariosGestion() {
+        try {
+            const res = await fetch('/api/todos-los-usuarios');
+            const data = await res.json();
+            const admins = data.filter(u => u.Rol === 'administrador');
+            const compradores = data.filter(u => u.Rol === 'comprador');
+
+            document.getElementById('body-gestion-admins').innerHTML = admins.map(u => `
+                <tr id="usuario-fila-${u.id_usuario}">
+                    <td>${u.id_usuario}</td>
+                    <td>${u.Email || ''}</td>
+                    <td>
+                        <select id="user-est-${u.id_usuario}" class="edit-input">
+                            <option value="1" ${u.Estatus == 1 ? 'selected' : ''}>Activo</option>
+                            <option value="0" ${u.Estatus == 0 ? 'selected' : ''}>Inactivo</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button class="btn btn-blue" onclick="actualizarUsuario(${u.id_usuario}, this)">💾 Actualizar</button>
+                        <button class="btn btn-red" onclick="borrarUsuario(${u.id_usuario}, this)">🗑️ Borrar</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('body-gestion-compradores').innerHTML = compradores.map(u => {
+                const puedeAdquirir = u.PuedeAdquirir == 1;
+                const membresiaActiva = u.MembresiaActiva == 1;
+                return `
+                <tr id="usuario-fila-${u.id_usuario}">
+                    <td>${u.id_usuario}</td>
+                    <td>${u.Email || ''}</td>
+                    <td>
+                        <select id="user-est-${u.id_usuario}" class="edit-input">
+                            <option value="1" ${u.Estatus == 1 ? 'selected' : ''}>Activo</option>
+                            <option value="0" ${u.Estatus == 0 ? 'selected' : ''}>Inactivo</option>
+                        </select>
+                    </td>
+                    <td>
+                        <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:0.75rem;font-weight:bold;${membresiaActiva ? 'background:rgba(0,255,0,0.2);color:#00ff00;' : 'background:rgba(255,68,68,0.2);color:#ff4444;'}">
+                            ${membresiaActiva ? '✅ Activa' : '❌ Vencida'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn ${puedeAdquirir ? 'btn-green' : 'btn-red'}" id="btn-adquirir-${u.id_usuario}" onclick="toggleAdquirir(${u.id_usuario}, ${puedeAdquirir ? 0 : 1}, this)" style="padding:5px 12px;font-size:0.75rem;">
+                            ${puedeAdquirir ? '✅ Habilitado' : '🚫 Deshabilitado'}
+                        </button>
+                    </td>
+                    <td>
+                        <button class="btn btn-blue" onclick="actualizarUsuario(${u.id_usuario}, this)">💾 Actualizar</button>
+                        <button class="btn btn-red" onclick="borrarUsuario(${u.id_usuario}, this)">🗑️ Borrar</button>
+                    </td>
+                </tr>
+            `}).join('');
+        } catch (error) {
+            console.error('Error cargando usuarios:', error);
+        }
+    }
+
+    async function toggleAdquirir(id, nuevoValor, btn) {
+        if (!confirm(`¿${nuevoValor == 1 ? 'Habilitar' : 'Deshabilitar'} la compra para este usuario?`)) return;
+        btn.disabled = true;
+        btn.innerHTML = '⏳...';
+        try {
+            const res = await fetch(`/api/usuarios/${id}/toggle-adquirir`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ PuedeAdquirir: nuevoValor })
+            });
+            const result = await res.json();
+            if (result.success) {
+                mostrarNotificacion(result.message, 'success');
+                cargarUsuariosGestion();
+            } else {
+                mostrarNotificacion('❌ ' + (result.message || 'Error'), 'error');
+                btn.disabled = false;
+            }
+        } catch (error) {
+            console.error('Error toggling adquirir:', error);
+            mostrarNotificacion('❌ Error al cambiar estado', 'error');
+            btn.disabled = false;
+        }
+    }
+
+    async function actualizarUsuario(id, btn) {
+        deshabilitarBoton(btn);
+
+        const estatusSelect = document.getElementById(`user-est-${id}`);
+        if (!estatusSelect) {
+            alert("Error: No se encontró el selector de estatus");
+            return;
+        }
+
+        const nuevoEstatus = estatusSelect.value;
+        const estadoTexto = nuevoEstatus == 1 ? 'activado' : 'desactivado';
+
+        if (!confirm(`¿Está seguro de ${estadoTexto} este usuario?`)) {
+            btn.disabled = false;
+            return;
+        }
+
+        const btnOriginal = btn.innerHTML;
+        btn.innerHTML = '⏳ Actualizando...';
+
+        try {
+            const response = await fetch(`/api/usuarios/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ Estatus: parseInt(nuevoEstatus) })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `Error HTTP: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            if (result.success) {
+                mostrarNotificacion(`✅ Usuario ${estadoTexto} correctamente`, 'success');
+
+                const fila = document.getElementById(`usuario-fila-${id}`);
+                if (fila) {
+                    fila.style.transition = "background-color 0.5s ease";
+                    fila.style.backgroundColor = nuevoEstatus == 1 ? 'rgba(0,255,0,0.1)' : 'rgba(255,68,68,0.1)';
+                    setTimeout(() => {
+                        fila.style.backgroundColor = '';
+                    }, 2000);
+                }
+            } else {
+                throw new Error(result.message || 'Error al actualizar');
+            }
+
+        } catch (error) {
+            console.error('Error actualizando usuario:', error);
+            mostrarNotificacion(`❌ Error: ${error.message}`, 'error');
+        } finally {
+            btn.innerHTML = btnOriginal;
+            setTimeout(() => { btn.disabled = false; }, 1500);
+        }
+    }
+
+    async function borrarUsuario(id, btn) {
+        if (!confirm("¿Eliminar usuario permanentemente? Esta acción eliminará todos sus registros relacionados (compras, reservas, membresías).")) return;
+        deshabilitarBoton(btn);
+
+        try {
+            const fila = document.getElementById(`usuario-fila-${id}`);
+            if (fila) {
+                fila.style.opacity = "0.5";
+            }
+
+            console.log('Eliminando registros relacionados del usuario:', id);
+
+            await fetch(`/api/eliminar-reservas-usuario/${id}`, { method: 'DELETE' });
+
+            await fetch(`/api/eliminar-membresias-usuario/${id}`, { method: 'DELETE' });
+
+            await fetch(`/api/eliminar-comprador/${id}`, { method: 'DELETE' });
+
+            const res = await fetch(`/api/usuarios/${id}`, { method: 'DELETE' });
+
+            if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(errorText || 'Error al eliminar');
+            }
+
+            if (fila) {
+                fila.style.transition = "all 0.4s ease";
+                fila.style.opacity = "0";
+                fila.style.transform = "translateX(-20px)";
+                setTimeout(() => fila.remove(), 400);
+            }
+
+            alert("✅ Usuario y todos sus registros asociados eliminados correctamente");
+
+        } catch (error) {
+            console.error('Error eliminando usuario:', error);
+            alert("❌ Error al eliminar: " + error.message);
+
+            const fila = document.getElementById(`usuario-fila-${id}`);
+            if (fila) {
+                fila.style.opacity = "1";
+            }
+        }
+    }
+
+    // === USUARIOS PENDIENTES ===
+    async function cargarUsuariosPendientes() {
+        try {
+            const res = await fetch('/api/usuarios-pendientes');
+            const usuarios = await res.json();
+            const tbody = document.getElementById('lista-usuarios-pendientes');
+
+            if (usuarios.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:30px;">No hay usuarios pendientes de registro</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = usuarios.map(u => `
+                <tr id="usuario-pendiente-${u.id_usuario}">
+                    <td>${u.id_usuario}</td>
+                    <td>${u.Email || ''}</td>
+                    <td>${u.CodigoVerificacion || 'N/A'}</td>
+                    <td>
+                        <button class="btn btn-green" onclick="aprobarUsuarioRegistro(${u.id_usuario}, this)">✅ Aprobar Registro</button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (error) {
+            console.error('Error cargando usuarios pendientes:', error);
+        }
+    }
+
+    async function aprobarUsuarioRegistro(id, btn) {
+        if (!confirm("¿Aprobar este usuario?")) return;
+        deshabilitarBoton(btn);
+
+        try {
+            const res = await fetch(`/aprobar-usuario/${id}`, { method: 'PATCH' });
+            if (res.ok) {
+                const fila = document.getElementById(`usuario-pendiente-${id}`);
+                if (fila) {
+                    fila.style.transition = "all 0.4s ease";
+                    fila.style.opacity = "0";
+                    fila.style.transform = "translateX(-20px)";
+                    setTimeout(() => {
+                        fila.remove();
+                        if (document.querySelector('#lista-usuarios-pendientes tr') === null) {
+                            document.getElementById('lista-usuarios-pendientes').innerHTML =
+                                `<tr><td colspan="4" style="text-align:center; padding:30px;">No hay usuarios pendientes de registro</td></tr>`;
+                        }
+                    }, 400);
+                }
+                alert('✅ Usuario aprobado y activado');
+                cargarUsuariosGestion();
+            }
+        } catch (error) {
+            console.error('Error aprobando usuario:', error);
+            alert("❌ Error al aprobar usuario");
+        }
+    }
+
+    // === PAGOS MEMBRESÍA ===
+    async function cargarPagos() {
+        try {
+            const res = await fetch('/api/solicitudes-pago');
+            const pagos = await res.json();
+            const tbody = document.getElementById('lista-pagos');
+
+            if (pagos.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding:30px;">No hay solicitudes de pago pendientes</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = pagos.map(p => `
+                <tr id="pago-fila-${p.id_solicitud}">
+                    <td>${p.Email}</td>
+                    <td>
+                        <button class="btn btn-green" onclick="aprobarPagoRegistro(${p.id_solicitud}, ${p.id_usuario}, this)">✅ Confirmar Pago</button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (error) {
+            console.error('Error cargando pagos:', error);
+        }
+    }
+
+    async function aprobarPagoRegistro(id_solicitud, id_usuario, btn) {
+        if (!confirm("¿Confirmar recepción de pago y activar membresía?")) return;
+        deshabilitarBoton(btn);
+
+        try {
+            const res = await fetch('/aprobar-pago', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_solicitud, id_usuario })
+            });
+
+            if (res.ok) {
+                const fila = document.getElementById(`pago-fila-${id_solicitud}`);
+                if (fila) {
+                    fila.style.transition = "all 0.4s ease";
+                    fila.style.opacity = "0";
+                    fila.style.transform = "translateX(-20px)";
+                    setTimeout(() => {
+                        fila.remove();
+                        if (document.querySelector('#lista-pagos tr') === null) {
+                            document.getElementById('lista-pagos').innerHTML =
+                                `<tr><td colspan="2" style="text-align:center; padding:30px;">No hay solicitudes de pago pendientes</td></tr>`;
+                        }
+                    }, 400);
+                }
+                alert("✅ Membresía activada correctamente");
+            }
+        } catch (error) {
+            console.error('Error aprobando pago:', error);
+            alert("❌ Error al aprobar pago");
+        }
+    }
+
+</script>

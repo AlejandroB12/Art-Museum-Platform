@@ -4,9 +4,7 @@ const session = require('express-session');
 const app = express();
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
-const connectMongoDB = require('../config/mongodb');
-const { connectCassandra } = require('../config/cassandra');
-const { connectNeo4j } = require('../config/neo4j');
+const { connectMongoDB, connectCassandra, connectNeo4j } = require('../config/database');
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -25,15 +23,41 @@ app.get('/', (req, res) => {
     res.redirect('/public/home.html');
 });
 
-const loginRoutes = require('../routes/Login');
-const catalogoRoutes = require('../routes/Catalogo');
-const adminRoutes = require('../routes/Admin');
-const recomendacionesRoutes = require('../routes/Recomendaciones');
+// ==========================================
+// Rutas modulares (routes → services → repositories)
+// ==========================================
+const routes = require('../backend/api/api_router');
+app.use(routes);
 
-app.use('/', loginRoutes);
-app.use('/api', catalogoRoutes);
-app.use('/', adminRoutes);
-app.use('/api', recomendacionesRoutes);
+// ==========================================
+// Swagger (si está instalado)
+// ==========================================
+try {
+    const swaggerJsdoc = require('swagger-jsdoc');
+    const swaggerUi = require('swagger-ui-express');
+
+    const swaggerSpec = swaggerJsdoc({
+        definition: {
+            openapi: '3.0.0',
+            info: {
+                title: 'Art Museum Platform API',
+                version: '1.0.0',
+                description: 'API del Museo de Arte Contemporáneo - Catálogo, autenticación, membresías, recomendaciones'
+            },
+            servers: [{ url: `http://localhost:${process.env.PORT || 3000}` }]
+        },
+        apis: ['./backend/**/*_router.js', './backend/**/*_schema.js']
+    });
+
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+    console.log('Swagger disponible en /api-docs');
+} catch (e) {
+    console.log('Swagger no instalado. Ejecute: npm install swagger-jsdoc swagger-ui-express');
+}
+
+const { errorHandler, notFoundHandler } = require('../backend/api/middlewares/error_middleware');
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 const PORT = process.env.PORT;
 

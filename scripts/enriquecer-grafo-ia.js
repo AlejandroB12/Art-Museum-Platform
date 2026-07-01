@@ -11,11 +11,11 @@
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const mongoose = require('mongoose');
 const { pipeline } = require('@xenova/transformers');
-const { getSession, connectNeo4j, closeNeo4j } = require('../config/neo4j');
+const { getSession, connectNeo4j, closeNeo4j } = require('../config/database');
 const fs = require('fs');
 const path = require('path');
 
-const Obra = require('../models/Obra');
+const Obra = require('../backend/models/obra_model');
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGO_URI_FALLBACK;
 const FORCE = process.argv.includes('--force');
 

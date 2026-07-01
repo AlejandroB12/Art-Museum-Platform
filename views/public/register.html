@@ -99,9 +99,21 @@
                             <span>Total a pagar</span>
                             <strong>Suscripción Digital</strong>
                         </div>
-                        <div class="price-tag">$10.00</div>
-                        <input type="hidden" name="monto" value="10.00">
+                        <div class="price-tag" id="precio-membresia">Cargando...</div>
+                        <input type="hidden" name="monto" id="monto-membresia" value="">
                     </div>
+                    <script>
+                        fetch('/api/precio-membresia')
+                            .then(r => r.json())
+                            .then(d => {
+                                document.getElementById('precio-membresia').textContent = '$' + d.precio.toFixed(2);
+                                document.getElementById('monto-membresia').value = d.precio.toFixed(2);
+                            })
+                            .catch(() => {
+                                document.getElementById('precio-membresia').textContent = '$10.00';
+                                document.getElementById('monto-membresia').value = '10.00';
+                            });
+                    </script>
 
                     <div class="input-group">
                         <input type="text" name="tarjeta" id="card-number" maxlength="19" required placeholder=" ">

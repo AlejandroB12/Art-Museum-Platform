@@ -6,11 +6,11 @@ const path = require('path');
 
 dns.setServers(['8.8.8.8', '1.1.1.1']);
 
-const Autor = require('../models/Autor');
-const Obra = require('../models/Obra');
-const Genero = require('../models/Genero');
-const Nacionalidad = require('../models/Nacionalidad');
-const Especializacion = require('../models/Especializacion');
+const Autor = require('../backend/models/autor_model');
+const Obra = require('../backend/models/obra_model');
+const Genero = require('../backend/models/genero_model');
+const Nacionalidad = require('../backend/models/nacionalidad_model');
+const Especializacion = require('../backend/models/especializacion_model');
 
 const seed = async () => {
     try {

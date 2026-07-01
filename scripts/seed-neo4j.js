@@ -1,9 +1,9 @@
 require('dotenv').config();
-const { getSession, connectNeo4j, closeNeo4j } = require('../config/neo4j');
+const { getSession, connectNeo4j, closeNeo4j } = require('../config/database');
 const mysql = require('mysql2');
 const mongoose = require('mongoose');
-const Obra = require('../models/Obra');
-const Autor = require('../models/Autor');
+const Obra = require('../backend/models/obra_model');
+const Autor = require('../backend/models/autor_model');
 
 const db = mysql.createConnection({
     host: process.env.DB_HOST_MYSQL,

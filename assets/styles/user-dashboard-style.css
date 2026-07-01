@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 * {
     margin: 0;
     padding: 0;
@@ -6,7 +7,7 @@
 }
 
 body {
-    background-color: #050505;
+    background-color: #0F0F0F;
     color: white;
     display: flex;
     min-height: 100vh;
@@ -56,7 +57,7 @@ body {
     border: 1px solid #333;
     margin-bottom: 20px;
     text-align: center;
-    background: #111;
+    background: #0F0F0F;
     color: #fff !important;
     font-size: 14px;
     font-weight: 500;
@@ -119,7 +120,7 @@ body {
 }
 
 .card {
-    background: #111;
+    background: #0F0F0F;
     border: 1px solid #222;
     padding: 40px;
     border-radius: 20px;
@@ -162,7 +163,7 @@ select.input-select option {
 
 .btn-main {
     background: #00ff00;
-    color: black;
+    color: #0F0F0F;
     border: none;
     padding: 15px;
     width: 100%;
@@ -191,7 +192,7 @@ select.input-select option {
 
 .tabla-membresia td {
     padding: 18px;
-    background: #111;
+    background: #0F0F0F;
     border-top: 1px solid #222;
     border-bottom: 1px solid #222;
 }

@@ -1,8 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Inter', sans-serif;
 }
 
 body {
@@ -10,7 +11,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #121212;
+    background-color: #0F0F0F;
     padding: 20px;
     color: white;
 }
@@ -119,7 +120,7 @@ body {
     background: #00ff00;
     border: none;
     border-radius: 5px;
-    color: #121212;
+    color: #0F0F0F;
     font-size: 16px;
     font-weight: 700;
     cursor: pointer;
@@ -189,7 +190,7 @@ body {
 
 .price-tag {
     background: #00ff00;
-    color: #000;
+    color: #0F0F0F;
     padding: 8px 15px;
     border-radius: 5px;
     font-weight: 900;
