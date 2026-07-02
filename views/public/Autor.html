@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,11 @@
     <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
     <link rel="stylesheet" href="/styles/Estilo-inicio.css">
     <style>
-        body { padding-top: 100px; background: #050505; color: white; }
+        body {
+            padding-top: 100px;
+            background: #050505;
+            color: white;
+        }
 
         /* --- SECCIÓN PERFIL SUPERIOR --- */
         .author-profile-container {
@@ -74,15 +79,21 @@
             color: #00ff00;
         }
 
-        .auth-buttons, .user-profile {
+        .auth-buttons,
+        .user-profile {
             display: flex;
             align-items: center;
             gap: 20px;
         }
 
         @media (max-width: 1024px) {
-            .nav-links { gap: 15px; }
-            .navbar { padding: 0 2%; }
+            .nav-links {
+                gap: 15px;
+            }
+
+            .navbar {
+                padding: 0 2%;
+            }
         }
 
         .author-frame img {
@@ -91,13 +102,13 @@
             object-fit: cover;
         }
 
-        .author-details { 
-            flex: 1; 
-            display: flex; 
-            flex-direction: column; 
+        .author-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
             justify-content: center;
             text-align: left;
-            padding-left: 20px;      
+            padding-left: 20px;
         }
 
         .author-meta {
@@ -247,17 +258,20 @@
         }
 
         @media (max-width: 768px) {
-            .author-profile-container { 
-                flex-direction: column; 
-                text-align: center; 
+            .author-profile-container {
+                flex-direction: column;
+                text-align: center;
             }
-            .author-meta { 
-                justify-content: center; 
+
+            .author-meta {
+                justify-content: center;
             }
+
             .author-details {
                 text-align: center;
                 padding-left: 0;
             }
+
             .gallery-grid {
                 grid-template-columns: 1fr;
                 padding: 0 5% 50px;
@@ -266,12 +280,12 @@
 
         /* --- ESTILOS DE LA MODAL --- */
         .modal {
-            display: none; 
+            display: none;
             position: fixed;
             z-index: 10000;
-            top: 0; 
+            top: 0;
             left: 0;
-            width: 100%; 
+            width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.95);
             align-items: center;
@@ -290,9 +304,9 @@
             position: relative;
         }
 
-        #modal-imagen { 
-            width: 65%; 
-            object-fit: contain; 
+        #modal-imagen {
+            width: 65%;
+            object-fit: contain;
             background: #000;
         }
 
@@ -305,7 +319,7 @@
 
         .cerrar-modal {
             position: absolute;
-            top: 20px; 
+            top: 20px;
             right: 30px;
             font-size: 2.5rem;
             color: #00ff00;
@@ -342,10 +356,11 @@
 </head>
 
 <body>
-    <div id="main-wrapper"> 
+    <div id="main-wrapper">
         <nav class="navbar">
-            <a href="/public/Inicio.html" class="logo" style="text-decoration:none; font-weight:bold; letter-spacing:2px; color:white;">ARTE CONTEMPORANEO</a>
-            
+            <a href="/public/Inicio.html" class="logo"
+                style="text-decoration:none; font-weight:bold; letter-spacing:2px; color:white;">ARTE CONTEMPORANEO</a>
+
             <div class="nav-container">
                 <ul class="nav-links">
                     <li><a href="Obras.html">Catálogo</a></li>
@@ -353,8 +368,10 @@
                 </ul>
 
                 <div class="auth-buttons" id="auth-buttons">
-                    <a href="/user/Login.html" class="btn-login" style="color:white; text-decoration:none; font-size:0.75rem;">INICIAR SESION</a>
-                    <a href="/user/Login.html" class="btn-register" style="border:1px solid #00ff00; color:#00ff00; padding:8px 15px; text-decoration:none; font-size:0.75rem;">REGISTRARTE</a>
+                    <a href="/user/Login.html" class="btn-login"
+                        style="color:white; text-decoration:none; font-size:0.75rem;">INICIAR SESION</a>
+                    <a href="/user/Login.html" class="btn-register"
+                        style="border:1px solid #00ff00; color:#00ff00; padding:8px 15px; text-decoration:none; font-size:0.75rem;">REGISTRARTE</a>
                 </div>
             </div>
         </nav>
@@ -366,7 +383,7 @@
             <div class="author-details">
                 <span id="authNation" class="badge-nacionalidad">Nacionalidad</span>
                 <h1 id="authName">Nombre del Autor</h1>
-                
+
                 <div class="author-meta">
                     <p id="authBirth" style="color: #666; font-size: 0.8rem; margin: 0;"></p>
                     <div id="authTypes" style="display: flex; gap: 5px;"></div>
@@ -401,7 +418,8 @@
             <img id="modal-imagen" src="" alt="Obra expandida">
             <div class="modal-info-panel">
                 <h2 id="modal-titulo" style="color:white;"></h2>
-                <p id="modal-artista" style="color: #00ff00; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 2px;"></p>
+                <p id="modal-artista"
+                    style="color: #00ff00; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 2px;"></p>
                 <hr style="border-color: #222; margin: 20px 0;">
                 <div id="modal-detalles-tecnicos" style="line-height: 1.8; color: #ccc; font-size: 0.9rem;"></div>
             </div>
@@ -416,7 +434,7 @@
             document.getElementById('modal-titulo').innerText = titulo;
             document.getElementById('modal-artista').innerText = `Por ${artista}`;
             document.getElementById('modal-detalles-tecnicos').innerHTML = detalles;
-            
+
             modal.style.display = 'flex';
             document.body.classList.add('modal-active');
         }
@@ -426,8 +444,8 @@
             document.body.classList.remove('modal-active');
         }
 
-        window.onclick = (event) => { 
-            if (event.target == modal) cerrarModal(); 
+        window.onclick = (event) => {
+            if (event.target == modal) cerrarModal();
         }
 
         const params = new URLSearchParams(window.location.search);
@@ -441,14 +459,14 @@
             }
 
             const ordenDate = document.getElementById('sortDate').value;
-            
+
             try {
                 const resp = await fetch(`/api/autor-detalle/${idAutor}?ordenDate=${ordenDate}`);
-                
+
                 if (!resp.ok) {
                     throw new Error(`Error HTTP: ${resp.status}`);
                 }
-                
+
                 const data = await resp.json();
 
                 let nombreAutor = "Artista Desconocido";
@@ -457,25 +475,25 @@
                     nombreAutor = `${data.autor.Nombre || ''} ${data.autor.Apellido || ''}`.trim();
                     document.getElementById('authName').textContent = nombreAutor || "Artista Desconocido";
                     document.getElementById('authNation').textContent = data.autor.NacionalidadDesc || data.autor.Nacionalidad || "Nacionalidad no especificada";
-                    
+
                     if (data.autor.Fecha_nacimiento) {
                         const fecha = new Date(data.autor.Fecha_nacimiento);
                         document.getElementById('authBirth').textContent = `Nacimiento: ${fecha.toLocaleDateString()}`;
                     } else {
                         document.getElementById('authBirth').textContent = "Fecha de nacimiento no disponible";
                     }
-                    
+
                     document.getElementById('authBio').textContent = data.autor.Biografia || "Sin biografía disponible.";
-                    
+
                     document.getElementById('authImg').src = data.autor.Fotografia || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Crect fill=%22%231a1a1a%22 width=%22300%22 height=%22300%22/%3E%3Ctext fill=%22%23666%22 font-size=%2214%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3ESin Imagen%3C/text%3E%3C/svg%3E';
                 }
 
                 const typesContainer = document.getElementById('authTypes');
                 typesContainer.innerHTML = '';
-                
+
                 if (data.obras && data.obras.length > 0) {
                     const generosUnicos = [...new Set(data.obras.map(o => o.GeneroNombre).filter(g => g))];
-                    
+
                     generosUnicos.forEach(genero => {
                         const span = document.createElement('span');
                         span.className = 'type-tag';
@@ -485,14 +503,14 @@
 
                     const gallery = document.getElementById('authorGallery');
                     gallery.innerHTML = '';
-                    
+
                     data.obras.forEach(obra => {
                         const imgPath = obra.imagen_url || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22350%22 height=%22300%22%3E%3Crect fill=%22%231a1a1a%22 width=%22350%22 height=%22300%22/%3E%3Ctext fill=%22%23666%22 font-size=%2214%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3ESin Imagen%3C/text%3E%3C/svg%3E';
-                        
+
                         // Preparar ficha técnica para la modal
                         const año = obra.Fecha_creacion ? new Date(obra.Fecha_creacion).getFullYear() : 'N/A';
                         const precio = obra.PrecioFormateado || 'Precio no disponible';
-                        
+
                         // Recopilar detalles técnicos según el tipo de obra
                         let detallesTecnicos = '';
                         if (obra.Tecnica_Principal) detallesTecnicos += `<p><strong>TÉCNICA PRINCIPAL:</strong> ${obra.Tecnica_Principal}</p>`;
@@ -504,7 +522,7 @@
                         if (obra.Kilataje_Estandar) detallesTecnicos += `<p><strong>KILATAJE:</strong> ${obra.Kilataje_Estandar}</p>`;
                         if (obra.Tecnica_Acabado) detallesTecnicos += `<p><strong>ACABADO:</strong> ${obra.Tecnica_Acabado}</p>`;
                         if (obra.Tipo_Arcilla_Base) detallesTecnicos += `<p><strong>ARCILLA:</strong> ${obra.Tipo_Arcilla_Base}</p>`;
-                        
+
                         const fichaTecnica = `
                             <p><strong>GÉNERO:</strong> ${obra.GeneroNombre || 'N/A'}</p>
                             <p><strong>AÑO:</strong> ${año}</p>
@@ -525,20 +543,20 @@
                                 </div>
                             </div>
                         `;
-                        
+
                         // Agregar evento click a la imagen
                         const imgDiv = card.querySelector('.art-img');
                         imgDiv.addEventListener('click', () => {
                             abrirModal(imgPath, obra.Nombre || 'Sin título', nombreAutor, fichaTecnica);
                         });
-                        
+
                         // Agregar evento click al botón de compra
                         const buyBtn = card.querySelector('.btn-buy');
                         buyBtn.addEventListener('click', (e) => {
                             e.stopPropagation();
                             comprar(obra.id_Obra, obra.Nombre);
                         });
-                        
+
                         gallery.appendChild(card);
                     });
                 } else {
@@ -558,21 +576,21 @@
 
         // Event listener para el selector de orden
         document.getElementById('sortDate').addEventListener('change', cargarPerfil);
-        
+
         // Cargar el perfil cuando la página esté lista
         document.addEventListener('DOMContentLoaded', () => {
             cargarPerfil();
-            
+
             // Verificar estado de usuario para mostrar/ocultar botones de autenticación
             fetch('/api/estado-usuario')
                 .then(response => response.json())
                 .then(data => {
                     const authContainer = document.querySelector('.auth-buttons');
                     const navContainer = document.querySelector('.nav-container');
-                    
+
                     if (data.autenticado) {
                         if (authContainer) authContainer.style.display = 'none';
-                        
+
                         fetch('/api/usuario-actual')
                             .then(res => res.json())
                             .then(user => {
@@ -580,7 +598,7 @@
                                 userDiv.className = 'user-profile';
                                 userDiv.innerHTML = `
                                     <span style="margin-right: 15px; color:white;">Hola, ${user.Nombre || user.email || 'Usuario'}</span>
-                                    <a href="/user/Panel-usuario.html" style="margin-right: 15px; color: #00ff00; text-decoration: none; border: 1px solid #00ff00; padding: 5px 10px; font-size: 0.7rem;">PANEL DE USUARIO</a>
+                                    <a href="/user/Panel-usuario.html" style="margin-right: 15px; color: #00ff00; text-decoration: none; border: 1px solid #00ff00; padding: 5px 10px; font-size: 0.7rem;">MI FEED</a>
                                     <a href="/logout" class="btn-logout" style="color:white; text-decoration:none;">Cerrar Sesión</a>
                                 `;
                                 if (navContainer) navContainer.appendChild(userDiv);
@@ -592,4 +610,5 @@
         });
     </script>
 </body>
+
 </html>

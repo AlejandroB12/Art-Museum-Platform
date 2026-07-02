@@ -412,10 +412,12 @@
         const gallery = document.getElementById('gallery');
         const modal = document.getElementById('obra-modal');
 
-        function abrirModal(img, titulo, artista, detalles, genero, idObra) {
+        function abrirModal(img, titulo, artista, detalles, genero, idObra, idArtista) {
             document.getElementById('modal-imagen').src = img;
             document.getElementById('modal-titulo').innerText = titulo;
-            document.getElementById('modal-artista').innerText = `Por ${artista}`;
+            document.getElementById('modal-artista').innerHTML = idArtista
+                ? `<a href="/public/Autor.html?id=${idArtista}" style="color:#00ff00; font-size:0.9rem; text-transform:uppercase; text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">Por ${artista}</a>`
+                : `Por ${artista}`;
             document.getElementById('modal-detalles-tecnicos').innerHTML = detalles;
 
             modal.style.display = 'flex';
@@ -499,7 +501,7 @@
                     const imgSource = obra.imagen_url || '/assets/images/placeholder.jpg';
                     const autorNombreCompleto = `${obra.AutorNombre || ''} ${obra.AutorApellido || ''}`.trim();
                     const detallesHTML = construirDetallesTecnicos(obra);
-                    abrirModal(imgSource, obra.Nombre.replace(/'/g, "\\'"), autorNombreCompleto.replace(/'/g, "\\'"), detallesHTML, obra.GeneroNombre || '', obra.id_Obra);
+                    abrirModal(imgSource, obra.Nombre.replace(/'/g, "\\'"), autorNombreCompleto.replace(/'/g, "\\'"), detallesHTML, obra.GeneroNombre || '', obra.id_Obra, obra.id_Autor || '');
                 }
             } catch (e) {
                 console.error('Error abriendo obra similar:', e);
@@ -610,55 +612,112 @@
             }
         }
 
-        async function renderGallery() {
+        let paginaActual = 1;
+        const OBRAS_POR_PAGINA = 20;
+        let cargandoMas = false;
+        let todasLasObras = [];
+        let filtrosActuales = { genero: 'all', artista: 'all', orden: 'asc' };
+
+        async function renderGallery(append = false) {
+            // Obtener valores actuales de los filtros
             const genero = document.getElementById('filterGenre').value;
             const artista = document.getElementById('filterAuthor').value;
             const orden = document.getElementById('sortPrice').value;
 
+            // Si cambiaron los filtros, reiniciar
+            if (!append || genero !== filtrosActuales.genero || artista !== filtrosActuales.artista || orden !== filtrosActuales.orden) {
+                paginaActual = 1;
+                gallery.innerHTML = '';
+                filtrosActuales = { genero, artista, orden };
+            }
+
             try {
                 const resp = await fetch(`/api/obras-filtradas?genero=${genero}&artista=${artista}&orden=${orden}`);
+                // ... resto igual
                 const obras = await resp.json();
-                gallery.innerHTML = '';
+                todasLasObras = obras;
 
-                console.log('Obras recibidas:', obras); // Para depuración
+                if (!append) {
+                    gallery.innerHTML = '';
+                    paginaActual = 1;
+                }
 
-                if (obras.length === 0) {
+                if (obras.length === 0 && !append) {
                     gallery.innerHTML = '<p style="text-align:center; width:100%; color:#444;">No hay piezas disponibles.</p>';
                     return;
                 }
 
-                obras.forEach(obra => {
-                    // CORREGIDO: Usar la URL directamente, no base64
+                const inicio = (paginaActual - 1) * OBRAS_POR_PAGINA;
+                const fin = inicio + OBRAS_POR_PAGINA;
+                const lote = obras.slice(inicio, fin);
+
+                lote.forEach(obra => {
                     const imgSource = obra.imagen_url || '/assets/images/placeholder.jpg';
-
-                    // Construir detalles técnicos usando la función
+                    const autorNombreCompleto = `${obra.AutorNombre || ''} ${obra.AutorApellido || ''}`.trim();
                     const detallesHTML = construirDetallesTecnicos(obra);
-
-                    const autorNombreCompleto = `${obra.AutorNombre} ${obra.AutorApellido}`;
 
                     const card = document.createElement('div');
                     card.className = 'art-card';
                     card.innerHTML = `
-                    <div class="art-img" style="background-image: url('${imgSource}'); background-size: cover; background-position: center;" 
-                         onclick="abrirModal('${imgSource}', '${obra.Nombre.replace(/'/g, "\\'")}', '${autorNombreCompleto.replace(/'/g, "\\'")}', \`${detallesHTML}\`, '${obra.GeneroNombre || ''}', '${obra.id_Obra}')">
+                <div class="art-img lazy-img" data-src="${imgSource}" 
+                     style="background-color: #1a1a1a; background-size: cover; background-position: center;"
+                     onclick="abrirModal('${imgSource}', '${obra.Nombre.replace(/'/g, "\\'")}', '${autorNombreCompleto.replace(/'/g, "\\'")}', \`${detallesHTML}\`, '${obra.GeneroNombre || ''}', '${obra.id_Obra}', '${obra.id_Autor || ''}')">
+                </div>
+                <div class="art-info">
+                    <a href="Autor.html?id=${obra.id_Autor}" class="author-link">${autorNombreCompleto || 'Anónimo'}</a>
+                    <h3 class="art-title" style="margin: 10px 0;">${obra.Nombre}</h3>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="price">${obra.PrecioFormateado}</span>
+                        <button class="btn-buy" onclick="adquirirObra('${obra.id_Obra}', '${obra.Nombre.replace(/'/g, "\\'")}', '${autorNombreCompleto.replace(/'/g, "\\'")}', '${obra.Precio}', '${imgSource}')">Adquirir</button>
                     </div>
-                    <div class="art-info">
-                        <a href="Autor.html?id=${obra.id_Autor}" class="author-link">
-                            ${autorNombreCompleto}
-                        </a>
-                        <h3 class="art-title" style="margin: 10px 0;">${obra.Nombre}</h3>
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span class="price">${obra.PrecioFormateado}</span>
-                            <button class="btn-buy" onclick="adquirirObra('${obra.id_Obra}', '${obra.Nombre.replace(/'/g, "\\'")}', '${autorNombreCompleto.replace(/'/g, "\\'")}', '${obra.Precio}', '${imgSource}')">Adquirir</button>
-                        </div>
-                    </div>
-                `;
+                </div>
+            `;
                     gallery.appendChild(card);
                 });
+
+                paginaActual++;
+
+                // Lazy load de imágenes
+                lazyLoadImages();
+
             } catch (error) {
                 console.error("Error cargando galería:", error);
             }
         }
+
+        // Lazy loading de imágenes
+        function lazyLoadImages() {
+            const lazyImgs = document.querySelectorAll('.lazy-img:not(.loaded)');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        const src = img.getAttribute('data-src');
+                        if (src) {
+                            img.style.backgroundImage = `url('${src}')`;
+                            img.classList.add('loaded');
+                        }
+                        observer.unobserve(img);
+                    }
+                });
+            }, { rootMargin: '800px' });
+
+            lazyImgs.forEach(img => observer.observe(img));
+        }
+
+        // Scroll infinito
+        window.addEventListener('scroll', () => {
+            if (cargandoMas) return;
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 1100) {
+                const totalPaginas = Math.ceil(todasLasObras.length / OBRAS_POR_PAGINA);
+                if (paginaActual <= totalPaginas) {
+                    cargandoMas = true;
+                    renderGallery(true);
+                    setTimeout(() => { cargandoMas = false; }, 500);
+                }
+            }
+        });
 
         // FUNCIÓN CON VERIFICACIÓN DE SESIÓN
         async function adquirirObra(id, nombre, autor, precio, imagen) {
@@ -687,14 +746,14 @@
         }
 
         // Event Listeners
-        document.getElementById('sortPrice').addEventListener('change', renderGallery);
-        document.getElementById('filterGenre').addEventListener('change', renderGallery);
-        document.getElementById('filterAuthor').addEventListener('change', renderGallery);
+        document.getElementById('sortPrice').addEventListener('change', () => renderGallery(false));
+        document.getElementById('filterGenre').addEventListener('change', () => renderGallery(false));
+        document.getElementById('filterAuthor').addEventListener('change', () => renderGallery(false));
 
         // Inicialización
         window.onload = () => {
             cargarFiltros();
-            renderGallery();
+            renderGallery(false);
         };
 
         // Estado de usuario 
@@ -724,37 +783,36 @@
                 }).catch(error => console.error('Error al cargar usuario:', error));
         });
 
-        // Al cargar Obras.html, verificar si hay una obra pendiente de abrir
         document.addEventListener('DOMContentLoaded', async () => {
-            const idPendiente = sessionStorage.getItem('abrirObra');
-            if (idPendiente) {
-                sessionStorage.removeItem('abrirObra');
-                // REGISTRAR ACTIVIDAD
+            // Leer datos completos desde Inicio/Feed
+            const dataPendiente = sessionStorage.getItem('abrirObraData');
+            if (dataPendiente) {
+                sessionStorage.removeItem('abrirObraData');
+                const data = JSON.parse(dataPendiente);
+
                 fetch('/api/actividad/registrar', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        idUsuario: 9999,
-                        idObra: parseInt(idPendiente),
-                        tipo: 'vista_detalle'
-                    })
+                    body: JSON.stringify({ idUsuario: 9999, idObra: data.id, tipo: 'vista_detalle' })
                 }).catch(() => { });
-                // Esperar a que la galería se renderice
+
                 setTimeout(async () => {
                     try {
                         const resp = await fetch('/api/obras-filtradas?artista=all&genero=all&orden=asc');
                         const obras = await resp.json();
-                        const obra = obras.find(o => o.id_Obra == idPendiente);
+                        const obra = obras.find(o => o.id_Obra == data.id);
                         if (obra) {
-                            const imgSource = obra.imagen_url || '/assets/images/placeholder.jpg';
+                            const imgSource = obra.imagen_url || data.imagen;
                             const autorNombreCompleto = `${obra.AutorNombre || ''} ${obra.AutorApellido || ''}`.trim();
                             const detallesHTML = construirDetallesTecnicos(obra);
-                            abrirModal(imgSource, obra.Nombre, autorNombreCompleto, detallesHTML, obra.GeneroNombre || '', obra.id_Obra);
+                            abrirModal(imgSource, obra.Nombre, autorNombreCompleto, detallesHTML, obra.GeneroNombre || '', obra.id_Obra, obra.id_Autor || '');
+                        } else {
+                            abrirModal(data.imagen, data.nombre, data.autor || '', '', data.genero || '', data.id, data.idAutor || '');
                         }
                     } catch (e) {
-                        console.error('Error abriendo obra pendiente:', e);
+                        abrirModal(data.imagen, data.nombre, data.autor || '', '', data.genero || '', data.id, data.idAutor || '');
                     }
-                }, 1000);
+                }, 500);
             }
         });
 
@@ -808,7 +866,7 @@
                         card.className = 'art-card';
                         card.innerHTML = `
                     <div class="art-img" style="background-image: url('${imgSource}'); background-size: cover; background-position: center; position: relative;" 
-                         onclick="abrirModal('${imgSource}', '${(obra.Nombre || '').replace(/'/g, "\\'")}', '${autorNombreCompleto.replace(/'/g, "\\'")}', \`${detallesHTML}\`, '${obra.GeneroNombre || ''}', '${obra.id_Obra}')">
+                         onclick="abrirModal('${imgSource}', '${obra.Nombre.replace(/'/g, "\\'")}', '${autorNombreCompleto.replace(/'/g, "\\'")}', \`${detallesHTML}\`, '${obra.GeneroNombre || ''}', '${obra.id_Obra}', '${obra.id_Autor || ''}')">
                         ${esVisual ? `<span style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); color: #00ff00; font-size: 0.6rem; padding: 3px 8px; border-radius: 10px;">${Math.round(obra.score * 100)}%</span>` : ''}
                     </div>
                     <div class="art-info">

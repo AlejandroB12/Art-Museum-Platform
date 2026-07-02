@@ -2,7 +2,13 @@ const express = require('express');
 const router = express.Router();
 const { getSession } = require('../config/neo4j');
 
-const toNum = (v) => v != null ? Number(v) : 0;
+const toNum = (v) => {
+    if (v === null || v === undefined) return 0;
+    if (typeof v === 'bigint') return Number(v);
+    if (typeof v === 'number') return v;
+    if (typeof v === 'object' && v.toNumber) return v.toNumber();
+    return Number(v);
+};
 
 router.get('/recomendaciones/mismo-genero/:idUsuario', async (req, res) => {
     const { idUsuario } = req.params;
@@ -111,21 +117,55 @@ router.get('/recomendaciones/personalizadas/:idUsuario', async (req, res) => {
 router.get('/recomendaciones/artistas-populares', async (req, res) => {
     const session = getSession();
     try {
+        // Obtener artistas populares desde Neo4j (ventas + vistas)
         const result = await session.run(`
-            MATCH (c:Comprador)-[:COMPRO]->(:Obra)<-[:CREO]-(a:Artista)
-            RETURN a.id_artista AS id_Artista,
-                   a.nombre + ' ' + a.apellido AS Artista,
-                   COUNT(*) AS ObrasVendidas,
-                   COUNT(DISTINCT c) AS CompradoresUnicos
-            ORDER BY ObrasVendidas DESC
-            LIMIT 10
+            MATCH (a:Artista)-[:CREO]->(o:Obra)
+            OPTIONAL MATCH (o)<-[r:INTERACTUO]-(:Comprador)
+            WITH a, o.id_obra AS idObra, o.nombre AS nombreObra, o.fotografia AS fotoObra, COUNT(r) AS vistasObra
+            WITH a, 
+                 SUM(vistasObra) AS totalVistas,
+                 COLLECT({id: idObra, nombre: nombreObra, fotografia: fotoObra, vistas: vistasObra}) AS obras
+            OPTIONAL MATCH (a)-[:CREO]->(v:Obra {estado: 'Vendida'})
+            WITH a, obras, totalVistas, COUNT(DISTINCT v) AS obrasVendidas
+            ORDER BY obrasVendidas DESC, totalVistas DESC
+            LIMIT 6
+            RETURN a.id_artista AS idArtista,
+                   a.nombre AS nombre,
+                   a.apellido AS apellido,
+                   obrasVendidas,
+                   totalVistas,
+                   obras
         `);
-        res.json(result.records.map(r => ({
-            id_Artista: toNum(r.get('id_Artista')),
-            Artista: r.get('Artista'),
-            ObrasVendidas: toNum(r.get('ObrasVendidas')),
-            CompradoresUnicos: toNum(r.get('CompradoresUnicos'))
-        })));
+
+        // Obtener fotos desde MongoDB
+        const Autor = require('../models/Autor');
+        const ids = result.records.map(r => toNum(r.get('idArtista')));
+        const autores = await Autor.find({ _id: { $in: ids } }).select('_id fotografia').lean();
+        const fotosMap = {};
+        autores.forEach(a => { fotosMap[a._id] = a.fotografia || ''; });
+
+        res.json(result.records.map(r => {
+            const id = toNum(r.get('idArtista'));
+            const obrasRaw = r.get('obras') || [];
+            const topObras = obrasRaw
+                .sort((a, b) => Number(b.vistas || 0) - Number(a.vistas || 0))
+                .slice(0, 5)
+                .map(o => ({
+                    id: toNum(o.id),
+                    nombre: o.nombre,
+                    fotografia: o.fotografia || '',
+                    vistas: toNum(o.vistas)
+                }));
+
+            return {
+                idArtista: id,
+                artista: (r.get('nombre') || '') + ' ' + (r.get('apellido') || ''),
+                fotoArtista: fotosMap[id] || '',
+                obrasVendidas: toNum(r.get('obrasVendidas')),
+                totalVistas: toNum(r.get('totalVistas')),
+                obras: topObras
+            };
+        }));
     } catch (err) {
         console.error('Error en artistas populares:', err);
         res.status(500).json({ error: err.message });
@@ -163,27 +203,26 @@ router.get('/recomendaciones/generos-populares', async (req, res) => {
 
 router.get('/recomendaciones/obras-por-genero/:genero', async (req, res) => {
     const { genero } = req.params;
-    const session = getSession();
     try {
-        const result = await session.run(`
-            MATCH (g:Genero {nombre: $genero})<-[:TRABAJA_EN]-(:Artista)-[:CREO]->(o:Obra)
-            WHERE o.estado = 'Disponible'
-            RETURN o.id_obra AS id_Obra,
-                   o.nombre AS Nombre,
-                   o.precio AS Precio
-            ORDER BY o.precio ASC
-            LIMIT 6
-        `, { genero });
-        res.json(result.records.map(r => ({
-            id_Obra: toNum(r.get('id_Obra')),
-            Nombre: r.get('Nombre'),
-            Precio: r.get('Precio')
+        const Obra = require('../models/Obra');
+        const obras = await Obra.find({
+            estado_obra: 'Disponible',
+            'genero.nombre': genero
+        })
+            .select('_id nombre precio fotografia genero.nombre')
+            .sort({ precio: 1 })
+            .limit(6)
+            .lean();
+
+        res.json(obras.map(o => ({
+            id_Obra: o._id,
+            Nombre: o.nombre,
+            Precio: o.precio,
+            fotografia: o.fotografia || ''
         })));
     } catch (err) {
         console.error('Error en obras por genero:', err);
         res.status(500).json({ error: err.message });
-    } finally {
-        await session.close();
     }
 });
 
@@ -275,84 +314,27 @@ router.get('/recomendaciones/por-similitud-ia/:idObra', async (req, res) => {
     const { idObra } = req.params;
     const session = getSession();
     try {
-        // Obtener embedding y tags CLIP de la obra de referencia
-        const obraRef = await session.run(
-            `MATCH (o:Obra {id_obra: $idObra}) 
-             WHERE o.embedding IS NOT NULL
-             RETURN o.embedding AS embedding, o.tagsClip AS tagsClip`,
-            { idObra: toNum(req.params.idObra) }
-        );
-
-        if (obraRef.records.length === 0) return res.json([]);
-
-        const embeddingRef = obraRef.records[0].get('embedding');
-        let tagsRef = [];
-        try { tagsRef = JSON.parse(obraRef.records[0].get('tagsClip') || '[]'); } catch (e) { }
-        const palabrasRef = new Set(tagsRef.map(t => t.tag));
-
-        // Obtener género y autores de la referencia
-        const infoObra = await session.run(
-            `MATCH (o:Obra {id_obra: $idObra})
-             OPTIONAL MATCH (o)<-[:CREO]-(a:Artista)-[:TRABAJA_EN]->(g:Genero)
-             RETURN collect(DISTINCT g.nombre) AS generos, 
-                    collect(DISTINCT a.id_artista) AS artistas`,
-            { idObra: toNum(req.params.idObra) }
-        );
-        const generosRef = infoObra.records[0]?.get('generos') || [];
-        const artistasRef = (infoObra.records[0]?.get('artistas') || []).map(a => toNum(a));
-
-        // Obtener obras disponibles
+        // Usar relaciones SIMILAR_A pre-calculadas (instantáneo)
         const result = await session.run(
-            `MATCH (o:Obra)
-             OPTIONAL MATCH (o)<-[:CREO]-(a:Artista)-[:TRABAJA_EN]->(g:Genero)
-             WHERE o.estado = 'Disponible' 
-               AND o.embedding IS NOT NULL
-               AND o.id_obra <> $idObra
-             RETURN o.id_obra AS idObra, 
-                    o.nombre AS nombre, 
-                    o.precio AS precio,
-                    o.fotografia AS fotografia,
-                    o.embedding AS embedding,
-                    o.tagsClip AS tagsClip,
-                    collect(DISTINCT g.nombre) AS generos,
-                    collect(DISTINCT a.id_artista) AS artistas
-             LIMIT 200`,
+            `MATCH (o:Obra {id_obra: $idObra})-[r:SIMILAR_A]->(similar:Obra)
+             WHERE similar.estado = 'Disponible'
+             RETURN similar.id_obra AS idObra,
+                    similar.nombre AS nombre,
+                    similar.precio AS precio,
+                    similar.fotografia AS fotografia,
+                    r.score AS similitud
+             ORDER BY r.score DESC
+             LIMIT 5`,
             { idObra: toNum(req.params.idObra) }
         );
 
-        const puntuadas = result.records.map(r => {
-            // Similitud de embedding (BLIP + metadatos)
-            const similitudBase = cosineSimilarity(embeddingRef, r.get('embedding'));
-
-            // Similitud de tags CLIP
-            let tagsObra = [];
-            try { tagsObra = JSON.parse(r.get('tagsClip') || '[]'); } catch (e) { }
-            const palabrasObra = new Set(tagsObra.map(t => t.tag));
-            const interseccion = [...palabrasRef].filter(t => palabrasObra.has(t)).length;
-            const bonusCLIP = palabrasRef.size > 0 ? interseccion / palabrasRef.size * 0.3 : 0;
-
-            // Bonus grafo
-            const generosObra = r.get('generos') || [];
-            const artistasObra = (r.get('artistas') || []).map(a => toNum(a));
-            const bonusGenero = generosObra.some(g => generosRef.includes(g)) ? 0.15 : 0;
-            const bonusAutor = artistasObra.some(a => artistasRef.includes(a)) ? 0.25 : 0;
-
-            const puntuacionFinal = Math.min(1, similitudBase + bonusCLIP + bonusGenero + bonusAutor);
-
-            return {
-                idObra: toNum(r.get('idObra')),
-                nombre: r.get('nombre'),
-                precio: toNum(r.get('precio')),
-                fotografia: r.get('fotografia') || '',
-                similitud: Math.round(puntuacionFinal * 100)
-            };
-        });
-
-        const top5 = puntuadas
-            .sort((a, b) => b.similitud - a.similitud)
-            .slice(0, 5);
-
-        res.json(top5);
+        res.json(result.records.map(r => ({
+            idObra: toNum(r.get('idObra')),
+            nombre: r.get('nombre'),
+            precio: toNum(r.get('precio')),
+            fotografia: r.get('fotografia') || '',
+            similitud: Math.round(toNum(r.get('similitud')) * 100)
+        })));
 
     } catch (err) {
         console.error('Error en similitud IA:', err);
