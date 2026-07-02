@@ -1,0 +1,294 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #0F0F0F;
+    padding: 20px;
+    color: white;
+}
+
+.register-container {
+    background: #1e1e1e;
+    padding: 50px 40px 40px 40px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border: 1px solid #333;
+    width: 100%;
+    max-width: 500px;
+    position: relative;
+    overflow: hidden;
+}
+
+.login-form h2 {
+    text-align: center;
+    color: #00ff00;
+    font-size: 30px;
+    font-weight: 800;
+    margin-top: -15px;
+    margin-bottom: 30px;
+    letter-spacing: -1px;
+}
+
+.input-row {
+    display: flex;
+    gap: 15px;
+}
+
+.input-group {
+    position: relative;
+    margin-bottom: 28px;
+    flex: 1;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px 12px;
+    font-size: 15px;
+    border: 2px solid #333;
+    border-radius: 8px;
+    outline: none;
+    transition: all 0.2s ease-in-out;
+    background-color: #252525;
+    color: white;
+}
+
+.input-group label {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    color: #888;
+    pointer-events: none;
+    transition: all 0.2s ease;
+}
+
+.input-group input:focus ~ label,
+.input-group input:valid ~ label {
+    top: -17px;
+    left: 4px;
+    font-size: 11px;
+    color: #00ff00;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.input-group input:focus {
+    border-color: #00ff00;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.1);
+}
+
+.input-group select {
+    width: 100%;
+    padding: 12px 8px;
+    font-size: 15px;
+    border: 2px solid #333;
+    border-radius: 8px;
+    outline: none;
+    transition: all 0.2s ease-in-out;
+    background-color: #252525;
+    color: white;
+    cursor: pointer;
+    appearance: auto;
+}
+
+.input-group select:focus {
+    border-color: #00ff00;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.1);
+}
+
+.input-group select ~ label {
+    top: -17px;
+    left: 4px;
+    font-size: 11px;
+    color: #00ff00;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.login-btn {
+    width: 100%;
+    padding: 16px;
+    margin-top: 10px;
+    background: #00ff00;
+    border: none;
+    border-radius: 5px;
+    color: #0F0F0F;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+}
+
+.login-btn:hover {
+    background: #00cc00;
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+}
+
+.register-link {
+    text-align: center;
+    margin-top: 25px;
+    font-size: 14px;
+    color: #888;
+}
+
+.register-link a {
+    color: #00ff00;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.forgot-password {
+    color: #00ff00;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0.8;
+}
+
+.electric-title {
+    color: #00ff00;
+    font-size: 14px;
+    text-transform: uppercase;
+    text-align: center;
+    font-weight: 800;
+}
+
+@media (max-width: 480px) {
+    .input-row {
+        flex-direction: column;
+        gap: 0;
+    }
+}
+
+.success-view { display: none; }
+.form-view { display: block; }
+
+.order-summary {
+    background: rgba(255, 255, 255, 0.05);
+    border-left: 4px solid #00ff00;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.order-info span { display: block; color: #999; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; }
+.order-info strong { color: #fff; font-size: 1.1rem; }
+
+.price-tag {
+    background: #00ff00;
+    color: #0F0F0F;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-weight: 900;
+    font-size: 1.4rem;
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.6);
+}
+
+.payment-section {
+    margin-top: 30px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 20px;
+}
+
+select {
+    width: 100%;
+    background: #1a1a1a;
+    color: #fff;
+    padding: 12px;
+    border: 1px solid #555;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    outline: none;
+}
+
+select:focus { border-color: #00ff00; }
+select option { background: #1a1a1a; color: #fff; }
+
+.input-row.no-stack { display: flex; gap: 10px; }
+.small { flex: 1; }
+
+.input-group.col-75 { flex: 0 0 75px; }
+.input-group.col-100 { flex: 0 0 100px; }
+.input-group.col-110 { flex: 0 0 110px; }
+.input-group.col-90 { flex: 0 0 90px; }
+
+.success-icon {
+    font-size: 60px;
+    margin-bottom: 20px;
+    color: #00ff00;
+    filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.4));
+    text-align: center;
+}
+
+.success-view .login-form {
+    text-align: center;
+}
+
+.welcome-text {
+    color: #ccc;
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+.welcome-text span {
+    color: #00ff00;
+    font-weight: 700;
+}
+
+.info-box {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.info-box p {
+    color: #888;
+    font-size: 14px;
+}
+
+.info-box .email-display {
+    color: #00ff00;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.success-note {
+    color: #555;
+    font-size: 12px;
+    margin-bottom: 25px;
+}
+
+.login-btn.inline-link {
+    text-decoration: none;
+    display: block;
+    text-align: center;
+}
+
+.back-link {
+    display: block;
+    margin-top: 20px;
+    color: #999;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+}
+
+.back-link:hover {
+    color: #ccc;
+}

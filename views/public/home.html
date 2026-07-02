@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Museo | Arte Contemporáneo</title>
+    <link rel="stylesheet" href="/styles/home-style.css">
+    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <a href="#" class="logo"> DO ART MAGIC</a>
+
+        <div class="nav-container">
+            <ul class="nav-links">
+                <li><a href="art-catalog.html">Catálogo</a></li>
+                <li><a href="artist-catalog.html">Artistas</a></li>
+            </ul>
+
+            <div class="auth-buttons" id="auth-buttons">
+                <a href="/public/login.html" class="btn-login">INICIAR SESION</a>
+                <a href="/public/register.html" class="btn-register">REGISTRARTE</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <h1>
+            <span class="outline">Tu Estilo</span>
+            <span class="neon">Tu Obra</span>
+        </h1>
+        <p>Desde piezas físicas de vanguardia hasta activos digitales exclusivos. Ofrecemos obras contemporáneas que
+            conectan con tu visión personal del arte.</p>
+        <a href="art-catalog.html" class="btn-main">Ver Obras Disponibles</a>
+    </header>
+
+    <section class="market-section" id="galeria">
+        <div class="section-header">
+            <h2>Obras <span>Destacadas</span></h2>
+            <p class="collection-label">Colección del
+                Museo</p>
+        </div>
+
+        <div class="art-grid" id="db-art-grid">
+            <p class="loading-text">Cargando obras destacadas...</p>
+        </div>
+        <div id="loader-mas" class="loader-mas">
+            <span>Cargando más obras...</span>
+        </div>
+
+    </section>
+
+    <footer>
+        &copy; 2026 DOART MAGIC TEAM. ALL RESERVED RIGHT.
+    </footer>
+
+    <script>
+        // Verificar sesión
+        async function checkSession() {
+            try {
+                const response = await fetch('/api/estado-usuario');
+                const data = await response.json();
+                if (data.autenticado) {
+                    const authButtons = document.getElementById('auth-buttons');
+                    const navContainer = document.querySelector('.nav-container');
+                    if (authButtons) authButtons.style.display = 'none';
+                    const resUser = await fetch('/api/usuario-actual');
+                    const user = await resUser.json();
+                    if (!document.querySelector('.user-profile')) {
+                        const userDiv = document.createElement('div');
+                        userDiv.className = 'user-profile';
+                        const panelLink = user.Rol === 'administrador' ? '/admin/admin-dashboard.html' : '/private/user-dashboard.html';
+                        const panelLabel = user.Rol === 'administrador' ? 'Panel Admin' : 'Mi Feed';
+                        userDiv.innerHTML = `
+                        <span style="margin-right: 15px; color: #eee; font-size: 0.75rem;">HOLA, ${user.Nombre}</span>
+                        <a href="${panelLink}" class="btn-panel">${panelLabel}</a>
+                        <a href="/logout" class="btn-logout" style="text-decoration: none; font-size: 0.7rem; margin-left: 10px;">Cerrar sesión</a>
+                    `;
+                        navContainer.appendChild(userDiv);
+                    }
+                }
+            } catch (e) {
+                console.error("Error al verificar sesión:", e);
+            }
+        }
+
+        async function guardarYAbrirObra(idObra) {
+            sessionStorage.setItem('abrirObra', idObra);
+            window.location.href = 'art-catalog.html';
+        }
+
+        // CARGAR DESTACADAS: primero populares, luego el resto
+        async function cargarDestacadas() {
+            const grid = document.getElementById('db-art-grid');
+            grid.innerHTML = '<p style="color:#444;text-align:center;width:100%;">Cargando obras destacadas...</p>';
+
+            try {
+                const popResp = await fetch('/api/recomendaciones/obras-destacadas?_=' + Date.now());
+                const populares = await popResp.json();
+                const todasResp = await fetch('/api/obras-filtradas?genero=all&artista=all&orden=desc&_=' + Date.now());
+                const todas = await todasResp.json();
+
+                let final = [...populares, ...todas];
+                const visto = new Set();
+                final = final.filter(o => {
+                    const id = Number(o.id_Obra || o.idObra);
+                    if (visto.has(id)) return false;
+                    visto.add(id);
+                    return true;
+                });
+
+                if (final.length === 0) {
+                    grid.innerHTML = '<p style="color:#444;text-align:center;width:100%;">No hay obras disponibles.</p>';
+                    return;
+                }
+
+                grid.innerHTML = final.map(o => {
+                    const img = o.imagen_url || o.fotografia || '';
+                    const nombre = o.Nombre || o.nombre || '';
+                    const autor = o.AutorNombre || o.autor || '';
+                    const precio = o.PrecioFormateado || (o.precio ? '$' + Number(o.precio).toLocaleString() : '');
+                    const id = Number(o.id_Obra || o.idObra);
+
+                    return `
+                <div class="art-card" onclick="guardarYAbrirObra(${id})" style="cursor:pointer; transition: transform 0.3s ease; position: relative;"
+                     onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <div class="art-img" style="background-image: url('${img}'); height:300px; background-size:cover; background-position:center; position: relative;">
+                    </div>
+                    <div class="art-info">
+                        <span class="art-author" style="color:#00ff00; font-size:0.65rem; text-transform:uppercase; font-weight:bold;">${autor || 'Anónimo'}</span>
+                        <h3 class="art-title" style="margin:8px 0; color:white; font-size:1rem;">${nombre}</h3>
+                        <span class="price" style="color:#00ff00; font-weight:bold;">${precio}</span>
+                    </div>
+                </div>`;
+                }).join('');
+
+            } catch (e) {
+                console.error('Error:', e);
+                grid.innerHTML = '<p style="color:#444;text-align:center;width:100%;">Error al cargar obras.</p>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', checkSession);
+        document.addEventListener('DOMContentLoaded', cargarDestacadas);
+    </script>
+</body>
+
+</html>

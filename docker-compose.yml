@@ -1,0 +1,117 @@
+services:
+
+  gateway:
+  
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+
+    ports:
+      - "3000:3000"
+
+    environment:
+      - PORT=3000
+      - AUTH_SERVICE_URL=http://auth:3001
+      - CATALOG_SERVICE_URL=http://catalog:3002
+      - USER_SERVICE_URL=http://user:3003
+      - CHECKOUT_SERVICE_URL=http://checkout:3004
+      - RECOMMENDATIONS_SERVICE_URL=http://recommendations:3005
+      - CHATBOT_SERVICE_URL=http://chatbot:3006
+      - ADMIN_SERVICE_URL=http://admin:3007
+
+    env_file:
+      - .env
+
+    depends_on:
+      - auth
+      - catalog
+      - user
+      - checkout
+      - recommendations
+      - chatbot
+      - admin
+    restart: unless-stopped
+
+  auth:
+    build:
+      context: .
+      dockerfile: modules/auth/Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - AUTH_SERVICE_PORT=3001
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  catalog:
+    build:
+      context: .
+      dockerfile: modules/catalog/Dockerfile
+    ports:
+      - "3002:3002"
+    environment:
+      - CATALOG_SERVICE_PORT=3002
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  user:
+    build:
+      context: .
+      dockerfile: modules/user/Dockerfile
+    ports:
+      - "3003:3003"
+    environment:
+      - USER_SERVICE_PORT=3003
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  checkout:
+    build:
+      context: .
+      dockerfile: modules/checkout/Dockerfile
+    ports:
+      - "3004:3004"
+    environment:
+      - CHECKOUT_SERVICE_PORT=3004
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  recommendations:
+    build:
+      context: .
+      dockerfile: modules/recommendations/Dockerfile
+    ports:
+      - "3005:3005"
+    environment:
+      - RECOMMENDATIONS_SERVICE_PORT=3005
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  chatbot:
+    build:
+      context: .
+      dockerfile: modules/chatbot/Dockerfile
+    ports:
+      - "3006:3006"
+    environment:
+      - CHATBOT_SERVICE_PORT=3006
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  admin:
+    build:
+      context: .
+      dockerfile: modules/admin/Dockerfile
+    ports:
+      - "3007:3007"
+    environment:
+      - ADMIN_SERVICE_PORT=3007
+    env_file:
+      - .env
+    restart: unless-stopped

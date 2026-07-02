@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Premium - Museo de Arte</title>
+    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+    <link rel="stylesheet" href="/styles/user-dashboard-style.css">
+
+        .menu a.active,
+        .menu a:hover {
+            background: rgba(0, 255, 0, 0.1);
+            color: #00ff00;
+        }
+
+        /* Botón Volver al Inicio */
+        .btn-home {
+            border: 1px solid #333;
+            margin-bottom: 20px;
+            text-align: center;
+            background: #111;
+            color: #fff !important;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+
+</head>
+
+<body>
+
+    <aside class="sidebar">
+        <div class="user-info">
+            <img id="user-avatar" src="https://ui-avatars.com/api/?name=U&background=00ff00&color=000&bold=true"
+                class="avatar" alt="Avatar">
+            <div>
+                <p class="premium-badge">Premium</p>
+                <p id="sidebar-nombre" class="sidebar-name">Cargando...</p>
+            </div>
+        </div>
+
+        <nav class="menu">
+            <a href="/public/home.html" class="btn-home">🏠 Volver al Inicio</a>
+
+            <a href="#" class="active" onclick="showView('view-dashboard', this)">Dashboard</a>
+            <a href="#" onclick="showView('view-compras', this); cargarCompras();">Mis Compras</a>
+            <a href="#" onclick="showView('view-membresia', this); cargarMembresia();">Membresía</a>
+            <a href="#" onclick="showView('view-seguridad', this)">Códigos de Seguridad</a>
+        </nav>
+
+        <div class="logout-container">
+            <a class="btn-logout" onclick="logout()">
+                <span>✕</span> Cerrar Sesión
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <section id="view-dashboard" class="view active-view">
+            <h1 id="welcome-msg" class="welcome-title">Bienvenido</h1>
+            <p class="welcome-sub">Tu panel de control exclusivo está listo.</p>
+            <div id="recomendaciones-container" class="recomendaciones-container"></div>
+        </section>
+
+        <section id="view-compras" class="view">
+            <div class="card">
+                <h2 class="section-title-green">Mis Obras Adquiridas</h2>
+                <div id="lista-compras">
+                    <p class="status-msg">Consultando tu colección...</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-seguridad" class="view">
+            <div class="card">
+                <h2 class="section-title">Configuración de Seguridad</h2>
+                <p id="status-msg" class="status-msg">Protege tu cuenta con
+                    estas 3 preguntas.</p>
+                <form id="form-seguridad">
+                    <div class="question-block">
+                        <h3 class="question-title">Pregunta #1</h3>
+                        <select name="pregunta1" required>
+                            <option value="mascota">¿Nombre de tu primera mascota?</option>
+                        </select>
+                        <input type="text" name="resp1" placeholder="Tu respuesta" required>
+                    </div>
+                    <div class="question-block">
+                        <h3 class="question-title">Pregunta #2</h3>
+                        <select name="pregunta2" required>
+                            <option value="escuela">¿Nombre de tu primera escuela?</option>
+                        </select>
+                        <input type="text" name="resp2" placeholder="Tu respuesta" required>
+                    </div>
+                    <div class="question-block">
+                        <h3 class="question-title">Pregunta #3</h3>
+                        <select name="pregunta3" required>
+                            <option value="ciudad">¿Ciudad donde naciste?</option>
+                        </select>
+                        <input type="text" name="resp3" placeholder="Tu respuesta" required>
+                    </div>
+
+                    <button type="submit" id="btn-save" class="btn-main">Guardar Configuración</button>
+                    <button type="button" id="btn-edit" class="btn-edit" onclick="toggleEdit(true)">Modificar
+                        Respuestas</button>
+                </form>
+            </div>
+        </section>
+
+        <section id="view-membresia" class="view">
+            <div class="card">
+                <h2 class="section-title">Mi Membresía</h2>
+                <table class="tabla-membresia">
+                    <thead>
+                        <tr>
+                            <th>Concepto</th>
+                            <th>Fecha Pago</th>
+                            <th>Estado</th>
+                            <th>Días Restantes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-membresia-body">
+                    </tbody>
+                </table>
+                <div class="card-divider">
+                    <h3>Informar pago realizado</h3>
+                    <div class="input-group">
+                        <input type="text" id="card-number" maxlength="19" placeholder="4444-4444-4444-4444" oninput="formatearTarjeta(); limpiarError('card-number')">
+                        <span id="error-card-number" class="error-msg"></span>
+                    </div>
+                    <div class="flex-row">
+                        <div class="flex-half">
+                            <select id="expiry-month" class="input-select" onchange="limpiarError('expiry-month')">
+                                <option value="">Mes</option>
+                                <option value="01">01 - Enero</option>
+                                <option value="02">02 - Febrero</option>
+                                <option value="03">03 - Marzo</option>
+                                <option value="04">04 - Abril</option>
+                                <option value="05">05 - Mayo</option>
+                                <option value="06">06 - Junio</option>
+                                <option value="07">07 - Julio</option>
+                                <option value="08">08 - Agosto</option>
+                                <option value="09">09 - Septiembre</option>
+                                <option value="10">10 - Octubre</option>
+                                <option value="11">11 - Noviembre</option>
+                                <option value="12">12 - Diciembre</option>
+                            </select>
+                            <span id="error-expiry-month" class="error-msg"></span>
+                        </div>
+                        <div class="flex-half">
+                            <select id="expiry-year" class="input-select" onchange="limpiarError('expiry-year')">
+                                <option value="">Año</option>
+                            </select>
+                            <span id="error-expiry-year" class="error-msg"></span>
+                        </div>
+                        <div class="flex-04">
+                            <input type="text" id="cvv" maxlength="3" placeholder="CVV" oninput="limpiarError('cvv')">
+                            <span id="error-cvv" class="error-msg"></span>
+                        </div>
+                    </div>
+                    <button class="btn-main btn-blue-bg" onclick="enviarSolicitudPago()">
+                        Enviar Pago para Revisión
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        let currentUserId = null;
+        let intervaloMembresia = null;
+
+        // Lógica para cambiar entre vistas
+        function showView(viewId, element) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
+            document.querySelectorAll('.menu a').forEach(a => a.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active-view');
+            element.classList.add('active');
+
+            // Auto-refresh cada 3s en la vista Membresía
+            if (intervaloMembresia) { clearInterval(intervaloMembresia); intervaloMembresia = null; }
+            if (viewId === 'view-membresia') {
+                intervaloMembresia = setInterval(cargarMembresia, 3000);
+            }
+        }
+
+
+
+        // CARGA INICIAL: Nombre, Foto y Recomendaciones
+        document.addEventListener('DOMContentLoaded', () => {
+            const anioSelect = document.getElementById('expiry-year');
+            const anioActual = new Date().getFullYear();
+            for (let a = anioActual; a <= 2100; a++) {
+                const opt = document.createElement('option');
+                opt.value = a;
+                opt.textContent = a;
+                anioSelect.appendChild(opt);
+            }
+            fetch('/api/usuario-actual')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.Nombre) {
+                        currentUserId = data.id_usuario;
+                        document.getElementById('sidebar-nombre').innerText = data.Nombre;
+                        document.getElementById('welcome-msg').innerText = `¡Bienvenido, ${data.Nombre}!`;
+                        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.Nombre)}&background=00ff00&color=000&bold=true&size=128`;
+                        document.getElementById('user-avatar').src = avatarUrl;
+                        cargarRecomendaciones();
+                    }
+                })
+                .catch(err => console.error("Error cargando sesión:", err));
+        });
+
+        // CONSULTA A BASE DE DATOS: Cargar obras compradas
+        async function cargarCompras() {
+            const contenedor = document.getElementById('lista-compras');
+            try {
+                const res = await fetch('/mis-compras');
+                const obras = await res.json();
+
+                contenedor.innerHTML = '';
+                if (obras.length === 0) {
+                    contenedor.innerHTML = '<p style="color: #666;">Aún no has realizado ninguna compra.</p>';
+                    return;
+                }
+
+                obras.forEach(obra => {
+                    const estadoColor = obra.Estado === 'Pagado' ? '#00ff00' : '#ffaa00';
+                    contenedor.innerHTML += `
+                        <div class="obra-comprada-card">
+                            <div>
+                                <strong style="font-size: 1.1rem; color: #fff;">${obra.Nombre}</strong>
+                                <p style="color: #888; font-size: 0.9rem;">Género: ${obra.Genero}</p>
+                            </div>
+                            <div style="text-align: right;">
+                                <p style="color: ${estadoColor}; font-weight: bold; font-size: 1.2rem;">$${obra.Precio}</p>
+                                <p style="color: #444; font-size: 0.8rem;">Fecha: ${new Date(obra.Fecha_emision).toLocaleDateString()}</p>
+                                <span style="color: ${estadoColor}; font-size: 0.7rem; border: 1px solid ${estadoColor}; padding: 2px 8px; border-radius: 2px;">${obra.Estado}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                console.error("Error al cargar obras:", error);
+                contenedor.innerHTML = '<p style="color: #ff4d4d;">Error al conectar con la base de datos.</p>';
+            }
+        }
+
+        // --- RECOMENDACIONES DESDE NEO4J ---
+        async function cargarRecomendaciones() {
+            const container = document.getElementById('recomendaciones-container');
+            container.innerHTML = '<div class="loading-rec">Cargando recomendaciones personalizadas...</div>';
+
+            try {
+                let html = '';
+
+                // 1. Mismo género
+                const res1 = await fetch(`/api/recomendaciones/mismo-genero/${currentUserId}`);
+                if (res1.ok) {
+                    const data = await res1.json();
+                    if (data.length > 0) {
+                        html += '<div class="rec-section"><h3>✦ Obras del mismo género que compraste</h3><div class="rec-grid">';
+                        data.forEach(r => {
+                            html += `<div class="rec-card">
+                                <h4>${r.Nombre}</h4>
+                                <div class="rec-meta">${r.Genero}</div>
+                                <div class="rec-price">$${r.Precio.toLocaleString()}</div>
+                            </div>`;
+                        });
+                        html += '</div></div>';
+                    }
+                }
+
+                // 2. Colaborativo
+                const res2 = await fetch(`/api/recomendaciones/colaborativo/${currentUserId}`);
+                if (res2.ok) {
+                    const data = await res2.json();
+                    if (data.length > 0) {
+                        html += '<div class="rec-section"><h3>✦ Otros compradores también compraron</h3><div class="rec-grid">';
+                        data.forEach(r => {
+                            html += `<div class="rec-card">
+                                <h4>${r.Nombre}</h4>
+                                <div class="rec-meta">Coincidencias: ${r.CantidadCoincidencias} compradores</div>
+                                <div class="rec-price">$${r.Precio.toLocaleString()}</div>
+                            </div>`;
+                        });
+                        html += '</div></div>';
+                    }
+                }
+
+                // 3. Personalizadas
+                const res3 = await fetch(`/api/recomendaciones/personalizadas/${currentUserId}`);
+                if (res3.ok) {
+                    const data = await res3.json();
+                    if (data.length > 0) {
+                        html += '<div class="rec-section"><h3>✦ Recomendado para ti</h3><div class="rec-grid">';
+                        data.forEach(r => {
+                            html += `<div class="rec-card">
+                                <h4>${r.Nombre}</h4>
+                                <div class="rec-meta">${r.Genero}</div>
+                                <div class="rec-price">$${r.Precio.toLocaleString()}</div>
+                            </div>`;
+                        });
+                        html += '</div></div>';
+                    }
+                }
+
+                // 4. Artistas populares
+                const res4 = await fetch('/api/recomendaciones/artistas-populares');
+                if (res4.ok) {
+                    const data = await res4.json();
+                    if (data.length > 0) {
+                        html += '<div class="rec-section"><h3>✦ Artistas más populares</h3><div class="rec-grid">';
+                        data.forEach(r => {
+                            html += `<div class="rec-card">
+                                <h4>${r.Artista}</h4>
+                                <div class="rec-stat"><span>${r.ObrasVendidas}</span> obras vendidas · <span>${r.CompradoresUnicos}</span> compradores</div>
+                            </div>`;
+                        });
+                        html += '</div></div>';
+                    }
+                }
+
+                // 5. Géneros populares
+                const res5 = await fetch('/api/recomendaciones/generos-populares');
+                if (res5.ok) {
+                    const data = await res5.json();
+                    if (data.length > 0) {
+                        html += '<div class="rec-section"><h3>✦ Géneros con más ventas</h3><div class="rec-grid">';
+                        data.forEach(r => {
+                            html += `<div class="rec-card">
+                                <h4>${r.Genero}</h4>
+                                <div class="rec-stat"><span>${r.ObrasVendidas}</span> vendidas · <span>$${r.IngresoTotal.toLocaleString()}</span> ingresos</div>
+                                <div class="rec-meta">Precio prom: $${r.PrecioPromedio.toLocaleString()}</div>
+                            </div>`;
+                        });
+                        html += '</div></div>';
+                    }
+                }
+
+                if (!html) {
+                    html = '<p style="color: #666;">Aún no hay suficientes datos para generar recomendaciones. ¡Compra tu primera obra!</p>';
+                }
+                // 6. Recomendados para ti (nuevo sistema unificado)
+                try {
+                    const res6 = await fetch(`/api/recomendaciones/para-ti/${currentUserId}`);
+                    if (res6.ok) {
+                        const data = await res6.json();
+                        if (data.length > 0) {
+                            html += '<div class="rec-section"><h3>✦ Recomendados para ti</h3><div class="rec-grid">';
+                            data.forEach(r => {
+                                html += `<div class="rec-card" onclick="sessionStorage.setItem('abrirObra', ${r.idObra}); window.location.href='/public/art-catalog.html';" style="cursor:pointer;">
+                    <h4>${r.nombre}</h4>
+                    <div class="rec-meta">${r.motivo || 'Basado en tu actividad'}</div>
+                    <div class="rec-price">$${Number(r.precio).toLocaleString()}</div>
+                </div>`;
+                            });
+                            html += '</div></div>';
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error cargando para-ti:', e);
+                }
+                container.innerHTML = html;
+
+            } catch (e) {
+                console.error('Error cargando recomendaciones:', e);
+                container.innerHTML = '<p style="color: #ff4d4d;">Error al cargar recomendaciones. Verifica conexión a Neo4j.</p>';
+            }
+        }
+
+        // Resto de funciones (Membresía, Logout, Seguridad) se mantienen igual...
+        async function cargarMembresia() {
+            const tbody = document.getElementById('tabla-membresia-body');
+            try {
+                const response = await fetch('/api/membresia-usuario');
+                const datos = await response.json();
+                tbody.innerHTML = '';
+                if (datos.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Sin registros.</td></tr>';
+                    return;
+                }
+                datos.forEach(pago => {
+                    const { estadoColor = '#ff0000', diasLabel = '-', estiloFila = '' } = pago;
+
+                    if (pago.Tipo === 'total') {
+                        tbody.innerHTML += `
+                            <tr style="${estiloFila}">
+                                <td colspan="3" style="text-align: right; padding-right: 20px;">${pago.Concepto}:</td>
+                                <td style="color: ${estadoColor}; font-size: 1.1rem; font-weight: bold;">${diasLabel}</td>
+                            </tr>
+                        `;
+                    } else if (pago.Tipo === 'detalle') {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${pago.Concepto}</td>
+                                <td>${pago.FechaInicio ? new Date(pago.FechaInicio).toLocaleDateString() : '-'}</td>
+                                <td style="color: #00ff00;">${pago.EstadoPago}</td>
+                                <td>${diasLabel}</td>
+                            </tr>
+                        `;
+                    } else {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${pago.Concepto}</td>
+                                <td>${pago.FechaInicio ? new Date(pago.FechaInicio).toLocaleDateString() : '-'}</td>
+                                <td style="color: ${estadoColor}">${pago.EstadoPago}</td>
+                                <td>-</td>
+                            </tr>
+                        `;
+                    }
+                });
+            } catch (error) { console.error(error); }
+        }
+
+        function logout() {
+            if (confirm("¿Deseas cerrar tu sesión?")) {
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.href = "/logout";
+            }
+        }
+
+        // --- VALIDACIONES ---
+        function limpiarError(id) {
+            const input = document.getElementById(id);
+            const error = document.getElementById('error-' + id);
+            if (error) error.textContent = '';
+            input.classList.remove('input-error');
+        }
+
+        function marcarError(id, mensaje) {
+            const input = document.getElementById(id);
+            const error = document.getElementById('error-' + id);
+            if (error) error.textContent = mensaje;
+            input.classList.add('input-error');
+        }
+
+        function formatearTarjeta() {
+            const input = document.getElementById('card-number');
+            let valor = input.value.replace(/[^0-9]/g, '').slice(0, 16);
+            let formateado = '';
+            for (let i = 0; i < valor.length; i++) {
+                if (i > 0 && i % 4 === 0) formateado += '-';
+                formateado += valor[i];
+            }
+            input.value = formateado;
+        }
+
+        function validarTarjeta(numero) {
+            const limpio = numero.replace(/-/g, '');
+            if (!/^\d{16}$/.test(limpio)) return 'Deben ser 16 dígitos (4444-4444-4444-4444)';
+            return '';
+        }
+
+        function validarFechaExpiracion(mes, anio) {
+            if (!mes) return 'Selecciona el mes';
+            if (!anio) return 'Selecciona el año';
+            const ahora = new Date();
+            const expira = new Date(parseInt(anio), parseInt(mes), 0);
+            if (expira < ahora) return 'Tarjeta vencida';
+            return '';
+        }
+
+        function validarCVV(cvv) {
+            if (!/^\d{3}$/.test(cvv)) return 'Debe ser 3 dígitos';
+            return '';
+        }
+
+        // --- LÓGICA DE GESTIÓN DE PAGOS ---
+        async function enviarSolicitudPago() {
+            const card = document.getElementById('card-number').value.trim();
+            const mes = document.getElementById('expiry-month').value;
+            const anio = document.getElementById('expiry-year').value;
+            const cvv = document.getElementById('cvv').value.trim();
+
+            let valido = true;
+
+            const errCard = validarTarjeta(card);
+            if (errCard) { marcarError('card-number', errCard); valido = false; }
+
+            const errExpiry = validarFechaExpiracion(mes, anio);
+            if (errExpiry) {
+                if (!mes) marcarError('expiry-month', errExpiry);
+                if (!anio) marcarError('expiry-year', 'Selecciona el año');
+                if (mes && anio) {
+                    marcarError('expiry-month', errExpiry);
+                    marcarError('expiry-year', errExpiry);
+                }
+                valido = false;
+            }
+
+            const errCvv = validarCVV(cvv);
+            if (errCvv) { marcarError('cvv', errCvv); valido = false; }
+
+            if (!valido) return;
+
+            document.getElementById('card-number').classList.add('input-valid');
+            document.getElementById('expiry-month').classList.add('input-valid');
+            document.getElementById('expiry-year').classList.add('input-valid');
+            document.getElementById('cvv').classList.add('input-valid');
+
+            const expiry = mes + '/' + anio.slice(-2);
+
+            if (!confirm("¿Confirmas que deseas enviar los datos para revisión del administrador?")) return;
+
+            try {
+                const response = await fetch('/solicitar-pago', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cardNumber: card, expiry: expiry, cvv: cvv })
+                });
+
+                if (response.ok) {
+                    alert("Solicitud enviada con éxito. El administrador revisará tu información pronto.");
+                    document.getElementById('card-number').value = '';
+                    document.getElementById('expiry-month').value = '';
+                    document.getElementById('expiry-year').value = '';
+                    document.getElementById('cvv').value = '';
+                    document.querySelectorAll('.input-valid').forEach(e => e.classList.remove('input-valid'));
+                } else {
+                    alert("Error al enviar la solicitud al servidor.");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Ocurrió un error de conexión.");
+            }
+        }
+
+        // Asegúrate de que este evento esté correctamente asignado
+        const form = document.getElementById('form-seguridad');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault(); // ¡Esto evita el envío tradicional del formulario!
+
+            const datos = [
+                { pregunta: form.querySelector('select[name="pregunta1"]').value, resp: form.querySelector('input[name="resp1"]').value },
+                { pregunta: form.querySelector('select[name="pregunta2"]').value, resp: form.querySelector('input[name="resp2"]').value },
+                { pregunta: form.querySelector('select[name="pregunta3"]').value, resp: form.querySelector('input[name="resp3"]').value }
+            ];
+
+            try {
+                const response = await fetch('/guardar-seguridad', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datos)
+                });
+
+                if (response.ok) {
+                    alert("¡Preguntas guardadas con éxito!");
+                } else {
+                    const errorText = await response.text();
+                    alert("Error: " + errorText);
+                }
+            } catch (error) {
+                console.error("Error al conectar:", error);
+            }
+        });
+    </script>
+</body>
+
+</html>

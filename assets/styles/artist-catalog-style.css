@@ -1,0 +1,153 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+html { scroll-behavior: smooth; }
+body { padding-top: 100px; background: #0F0F0F; color: white; margin: 0; }
+
+.navbar {
+    position: fixed; top: 0; width: 100%; height: 80px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 5%;     background: rgba(15, 15, 15, 0.95);
+    backdrop-filter: blur(15px); z-index: 9999;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    box-sizing: border-box;
+}
+
+.logo { color: white; text-decoration: none; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; }
+.nav-container { display: flex; align-items: center; gap: 40px; }
+.nav-links { display: flex; list-style: none; gap: 30px; margin: 0; padding: 0; }
+.nav-links a { color: white; text-decoration: none; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px; transition: 0.3s; }
+.nav-links a:hover, .nav-links a.active { color: #00ff00; }
+
+.auth-buttons { display: flex; align-items: center; gap: 15px; }
+
+.btn-login {
+    color: white;
+    text-decoration: none;
+    font-size: 0.75rem;
+}
+
+.btn-register {
+    border: 1px solid #00ff00;
+    color: #00ff00;
+    padding: 8px 15px;
+    text-decoration: none;
+    font-size: 0.75rem;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    white-space: nowrap;
+}
+
+.btn-panel, .btn-logout {
+    text-decoration: none;
+    padding: 5px 12px;
+    font-size: 0.7rem;
+    transition: 0.3s ease;
+    letter-spacing: 1px;
+    background: transparent;
+    display: inline-block;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.btn-panel {
+    color: #00ff00;
+    border: 1px solid #00ff00;
+    margin-right: 10px;
+}
+
+.btn-panel:hover {
+    background: #00ff00;
+    color: #0F0F0F;
+    box-shadow: 0 0 20px #00ff00;
+    cursor: pointer;
+}
+
+.btn-logout {
+    color: red;
+    border: 1px solid #ff4444;
+    text-decoration: none;
+    font-size: 0.7rem;
+    margin-left: 10px;
+}
+
+.btn-logout:hover {
+    background: #ff4444;
+    color: #0F0F0F;
+    box-shadow: 0 0 20px #ff4444;
+    cursor: pointer;
+}
+
+.container { width: 84%; margin: 0 auto; }
+
+.section-header { text-align: center; margin-bottom: 60px; }
+.section-header h1 { text-transform: uppercase; letter-spacing: 15px; font-size: 2.5rem; color: #fff; margin-bottom: 10px; }
+.section-header p { color: #00ff00; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 3px; }
+
+.artists-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 40px;
+    padding-bottom: 100px;
+}
+
+.artist-card {
+    background: #0F0F0F;
+    border: 1px solid #222;
+    padding: 30px 20px;
+    text-align: center;
+    transition: all 0.4s ease;
+    cursor: pointer;
+}
+
+.artist-card:hover {
+    border-color: #00ff00;
+    transform: translateY(-10px);
+    box-shadow: 0 10px 30px rgba(0, 255, 0, 0.05);
+}
+
+.artist-photo-frame {
+    width: 160px; height: 160px;
+    margin: 0 auto 25px;
+    border: 1px solid #222;
+    padding: 5px;
+    border-radius: 50%;
+    transition: 0.4s;
+}
+
+.artist-card:hover .artist-photo-frame { border-color: #00ff00; }
+
+.artist-photo-frame img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    filter: grayscale(100%);
+    transition: 0.4s;
+}
+
+.artist-card:hover img { filter: grayscale(0%); }
+
+.artist-name { font-size: 1.1rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; color: #fff; }
+.artist-specialty { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 20px; }
+
+.tag {
+    font-size: 0.6rem;
+    background: #0F0F0F;
+    color: #00ff00;
+    padding: 4px 10px;
+    border: 1px solid #222;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.artist-info {
+    font-size: 0.7rem;
+    color: #555;
+    border-top: 1px solid #222;
+    padding-top: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Panel Administrativo - Museo</title>
+    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <link rel="stylesheet" href="/styles/admin-dashboard-style.css">
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <h2>Museo UNEG</h2>
+
+        <div class="nav-group">
+            <div class="nav-parent open" onclick="toggleGroup('catalog-group')">
+                <span>🖼️ Gestión de Catálogo</span>
+                <span class="arrow" id="arrow-catalog-group">▾</span>
+            </div>
+            <div id="catalog-group" class="sub-nav open">
+                <div class="nav-item active" id="btn-gestion" onclick="mostrarTab('gestion')">📦 Inventario</div>
+                <div class="nav-item" id="btn-facturacion" onclick="mostrarTab('facturacion')">🧾 Facturar Reservas</div>
+                <div class="nav-item" id="btn-autores" onclick="mostrarTab('autores')">✍️ Autores</div>
+                <div class="nav-item" id="btn-generos" onclick="mostrarTab('generos')">🎭 Géneros</div>
+                <div class="nav-item" id="btn-obras" onclick="mostrarTab('obras')">🖼️ Obras</div>
+                <div class="nav-item" id="btn-rep-obras" onclick="mostrarTab('rep-obras')">📊 Obras Vendidas</div>
+                <div class="nav-item" id="btn-rep-facturas" onclick="mostrarTab('rep-facturas')">📈 Resumen Facturación</div>
+                <div class="nav-item" id="btn-rep-membresias" onclick="mostrarTab('rep-membresias')">🎫 Reporte Membresías</div>
+                <div class="nav-item" id="btn-tendencias" onclick="mostrarTab('tendencias')">📈 Tendencias</div>
+            </div>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-parent" onclick="toggleGroup('users-group')">
+                <span>👥 Administración de Usuarios</span>
+                <span class="arrow" id="arrow-users-group">▾</span>
+            </div>
+            <div id="users-group" class="sub-nav">
+                <div class="nav-item" id="btn-usuarios" onclick="mostrarTab('usuarios')">👥 Usuarios</div>
+                <div class="nav-item" id="btn-usuarios-pagos" onclick="mostrarTab('usuarios-pagos')">💳 Pagos Membresía</div>
+                <div class="nav-item" id="btn-validar-usuarios" onclick="mostrarTab('validar-usuarios')">✅ Validar Registros</div>
+            </div>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-parent" onclick="toggleGroup('security-group')">
+                <span>🔒 Seguridad</span>
+                <span class="arrow" id="arrow-security-group">▾</span>
+            </div>
+            <div id="security-group" class="sub-nav">
+                <div class="nav-item" id="btn-historial-estatus" onclick="mostrarTab('historial-estatus')">📋 Historial Estatus</div>
+                <div class="nav-item" id="btn-logs-seguridad" onclick="mostrarTab('logs-seguridad')">🔒 Bitácora Seguridad</div>
+                <div class="nav-item text-danger" onclick="cerrarSesion()">🚪 Cerrar Sesión</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main">
+        <header class="main-header">
+            <h1 id="titulo-seccion">Panel Administrativo</h1>
+        </header>
+        <div id="module-container"></div>
+    </div>
+
+    <script>
+        const loadedModules = {};
+
+        function deshabilitarBoton(btn, tiempo) {
+            if (!btn) return;
+            btn.disabled = true;
+            setTimeout(() => { btn.disabled = false; }, tiempo);
+        }
+
+        function toggleGroup(id) {
+            const el = document.getElementById(id);
+            const parent = el?.previousElementSibling;
+            if (!el || !parent) return;
+            const isOpen = el.classList.toggle('open');
+            parent.classList.toggle('open', isOpen);
+        }
+
+        const tabToModule = {
+            gestion: 'catalog', facturacion: 'catalog',
+            'rep-obras': 'catalog', 'rep-facturas': 'catalog', 'rep-membresias': 'catalog',
+            generos: 'catalog', autores: 'catalog', obras: 'catalog', tendencias: 'catalog',
+            usuarios: 'users', 'usuarios-pagos': 'users', 'validar-usuarios': 'users',
+            'historial-estatus': 'security', 'logs-seguridad': 'security'
+        };
+
+        const moduleFiles = {
+            catalog: 'admin-catalog.html',
+            users: 'admin-users.html',
+            security: 'admin-security.html'
+        };
+
+        async function mostrarTab(tab) {
+            const titulos = {
+                gestion: 'Gestión de Inventario', facturacion: 'Facturación de Reservas',
+                'rep-obras': 'Reporte de Obras Vendidas', 'rep-facturas': 'Resumen de Facturación',
+                'rep-membresias': 'Reporte de Membresías Pagadas',
+                generos: 'Gestión de Géneros', autores: 'Gestión de Autores', obras: 'Gestión de Obras',
+                tendencias: 'Tendencias del Museo',
+                usuarios: 'Gestión de Usuarios del Sistema', 'usuarios-pagos': 'Validar Pagos de Membresía',
+                'validar-usuarios': 'Validar Registro de Usuarios',
+                'historial-estatus': 'Historial de Cambios de Estatus', 'logs-seguridad': 'Bitácora de Seguridad'
+            };
+
+            document.getElementById('titulo-seccion').textContent = titulos[tab] || 'Panel Administrativo';
+
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            const btnElement = document.getElementById('btn-' + tab);
+            if (btnElement) {
+                btnElement.classList.add('active');
+                const subNav = btnElement.closest('.sub-nav');
+                if (subNav && !subNav.classList.contains('open')) {
+                    subNav.classList.add('open');
+                    const parent = subNav.previousElementSibling;
+                    if (parent) parent.classList.add('open');
+                }
+            }
+
+            const module = tabToModule[tab];
+            if (!module) return;
+
+            const container = document.getElementById('module-container');
+
+            if (!loadedModules[module]) {
+                container.innerHTML = '<p id="loading-msg" style="text-align:center;padding:40px;color:#718096;">Cargando...</p>';
+                try {
+                    console.log('Cargando módulo:', module, moduleFiles[module]);
+                    const res = await fetch(`/admin/${moduleFiles[module]}`);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                    const html = await res.text();
+                    console.log('Módulo cargado:', html.length, 'bytes');
+                    const scripts = [];
+                    const htmlClean = html.replace(/<script>([\s\S]*?)<\/script>/g, (_, code) => {
+                        scripts.push(code);
+                        return '';
+                    });
+                    container.innerHTML = htmlClean;
+                    console.log('Scripts extraídos:', scripts.length);
+                    scripts.forEach((code, i) => {
+                        const s = document.createElement('script');
+                        s.textContent = code;
+                        document.body.appendChild(s);
+                        console.log('Script', i, 'ejecutado');
+                    });
+                    loadedModules[module] = true;
+                    console.log('Módulo cargado exitosamente:', module);
+                } catch (err) {
+                    console.error('Error cargando módulo:', err);
+                    container.innerHTML = `<p style="text-align:center;padding:40px;color:#e53e3e;">Error al cargar módulo: ${err.message}</p>`;
+                    return;
+                }
+            }
+
+            document.querySelectorAll('#module-container .tab-content').forEach(t => t.classList.remove('active'));
+            const tabElement = document.getElementById('tab-' + tab);
+            if (tabElement) {
+                tabElement.classList.add('active');
+                console.log('Tab mostrado:', tab);
+            } else {
+                console.warn('Tab no encontrado:', 'tab-' + tab);
+            }
+
+            const loaders = {
+                gestion: () => {
+                    const fn = window.cargarObrasGestion;
+                    if (typeof fn === 'function') fn();
+                },
+                facturacion: () => {
+                    const fn = window.cargarReservadas;
+                    if (typeof fn === 'function') fn();
+                },
+                usuarios: () => {
+                    const fn = window.cargarUsuariosGestion;
+                    if (typeof fn === 'function') fn();
+                },
+                'usuarios-pagos': () => {
+                    const fn = window.cargarPagos;
+                    if (typeof fn === 'function') fn();
+                },
+                'validar-usuarios': () => {
+                    const fn = window.cargarUsuariosPendientes;
+                    if (typeof fn === 'function') fn();
+                },
+                generos: () => {
+                    const fn = window.cargarGeneros;
+                    if (typeof fn === 'function') fn();
+                },
+                autores: () => {
+                    if (typeof window.cargarAutores === 'function') window.cargarAutores();
+                    if (typeof window.cargarNacionalidades === 'function') window.cargarNacionalidades();
+                },
+                obras: () => {
+                    if (typeof window.cargarObrasAdmin === 'function') window.cargarObrasAdmin();
+                    if (typeof window.cargarGenerosSelect === 'function') window.cargarGenerosSelect();
+                    if (typeof window.cargarAutoresSelect === 'function') window.cargarAutoresSelect();
+                },
+                'rep-obras': () => {
+                    const hoy = new Date();
+                    const hace30 = new Date(); hace30.setDate(hoy.getDate() - 30);
+                    const el1 = document.getElementById('obras-inicio');
+                    const el2 = document.getElementById('obras-fin');
+                    if (el1) el1.value = hace30.toISOString().split('T')[0];
+                    if (el2) el2.value = hoy.toISOString().split('T')[0];
+                    if (typeof window.consultarObras === 'function') window.consultarObras();
+                },
+                'rep-facturas': () => {
+                    const hoy = new Date();
+                    const hace30 = new Date(); hace30.setDate(hoy.getDate() - 30);
+                    const el1 = document.getElementById('fact-inicio');
+                    const el2 = document.getElementById('fact-fin');
+                    if (el1) el1.value = hace30.toISOString().split('T')[0];
+                    if (el2) el2.value = hoy.toISOString().split('T')[0];
+                    if (typeof window.consultarFacturacion === 'function') window.consultarFacturacion();
+                },
+                'rep-membresias': () => {
+                    const hoy = new Date();
+                    const hace30 = new Date(); hace30.setDate(hoy.getDate() - 30);
+                    const el1 = document.getElementById('mem-inicio');
+                    const el2 = document.getElementById('mem-fin');
+                    if (el1) el1.value = hace30.toISOString().split('T')[0];
+                    if (el2) el2.value = hoy.toISOString().split('T')[0];
+                    if (typeof window.consultarMembresias === 'function') window.consultarMembresias();
+                },
+                'historial-estatus': () => {
+                    const fn = window.cargarObrasConHistorial;
+                    if (typeof fn === 'function') fn();
+                },
+                'logs-seguridad': () => {
+                    const fn = window.cargarLogsSeguridad;
+                    if (typeof fn === 'function') fn();
+                },
+                tendencias: () => {
+                    const fn = window.cargarTendencias;
+                    if (typeof fn === 'function') fn();
+                }
+            };
+
+            const loader = loaders[tab];
+            if (loader) setTimeout(loader, 50);
+        }
+
+        function cerrarSesion() {
+            if (confirm("¿Cerrar sesión?")) {
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.href = '/logout';
+            }
+        }
+
+        window.onload = () => mostrarTab('gestion');
+
+        // Re-listen to document clicks for autor dropdown (re-binds after module load)
+        document.addEventListener('click', function (e) {
+            const c = document.getElementById('autor-selector-container');
+            const fn = window.cerrarDropdownAutores;
+            if (c && !c.contains(e.target) && typeof fn === 'function') fn();
+        });
+    </script>
+</body>
+
+</html>

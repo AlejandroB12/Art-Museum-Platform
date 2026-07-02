@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Envío | Museo</title>
+    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+    <link rel="stylesheet" href="/styles/shipping-address-style.css">
+</head>
+<body>
+    <div class="register-container" id="app">
+        <!-- FORM VIEW -->
+        <div id="formView" class="form-view">
+            <form class="login-form" id="envioForm">
+                <h2>ENVÍO</h2>
+                <p>Confirma los datos para el envío de la obra</p>
+
+                <div class="order-summary" id="facturaSummary">
+                    <p><strong>#Factura:</strong> <span id="facturaNumero">Cargando...</span></p>
+                    <p><strong>Cliente:</strong> <span id="clienteNombre">Cargando...</span></p>
+                    <p><strong>Cédula:</strong> <span id="clienteCedula">Cargando...</span></p>
+                    <p><strong>Obra:</strong> <span id="obraDetalle">Cargando...</span></p>
+                    <p><strong>Total con IVA:</strong> <span id="totalPagado">Cargando...</span>€</p>
+                </div>
+
+                <div class="address-card">
+                    <h3>📦 Dirección de Envío</h3>
+
+                    <div class="address-label">Estado</div>
+                    <select id="estado" required>
+                        <option value="">Cargando estados...</option>
+                    </select>
+
+                    <div class="address-label">Municipio</div>
+                    <select id="municipio" required disabled>
+                        <option value="">Primero seleccione un estado</option>
+                    </select>
+
+                    <div class="address-label">Parroquia</div>
+                    <select id="parroquia" required disabled>
+                        <option value="">Primero seleccione un municipio</option>
+                    </select>
+
+                    <div class="address-label">Calle / Av / Urbanización</div>
+                    <input type="text" id="direccion" placeholder="Ej: Calle 3, atlántico. Los Mangos" required>
+                </div>
+
+                <div class="guia-field">
+                    <label>📦 Número de guía (opcional):</label>
+                    <input type="text" id="numeroGuia" placeholder="Ej: 1234-5678-90">
+                </div>
+
+                <button type="submit" class="login-btn" id="submitBtn">Confirmar envío</button>
+
+                <div class="loading" id="loading">Procesando...</div>
+                <div class="error-message" id="error"></div>
+            </form>
+
+            <a href="/admin/admin-dashboard.html" class="back-link">← Volver al panel</a>
+        </div>
+
+        <!-- SUCCESS VIEW -->
+        <div id="successView" class="success-view">
+            <div class="check-icon">✅</div>
+            <h2>ENVIO REGISTRADO</h2>
+            <p class="success-message">El envío de la obra ha sido registrado exitosamente</p>
+            <div class="order-summary" id="successSummary">
+                <p><strong>#Factura:</strong> <span id="successFactura">Cargando...</span></p>
+                <p><strong>Cliente:</strong> <span id="successCliente">Cargando...</span></p>
+                <p><strong>Destino:</strong> <span id="successDestino">Cargando...</span></p>
+                <p><strong>Dirección:</strong> <span id="successDireccion">Cargando...</span></p>
+                <p><strong>Número de guía:</strong> <span id="successGuia">N/A</span></p>
+            </div>
+            <a href="/admin/admin-dashboard.html" class="login-btn">← Volver al panel</a>
+            <div class="loading loading-top" id="successLoading">Redirigiendo al panel...</div>
+        </div>
+    </div>
+
+    <script>
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error').textContent = message;
+            document.getElementById('submitBtn').disabled = false;
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const idFactura = urlParams.get('id_factura');
+
+        if (!idFactura) {
+            alert('No se especificó ninguna factura');
+            window.location.href = '/admin/admin-dashboard.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            await cargarEstados();
+            await cargarFactura();
+        });
+
+        async function cargarEstados() {
+            try {
+                const response = await fetch('/api/estados');
+                if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+                const data = await response.json();
+                const selectEstado = document.getElementById('estado');
+                if (Array.isArray(data)) {
+                    selectEstado.innerHTML = '<option value="">Seleccione un estado</option>';
+                    data.forEach(estado => {
+                        selectEstado.innerHTML += `<option value="${estado.id_estado}">${estado.nombre}</option>`;
+                    });
+                } else if (data.success && data.estados) {
+                    selectEstado.innerHTML = '<option value="">Seleccione un estado</option>';
+                    data.estados.forEach(estado => {
+                        selectEstado.innerHTML += `<option value="${estado.id_estado}">${estado.nombre}</option>`;
+                    });
+                } else {
+                    throw new Error('Formato de datos no reconocido');
+                }
+            } catch (error) {
+                document.getElementById('estado').innerHTML = '<option value="">Error cargando estados</option>';
+                showError('Error al cargar los estados: ' + error.message);
+            }
+        }
+
+        document.getElementById('estado').addEventListener('change', async function() {
+            const idEstado = this.value;
+            const selectMunicipio = document.getElementById('municipio');
+            const selectParroquia = document.getElementById('parroquia');
+            selectMunicipio.disabled = true;
+            selectParroquia.disabled = true;
+            selectParroquia.innerHTML = '<option value="">Primero seleccione un municipio</option>';
+            if (!idEstado) {
+                selectMunicipio.innerHTML = '<option value="">Primero seleccione un estado</option>';
+                return;
+            }
+            try {
+                const response = await fetch(`/api/municipios/${idEstado}`);
+                if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+                const data = await response.json();
+                selectMunicipio.innerHTML = '<option value="">Seleccione un municipio</option>';
+                if (Array.isArray(data)) {
+                    data.forEach(municipio => {
+                        selectMunicipio.innerHTML += `<option value="${municipio.id_municipio}">${municipio.nombre}</option>`;
+                    });
+                } else if (data.success && data.municipios) {
+                    data.municipios.forEach(municipio => {
+                        selectMunicipio.innerHTML += `<option value="${municipio.id_municipio}">${municipio.nombre}</option>`;
+                    });
+                } else {
+                    throw new Error('Formato de datos no reconocido');
+                }
+                selectMunicipio.disabled = false;
+            } catch (error) {
+                selectMunicipio.innerHTML = '<option value="">Error cargando municipios</option>';
+            }
+        });
+
+        document.getElementById('municipio').addEventListener('change', async function() {
+            const idMunicipio = this.value;
+            const selectParroquia = document.getElementById('parroquia');
+            selectParroquia.disabled = true;
+            if (!idMunicipio) {
+                selectParroquia.innerHTML = '<option value="">Primero seleccione un municipio</option>';
+                return;
+            }
+            try {
+                const response = await fetch(`/api/parroquias/${idMunicipio}`);
+                if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+                const data = await response.json();
+                selectParroquia.innerHTML = '<option value="">Seleccione una parroquia</option>';
+                if (Array.isArray(data)) {
+                    data.forEach(parroquia => {
+                        selectParroquia.innerHTML += `<option value="${parroquia.id_parroquia}">${parroquia.nombre}</option>`;
+                    });
+                } else if (data.success && data.parroquias) {
+                    data.parroquias.forEach(parroquia => {
+                        selectParroquia.innerHTML += `<option value="${parroquia.id_parroquia}">${parroquia.nombre}</option>`;
+                    });
+                } else {
+                    throw new Error('Formato de datos no reconocido');
+                }
+                selectParroquia.disabled = false;
+            } catch (error) {
+                selectParroquia.innerHTML = '<option value="">Error cargando parroquias</option>';
+            }
+        });
+
+        async function cargarFactura() {
+            try {
+                const response = await fetch(`/api/factura/${idFactura}`);
+                if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+                const data = await response.json();
+                if (data.success && data.factura) {
+                    const f = data.factura;
+                    const facturaFormateada = f.id_factura.toString().padStart(8, '0');
+                    document.getElementById('facturaNumero').textContent = facturaFormateada;
+                    document.getElementById('clienteNombre').textContent = f.CompradorNombre || `${f.Nombre || ''} ${f.Apellido || ''}`.trim() || 'No disponible';
+                    document.getElementById('clienteCedula').textContent = f.CompradorCedula || f.Cedula || 'No disponible';
+                    const precioFormateado = (f.Precio || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    document.getElementById('obraDetalle').textContent = `${f.nombre_obra || 'Obra'} - ${precioFormateado}€`;
+                    const totalFormateado = (f.Total_Pagado || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    document.getElementById('totalPagado').textContent = totalFormateado;
+                    if (data.direccion) {
+                        await seleccionarDireccion(data.direccion);
+                    }
+                } else {
+                    throw new Error(data.message || 'Error al cargar la factura');
+                }
+            } catch (error) {
+                showError('Error al cargar los datos de la factura: ' + error.message);
+            }
+        }
+
+        async function seleccionarDireccion(direccion) {
+            if (!direccion.id_estado || !direccion.id_municipio || !direccion.id_parroquia) return;
+            const selectEstado = document.getElementById('estado');
+            selectEstado.value = direccion.id_estado;
+            const event = new Event('change');
+            selectEstado.dispatchEvent(event);
+            setTimeout(() => {
+                const selectMunicipio = document.getElementById('municipio');
+                if (selectMunicipio.options.length > 1) {
+                    selectMunicipio.value = direccion.id_municipio;
+                    selectMunicipio.dispatchEvent(event);
+                    setTimeout(() => {
+                        const selectParroquia = document.getElementById('parroquia');
+                        if (selectParroquia.options.length > 1) {
+                            selectParroquia.value = direccion.id_parroquia;
+                        }
+                        if (direccion.direccion_detallada) {
+                            document.getElementById('direccion').value = direccion.direccion_detallada;
+                        }
+                    }, 1000);
+                }
+            }, 1000);
+        }
+
+        document.getElementById('envioForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const estado = document.getElementById('estado').value;
+            const municipio = document.getElementById('municipio').value;
+            const parroquia = document.getElementById('parroquia').value;
+            const direccion = document.getElementById('direccion').value.trim();
+
+            const estadoText = document.getElementById('estado').selectedOptions[0]?.text || '';
+            const municipioText = document.getElementById('municipio').selectedOptions[0]?.text || '';
+            const parroquiaText = document.getElementById('parroquia').selectedOptions[0]?.text || '';
+
+            if (!estado || !municipio || !parroquia || !direccion) {
+                showError('Todos los campos de dirección son obligatorios');
+                return;
+            }
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('submitBtn').disabled = true;
+
+            const formData = {
+                id_factura: parseInt(idFactura),
+                estado: estadoText,
+                municipio: municipioText,
+                parroquia: parroquiaText,
+                direccion_detallada: direccion,
+                numero_guia: document.getElementById('numeroGuia').value.trim() || null
+            };
+
+            try {
+                const response = await fetch('/api/registrar-envio', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    mostrarExito(idFactura, result.numero_guia);
+                } else {
+                    showError(result.message || 'Error al registrar el envío');
+                }
+            } catch (error) {
+                showError('Error de conexión con el servidor');
+            }
+        });
+
+        async function mostrarExito(idFactura, numeroGuia) {
+            document.getElementById('formView').style.display = 'none';
+            document.getElementById('successView').style.display = 'block';
+
+            if (numeroGuia) {
+                document.getElementById('successGuia').textContent = numeroGuia;
+            }
+
+            try {
+                const res = await fetch(`/api/factura/${idFactura}`);
+                const data = await res.json();
+                if (data.success && data.factura) {
+                    const f = data.factura;
+                    document.getElementById('successFactura').textContent = f.id_factura.toString().padStart(8, '0');
+                    document.getElementById('successCliente').textContent = f.CompradorNombre || `${f.Nombre || ''} ${f.Apellido || ''}`.trim() || 'No disponible';
+                    if (data.direccion) {
+                        document.getElementById('successDestino').textContent = `${data.direccion.municipio || ''}, ${data.direccion.parroquia || ''}`.replace(/^, /, '').replace(/, $/, '') || 'No especificado';
+                        document.getElementById('successDireccion').textContent = data.direccion.direccion || 'No especificada';
+                    }
+                    if (data.numero_guia) {
+                        document.getElementById('successGuia').textContent = data.numero_guia;
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+
+            setTimeout(() => {
+                document.getElementById('successLoading').style.display = 'block';
+                window.location.href = '/admin/admin-dashboard.html';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

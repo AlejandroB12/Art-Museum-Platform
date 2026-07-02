@@ -1,0 +1,186 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #0F0F0F;
+    padding: 20px;
+    color: white;
+}
+
+.login-container {
+    background: #1e1e1e;
+    padding: 50px 40px 40px 40px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border: 1px solid #333;
+    width: 100%;
+    max-width: 400px;
+    position: relative;
+    overflow: hidden;
+}
+
+.login-form h2 {
+    text-align: center;
+    color: #00ff00;
+    font-size: 30px;
+    font-weight: 800;
+    margin-top: -15px;
+    margin-bottom: 8px;
+    letter-spacing: -1px;
+}
+
+.login-form p {
+    text-align: center;
+    color: #888;
+    font-size: 15px;
+    margin-bottom: 30px;
+}
+
+.input-group {
+    position: relative;
+    margin-bottom: 22px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 15px;
+    border: 2px solid #333;
+    border-radius: 8px;
+    outline: none;
+    transition: all 0.2s ease-in-out;
+    background-color: #252525;
+    color: white;
+}
+
+.input-group label {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    color: #888;
+    pointer-events: none;
+    transition: all 0.2s ease;
+}
+
+.input-group input:focus ~ label,
+.input-group input:valid ~ label {
+    top: -17px;
+    left: 4px;
+    font-size: 12px;
+    color: #00ff00;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.input-group input:focus {
+    border-color: #00ff00;
+    background-color: #1e1e1e;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.1);
+}
+
+.options {
+    text-align: right;
+    margin-bottom: 25px;
+    margin-top: -10px;
+}
+
+.forgot-password {
+    color: #00ff00;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0.8;
+}
+
+.forgot-password:hover {
+    opacity: 1;
+    text-decoration: underline;
+}
+
+.login-btn {
+    width: 100%;
+    padding: 16px;
+    background: #00ff00;
+    border: none;
+    border-radius: 5px;
+    color: #0F0F0F;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.login-btn:hover {
+    background: #00cc00;
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+}
+
+.register-link {
+    text-align: center;
+    margin-top: 25px;
+    font-size: 14px;
+    color: #888;
+}
+
+.register-link a {
+    color: #00ff00;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.error-message {
+    background: rgba(255, 0, 0, 0.1);
+    border: 1px solid #ff3333;
+    color: #ff3333;
+    padding: 12px 14px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.input-group input.input-error {
+    border-color: #ff3333;
+    background-color: rgba(255, 0, 0, 0.05);
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.15);
+}
+
+.input-group input.input-error:focus {
+    border-color: #ff3333;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.2);
+}
+
+.input-group input.input-error ~ label {
+    color: #ff3333;
+}
+
+.hidden {
+    display: none;
+}
+
+.back-link {
+    display: block;
+    margin-top: 20px;
+    color: #999;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.back-link:hover {
+    color: #ccc;
+}

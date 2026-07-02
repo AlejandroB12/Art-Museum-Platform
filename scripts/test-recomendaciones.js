@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { getSession, connectNeo4j, closeNeo4j } = require('../config/neo4j');
+const { getSession, connectNeo4j, closeNeo4j } = require('../config/database');
 
 async function testRecomendaciones() {
     console.log('=== TEST DEL SISTEMA DE RECOMENDACIONES ===\n');
