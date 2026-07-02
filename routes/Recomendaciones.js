@@ -314,7 +314,6 @@ router.get('/recomendaciones/por-similitud-ia/:idObra', async (req, res) => {
     const { idObra } = req.params;
     const session = getSession();
     try {
-        // Usar relaciones SIMILAR_A pre-calculadas (instantáneo)
         const result = await session.run(
             `MATCH (o:Obra {id_obra: $idObra})-[r:SIMILAR_A]->(similar:Obra)
              WHERE similar.estado = 'Disponible'
