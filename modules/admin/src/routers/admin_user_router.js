@@ -67,6 +67,33 @@ router.put('/api/usuarios/:id/toggle-adquirir', async (req, res) => {
     }
 });
 
+router.delete('/api/eliminar-reservas-usuario/:id', async (req, res) => {
+    try {
+        await adminService.deleteUserReservations(req.params.id);
+        res.send("Reservas eliminadas");
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+router.delete('/api/eliminar-membresias-usuario/:id', async (req, res) => {
+    try {
+        await adminService.deleteUserMemberships(req.params.id);
+        res.send("Membresías eliminadas");
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+router.delete('/api/eliminar-comprador/:id', async (req, res) => {
+    try {
+        await adminService.deleteComprador(req.params.id);
+        res.send("Comprador eliminado");
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
 router.delete('/api/usuarios/:id', async (req, res) => {
     try {
         await adminService.deleteUser(req.params.id);

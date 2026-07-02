@@ -2,7 +2,7 @@ const userRepo = require('../repositories/user_repository');
 const compradorRepo = require('../repositories/comprador_repository');
 const membershipRepo = require('../repositories/membership_repository');
 const auditRepo = require('../repositories/audit_repository');
-const emailUtils = require('../../../shared/utils/email');
+const emailUtils = require('../../../../shared/utils/email');
 
 async function login(username, password, req) {
     const results = await userRepo.findByEmail(username);

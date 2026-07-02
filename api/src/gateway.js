@@ -49,7 +49,7 @@ const apiProxy = createProxyMiddleware({
         ) return USER_URL;
 
         if (
-            path.startsWith('/api/autores') ||
+            (path === '/api/autores' || path.startsWith('/api/autores/')) ||
             path.startsWith('/api/obras-filtradas') ||
             path.startsWith('/api/autor-detalle') ||
             path.startsWith('/api/artistas-catalogo') ||
@@ -103,7 +103,8 @@ const shouldProxy = (pathname) => {
         pathname.startsWith('/consultas/') ||
         pathname.startsWith('/generar-') ||
         pathname.startsWith('/cassandra/') ||
-        pathname.startsWith('/aprobar-')
+        pathname.startsWith('/aprobar-') ||
+        pathname.startsWith('/registrar-')
     );
 };
 

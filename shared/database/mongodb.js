@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
+const dns = require('dns');
 require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '.env') });
+
+dns.setServers(['1.1.1.1', '8.8.8.8']);
 
 const BASE_OPTS = {
     serverSelectionTimeoutMS: 8000,

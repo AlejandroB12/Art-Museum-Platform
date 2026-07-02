@@ -10,7 +10,7 @@ const generoRepo = require('../repositories/genero_repository');
 const nacionalidadRepo = require('../repositories/nacionalidad_repository');
 const auditRepo = require('../repositories/audit_repository');
 const billingRepo = require('../repositories/billing_repository');
-const emailUtils = require('../../../shared/utils/email');
+const emailUtils = require('../../../../shared/utils/email');
 
 const generoMap = { 'Pintura': 1, 'Escultura': 2, 'Fotografía': 3, 'Orfebreria': 4, 'Ceramica': 5 };
 
@@ -78,6 +78,18 @@ async function toggleUserStatus(id, estatus) {
 async function togglePuedeAdquirir(id, value) {
     const result = await userRepo.updatePuedeAdquirir(id, value);
     if (result.affectedRows === 0) throw new Error("Comprador no encontrado");
+}
+
+async function deleteUserReservations(id) {
+    await userRepo.queryRaw("DELETE FROM Reserva WHERE id_usuario = ?", [id]);
+}
+
+async function deleteUserMemberships(id) {
+    await userRepo.queryRaw("DELETE FROM Membresia WHERE id_usuario = ?", [id]);
+}
+
+async function deleteComprador(id) {
+    await userRepo.queryRaw("DELETE FROM Comprador WHERE id_usuario = ?", [id]);
 }
 
 async function deleteUser(id) {
@@ -603,7 +615,7 @@ function getPrecargasAtributos() {
 
 module.exports = {
     registerAdmin, listUsers, listPendingUsers, approveUser,
-    toggleUserStatus, togglePuedeAdquirir, deleteUser,
+    toggleUserStatus, togglePuedeAdquirir, deleteUserReservations, deleteUserMemberships, deleteComprador, deleteUser,
     listObras, updateObra, deleteObra, listObrasReservadas,
     generarFactura, listPaymentRequests, approvePayment, registerNewPayment,
     getObrasVendidasReport, getFacturacionResumen, getMembresiasResumen,

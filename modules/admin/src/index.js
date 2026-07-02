@@ -3,7 +3,7 @@ const path = require('path');
 const app = express();
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '..', '.env') });
 
-const { connectMongoDB, connectCassandra } = require('../../../shared/database/mongodb');
+const { connectMongoDB } = require('../../../shared/database/mongodb');
 const { connectCassandra: connectCass } = require('../../../shared/database/cassandra');
 const getSessionConfig = require('../../../shared/middlewares/session_config');
 const { sessionFromToken } = require('../../../shared/middlewares/auth_jwt');
