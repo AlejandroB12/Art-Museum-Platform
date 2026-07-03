@@ -7,25 +7,31 @@
     <title>Panel Premium - Museo de Arte</title>
     <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
     <link rel="stylesheet" href="/styles/user-dashboard-style.css">
-
-        .menu a.active,
-        .menu a:hover {
-            background: rgba(0, 255, 0, 0.1);
-            color: #00ff00;
+    <style>
+        .rec-mini-obra {
+            cursor: pointer;
+            transition: transform 0.2s;
+            flex-shrink: 0;
         }
 
-        /* Botón Volver al Inicio */
-        .btn-home {
-            border: 1px solid #333;
-            margin-bottom: 20px;
-            text-align: center;
-            background: #111;
+        .rec-mini-obra:hover {
+            transform: scale(1.1);
+            z-index: 2;
+        }
+
+        .genero-tag:hover {
+            border-color: #00ff00 !important;
             color: #fff !important;
-            font-size: 14px;
-            font-weight: 500;
         }
 
+        .view {
+            display: none;
+        }
 
+        .view.active-view {
+            display: block;
+        }
+    </style>
 </head>
 
 <body>
@@ -60,6 +66,18 @@
         <section id="view-dashboard" class="view active-view">
             <h1 id="welcome-msg" class="welcome-title">Bienvenido</h1>
             <p class="welcome-sub">Tu panel de control exclusivo está listo.</p>
+
+            <!-- Géneros (horizontal arriba) -->
+            <div id="generos-container"
+                style="width:100%; margin-top: 30px; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 20px;">
+            </div>
+
+            <!-- Dashboard dos columnas -->
+            <div style="display: flex; gap: 30px; margin-top: 20px; width: 100%; justify-content: space-between;">
+                <div style="flex: 1.5; min-width: 0; padding-right:15px;" id="recomendados-left"></div>
+                <div style="width: 250px; flex-shrink: 0;" id="artistas-right"></div>
+            </div>
+
             <div id="recomendaciones-container" class="recomendaciones-container"></div>
         </section>
 
@@ -125,7 +143,8 @@
                 <div class="card-divider">
                     <h3>Informar pago realizado</h3>
                     <div class="input-group">
-                        <input type="text" id="card-number" maxlength="19" placeholder="4444-4444-4444-4444" oninput="formatearTarjeta(); limpiarError('card-number')">
+                        <input type="text" id="card-number" maxlength="19" placeholder="4444-4444-4444-4444"
+                            oninput="formatearTarjeta(); limpiarError('card-number')">
                         <span id="error-card-number" class="error-msg"></span>
                     </div>
                     <div class="flex-row">
@@ -252,120 +271,165 @@
             container.innerHTML = '<div class="loading-rec">Cargando recomendaciones personalizadas...</div>';
 
             try {
+                // Lanzar TODAS las llamadas en paralelo
+                const [res1, res2, res4, res5, res6] = await Promise.all([
+                    fetch(`/api/recomendaciones/mismo-genero/${currentUserId}`),
+                    fetch(`/api/recomendaciones/colaborativo/${currentUserId}`),
+                    fetch('/api/recomendaciones/artistas-populares'),
+                    fetch('/api/recomendaciones/generos-populares'),
+                    fetch(`/api/recomendaciones/para-ti/${currentUserId}`)
+                ]);
+
                 let html = '';
 
                 // 1. Mismo género
-                const res1 = await fetch(`/api/recomendaciones/mismo-genero/${currentUserId}`);
                 if (res1.ok) {
                     const data = await res1.json();
                     if (data.length > 0) {
                         html += '<div class="rec-section"><h3>✦ Obras del mismo género que compraste</h3><div class="rec-grid">';
                         data.forEach(r => {
-                            html += `<div class="rec-card">
-                                <h4>${r.Nombre}</h4>
-                                <div class="rec-meta">${r.Genero}</div>
-                                <div class="rec-price">$${r.Precio.toLocaleString()}</div>
-                            </div>`;
+                            html += `<div class="rec-card"><h4>${r.Nombre}</h4><div class="rec-meta">${r.Genero}</div><div class="rec-price">$${r.Precio.toLocaleString()}</div></div>`;
                         });
                         html += '</div></div>';
                     }
                 }
 
                 // 2. Colaborativo
-                const res2 = await fetch(`/api/recomendaciones/colaborativo/${currentUserId}`);
                 if (res2.ok) {
                     const data = await res2.json();
                     if (data.length > 0) {
                         html += '<div class="rec-section"><h3>✦ Otros compradores también compraron</h3><div class="rec-grid">';
                         data.forEach(r => {
-                            html += `<div class="rec-card">
-                                <h4>${r.Nombre}</h4>
-                                <div class="rec-meta">Coincidencias: ${r.CantidadCoincidencias} compradores</div>
-                                <div class="rec-price">$${r.Precio.toLocaleString()}</div>
-                            </div>`;
+                            html += `<div class="rec-card"><h4>${r.Nombre}</h4><div class="rec-meta">Coincidencias: ${r.CantidadCoincidencias} compradores</div><div class="rec-price">$${r.Precio.toLocaleString()}</div></div>`;
                         });
                         html += '</div></div>';
                     }
                 }
 
-                // 3. Personalizadas
-                const res3 = await fetch(`/api/recomendaciones/personalizadas/${currentUserId}`);
-                if (res3.ok) {
-                    const data = await res3.json();
-                    if (data.length > 0) {
-                        html += '<div class="rec-section"><h3>✦ Recomendado para ti</h3><div class="rec-grid">';
-                        data.forEach(r => {
-                            html += `<div class="rec-card">
-                                <h4>${r.Nombre}</h4>
-                                <div class="rec-meta">${r.Genero}</div>
-                                <div class="rec-price">$${r.Precio.toLocaleString()}</div>
-                            </div>`;
-                        });
-                        html += '</div></div>';
-                    }
-                }
-
-                // 4. Artistas populares
-                const res4 = await fetch('/api/recomendaciones/artistas-populares');
+                // 3. Artistas populares
                 if (res4.ok) {
                     const data = await res4.json();
                     if (data.length > 0) {
-                        html += '<div class="rec-section"><h3>✦ Artistas más populares</h3><div class="rec-grid">';
+                        html += '<div class="rec-section" id="seccion-artistas"><h3>✦ Artistas populares</h3><div style="display:flex; flex-direction:column; gap:15px;">';
                         data.forEach(r => {
-                            html += `<div class="rec-card">
-                                <h4>${r.Artista}</h4>
-                                <div class="rec-stat"><span>${r.ObrasVendidas}</span> obras vendidas · <span>${r.CompradoresUnicos}</span> compradores</div>
-                            </div>`;
+                            const inicial = (r.artista || 'A')[0].toUpperCase();
+                            const obrasCollage = r.obras.map((o, i) => `
+                        <div onclick="event.stopPropagation(); sessionStorage.setItem('abrirObra', ${o.id}); window.location.href='/public/art-catalog.html';" 
+                             title="${o.nombre}" style="position:absolute; top:0; left:${i * 30}px; width:60px; height:60px; border-radius:6px; background-image:url('${o.fotografia || ''}'); background-size:cover; background-position:center; background-color:#1a1a1a; opacity:0.4; z-index:${5 - i}; filter:blur(1px);"></div>
+                    `).join('');
+
+                            html += `
+                        <div class="rec-card" style="padding:12px 10px; position:relative; overflow:visible;">
+                            <div style="position:relative; height:60px; margin-bottom:5px;">
+                                <div style="position:relative; width:70px; height:70px; margin:0 auto;">
+                                    ${obrasCollage}
+                                    <div onclick="window.location.href='/public/Autor.html?id=${r.idArtista}'" style="cursor:pointer; position:absolute; top:5px; left:35px; transform:translateX(-50%); z-index:10;">
+                                        ${r.fotoArtista
+                                    ? `<img src="${r.fotoArtista}" style="width:60px; height:60px; border-radius:50%; object-fit:cover; border:2px solid #00ff00;">`
+                                    : `<div style="width:60px; height:60px; border-radius:50%; background:#1a1a1a; border:2px solid #00ff00; display:flex; align-items:center; justify-content:center; color:#00ff00; font-weight:bold; font-size:1.2rem;">${inicial}</div>`
+                                }
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="text-align:center; cursor:pointer;" onclick="window.location.href='/public/Autor.html?id=${r.idArtista}'">
+                                <h4 style="margin:0; font-size:0.85rem; color:#fff;">${r.artista}</h4>
+                                <div style="font-size:0.7rem; color:#888; margin-top:4px;">🏆 ${r.obrasVendidas} · 👁 ${r.totalVistas}</div>
+                            </div>
+                        </div>`;
                         });
                         html += '</div></div>';
                     }
                 }
 
-                // 5. Géneros populares
-                const res5 = await fetch('/api/recomendaciones/generos-populares');
+                // 4. Géneros populares
                 if (res5.ok) {
-                    const data = await res5.json();
+                    const dataGeneros = await res5.json();
+                    if (dataGeneros.length > 0) {
+                        const primerGenero = dataGeneros[0].Genero;
+                        html += '<div class="rec-section" id="seccion-generos"><h3>✦ Géneros Populares</h3><div style="display:flex; flex-wrap:wrap; gap:8px;">';
+                        dataGeneros.forEach(r => {
+                            html += `<div class="genero-tag" onclick="mostrarObrasGenero('${r.Genero}')" style="background:#1a1a1a; border:1px solid #333; padding:8px 14px; border-radius:20px; cursor:pointer; font-size:0.8rem; color:#ccc;">${r.Genero} <span style="color:#00ff00;">${r.ObrasVendidas}</span></div>`;
+                        });
+                        html += '</div><div id="genero-obra-preview" style="margin-top:10px; padding:10px; background:#111; border-radius:8px; min-height:60px;"><span style="color:#555;">Cargando géneros...</span></div></div>';
+                        setTimeout(() => mostrarObrasGenero(primerGenero), 800);
+                    }
+                }
+
+                // 5. Recomendados para ti
+                if (res6.ok) {
+                    const data = await res6.json();
                     if (data.length > 0) {
-                        html += '<div class="rec-section"><h3>✦ Géneros con más ventas</h3><div class="rec-grid">';
+                        html += '<div class="rec-section" id="seccion-recomendados"><h3>✦ Recomendados para ti</h3><div class="rec-grid">';
                         data.forEach(r => {
-                            html += `<div class="rec-card">
-                                <h4>${r.Genero}</h4>
-                                <div class="rec-stat"><span>${r.ObrasVendidas}</span> vendidas · <span>$${r.IngresoTotal.toLocaleString()}</span> ingresos</div>
-                                <div class="rec-meta">Precio prom: $${r.PrecioPromedio.toLocaleString()}</div>
-                            </div>`;
+                            html += `<div class="rec-card" onclick="sessionStorage.setItem('abrirObra', ${r.idObra}); window.location.href='/public/art-catalog.html';" style="cursor:pointer; margin-bottom:20px;">
+                        <div style="background-image:url('${r.fotografia || ''}'); background-size:cover; background-position:center; width:100%; height:200px; border-radius:8px; margin-bottom:12px; background-color:#1a1a1a;"></div>
+                        <h4>${r.nombre}</h4>
+                        <div class="rec-meta">${r.motivo || 'Basado en tu actividad'}</div>
+                        <div class="rec-price">$${Number(r.precio).toLocaleString()}</div>
+                    </div>`;
                         });
                         html += '</div></div>';
                     }
                 }
 
-                if (!html) {
-                    html = '<p style="color: #666;">Aún no hay suficientes datos para generar recomendaciones. ¡Compra tu primera obra!</p>';
+                if (!html) html = '<p style="color: #666;">Interactúa con más obras para ver recomendaciones.</p>';
+
+                // Insertar directamente en contenedores
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+
+                const generosBlock = tempDiv.querySelector('#seccion-generos');
+                if (generosBlock) {
+                    document.getElementById('generos-container').innerHTML = generosBlock.outerHTML;
+                    generosBlock.remove();
+                    setTimeout(() => {
+                        const tag = document.querySelector('#generos-container .genero-tag');
+                        if (tag) mostrarObrasGenero(tag.textContent.trim().split(' ')[0]);
+                    }, 600);
                 }
-                // 6. Recomendados para ti (nuevo sistema unificado)
-                try {
-                    const res6 = await fetch(`/api/recomendaciones/para-ti/${currentUserId}`);
-                    if (res6.ok) {
-                        const data = await res6.json();
-                        if (data.length > 0) {
-                            html += '<div class="rec-section"><h3>✦ Recomendados para ti</h3><div class="rec-grid">';
-                            data.forEach(r => {
-                                html += `<div class="rec-card" onclick="sessionStorage.setItem('abrirObra', ${r.idObra}); window.location.href='/public/art-catalog.html';" style="cursor:pointer;">
-                    <h4>${r.nombre}</h4>
-                    <div class="rec-meta">${r.motivo || 'Basado en tu actividad'}</div>
-                    <div class="rec-price">$${Number(r.precio).toLocaleString()}</div>
-                </div>`;
-                            });
-                            html += '</div></div>';
-                        }
-                    }
-                } catch (e) {
-                    console.error('Error cargando para-ti:', e);
+
+                const artistasBlock = tempDiv.querySelector('#seccion-artistas');
+                if (artistasBlock) {
+                    document.getElementById('artistas-right').innerHTML = artistasBlock.outerHTML;
+                    artistasBlock.remove();
                 }
-                container.innerHTML = html;
+
+                const recBlock = tempDiv.querySelector('#seccion-recomendados');
+                if (recBlock) {
+                    document.getElementById('recomendados-left').innerHTML = recBlock.outerHTML;
+                    recBlock.remove();
+                }
+
+                container.innerHTML = tempDiv.innerHTML;
 
             } catch (e) {
                 console.error('Error cargando recomendaciones:', e);
-                container.innerHTML = '<p style="color: #ff4d4d;">Error al cargar recomendaciones. Verifica conexión a Neo4j.</p>';
+                container.innerHTML = '<p style="color: #ff4d4d;">Error al cargar recomendaciones.</p>';
+            }
+        }
+
+        // Función para mostrar obras por género
+        async function mostrarObrasGenero(genero) {
+            const preview = document.getElementById('genero-obra-preview');
+            if (!preview) return;
+            preview.innerHTML = '<span style="color:#555;">Cargando...</span>';
+            try {
+                const resp = await fetch(`/api/recomendaciones/obras-por-genero/${encodeURIComponent(genero)}`);
+                const obras = await resp.json();
+                preview.innerHTML = obras.map(o => {
+                    const img = o.fotografia || '';
+                    const nombre = o.Nombre || '';
+                    const precio = o.Precio || 0;
+                    const id = o.id_Obra || '';
+                    return `<div style="display:inline-block; text-align:center; width:100px; cursor:pointer; margin-right:10px;"
+                onclick="event.stopPropagation(); sessionStorage.setItem('abrirObra', ${id}); window.location.href='/public/art-catalog.html';">
+                <div style="background-image:url('${img}'); background-size:cover; background-position:center; width:100px; height:70px; border-radius:4px; background-color:#1a1a1a;"></div>
+                <span style="font-size:0.65rem; color:#888;">${nombre}</span><br>
+                <span style="font-size:0.7rem; color:#00ff00;">$${Number(precio).toLocaleString()}</span>
+            </div>`;
+                }).join('');
+            } catch (e) {
+                preview.innerHTML = '<span style="color:#555;">No disponible</span>';
             }
         }
 

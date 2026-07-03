@@ -1,5 +1,5 @@
 function errorHandler(err, req, res, next) {
-    console.error(`[ERROR] ${req.method} ${req.path}:`, err.message);
+    console.error(`[ERROR] ${req.method} ${req.path}:`, err.message, err.code, err.stack?.split('\n')[0]);
     console.error(err.stack);
 
     if (err.name === 'ValidationError' || err.name === 'ZodError') {
@@ -20,7 +20,7 @@ function errorHandler(err, req, res, next) {
     const statusCode = err.statusCode || 500;
     res.status(statusCode).json({
         success: false,
-        message: err.message || 'Error interno del servidor'
+        message: err.message || err.code || 'Error interno del servidor'
     });
 }
 
