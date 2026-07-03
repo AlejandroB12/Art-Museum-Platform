@@ -37,8 +37,7 @@
         <div class="search-container">
             <input type="text" id="buscador"
                 placeholder="Buscar por nombre, artista o describir... ej: escultura abstracta naranja"
-                class="search-input"
-                onkeyup="buscarObras(this.value)">
+                class="search-input" onkeyup="buscarObras(this.value)">
         </div>
 
         <div class="filter-container">
@@ -101,9 +100,10 @@
         const gallery = document.getElementById('gallery');
         const modal = document.getElementById('obra-modal');
         let currentPage = 1;
-        const ITEMS_PER_PAGE = 15;
+        const ITEMS_PER_PAGE = 12;
         let allObras = [];
         let isSearching = false;
+        let totalObras = 0;
 
         function abrirModal(img, titulo, artista, detalles, genero, idObra) {
             document.getElementById('modal-imagen').src = img;
@@ -180,17 +180,20 @@
 
         async function abrirObraPorId(idObra) {
             try {
-                const resp = await fetch(`/api/obras-filtradas?artista=all&genero=all&orden=asc`);
-                const obras = await resp.json();
-                const obra = obras.find(o => o.id_Obra == idObra);
-                if (obra) {
-                    const imgSource = obra.imagen_url || '/assets/images/placeholder.jpg';
-                    const autorNombreCompleto = `${obra.AutorNombre || ''} ${obra.AutorApellido || ''}`.trim();
-                    const detallesHTML = construirDetallesTecnicos(obra);
-                    abrirModal(imgSource, obra.Nombre.replace(/'/g, "\\'"), autorNombreCompleto.replace(/'/g, "\\'"), detallesHTML, obra.GeneroNombre || '', obra.id_Obra);
-                }
+                const resp = await fetch(`/api/obra/${idObra}`);
+                if (!resp.ok) return;
+                const obra = await resp.json();
+                const imgSource = obra.fotografia || '/assets/images/placeholder.jpg';
+                const autorNombreCompleto = obra.autores?.map(a => `${a.nombre} ${a.apellido}`).join(', ') || '';
+                const detallesHTML = construirDetallesTecnicos({
+                    GeneroNombre: obra.genero?.nombre,
+                    PrecioFormateado: '$' + Number(obra.precio).toLocaleString(),
+                    Fecha_creacion: obra.fecha_creacion?.split('T')[0],
+                    ...obra.genero?.detalles
+                });
+                abrirModal(imgSource, obra.nombre, autorNombreCompleto, detallesHTML, obra.genero?.nombre || '', obra._id);
             } catch (e) {
-                console.error('Error abriendo obra similar:', e);
+                console.error('Error abriendo obra:', e);
             }
         }
 
@@ -356,28 +359,50 @@
             container.innerHTML = html;
         }
 
-        function irPagina(pagina) {
-            currentPage = pagina;
-            const start = (currentPage - 1) * ITEMS_PER_PAGE;
-            renderCards(allObras.slice(start, start + ITEMS_PER_PAGE));
-            renderPagination(allObras.length);
-        }
-
         async function renderGallery() {
             const genero = document.getElementById('filterGenre').value;
             const artista = document.getElementById('filterAuthor').value;
             const orden = document.getElementById('sortPrice').value;
             isSearching = false;
+            currentPage = 1;
 
             try {
-                const resp = await fetch(`/api/obras-filtradas?genero=${genero}&artista=${artista}&orden=${orden}`);
-                allObras = await resp.json();
-                currentPage = 1;
-                irPagina(1);
+                const resp = await fetch(`/api/obras-filtradas?genero=${genero}&artista=${artista}&orden=${orden}&page=1&limit=${ITEMS_PER_PAGE}`);
+                const data = await resp.json();
+                allObras = data.obras;
+                totalObras = data.total;
+                renderCards(allObras);
+                renderPagination(totalObras);
             } catch (error) {
                 console.error("Error cargando galería:", error);
-                gallery.innerHTML = '<p style="text-align:center; width:100%; color:#444;">Error al cargar obras.</p>';
+                gallery.innerHTML = '<p style="text-align:center;">Error al cargar obras.</p>';
             }
+        }
+
+        function irPagina(pagina) {
+            currentPage = pagina;
+
+            if (isSearching) {
+                // Paginar resultados de búsqueda locales
+                const start = (currentPage - 1) * ITEMS_PER_PAGE;
+                renderCards(allObras.slice(start, start + ITEMS_PER_PAGE));
+                renderPagination(allObras.length);
+                return;
+            }
+
+            // Paginar desde backend
+            const genero = document.getElementById('filterGenre').value;
+            const artista = document.getElementById('filterAuthor').value;
+            const orden = document.getElementById('sortPrice').value;
+
+            fetch(`/api/obras-filtradas?genero=${genero}&artista=${artista}&orden=${orden}&page=${pagina}&limit=${ITEMS_PER_PAGE}`)
+                .then(r => r.json())
+                .then(data => {
+                    allObras = data.obras;
+                    totalObras = data.total;
+                    renderCards(allObras);
+                    renderPagination(data.total);
+                });
         }
 
         // FUNCIÓN CON VERIFICACIÓN DE SESIÓN Y PERMISO DE COMPRA
@@ -411,13 +436,65 @@
         }
 
         // Event Listeners
-        document.getElementById('sortPrice').addEventListener('change', renderGallery);
-        document.getElementById('filterGenre').addEventListener('change', renderGallery);
-        document.getElementById('filterAuthor').addEventListener('change', renderGallery);
+        document.getElementById('sortPrice').addEventListener('change', aplicarFiltros);
+        document.getElementById('filterGenre').addEventListener('change', aplicarFiltros);
+        document.getElementById('filterAuthor').addEventListener('change', aplicarFiltros);
+
+        async function aplicarFiltros() {
+            const query = document.getElementById('buscador').value.trim();
+            if (query.length >= 2) {
+                buscarObras(query);
+            } else {
+                renderGallery();
+            }
+        }
 
         // Inicialización
         window.onload = () => {
             cargarFiltros();
+
+            // PRIMERO: Abrir modal pendiente
+            const dataPendiente = sessionStorage.getItem('abrirObraData');
+            const idPendiente = sessionStorage.getItem('abrirObra');
+
+            if (dataPendiente || idPendiente) {
+                // Abrir inmediatamente y luego cargar galería
+                if (dataPendiente) {
+                    sessionStorage.removeItem('abrirObraData');
+                    const data = JSON.parse(dataPendiente);
+                    fetch('/api/actividad/registrar', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ idUsuario: 9999, idObra: data.id, tipo: 'vista_detalle' })
+                    }).catch(() => { });
+                    abrirModal(data.imagen, data.nombre, data.autor || '', '', data.genero || '', data.id);
+                }
+                if (idPendiente) {
+                    sessionStorage.removeItem('abrirObra');
+                    fetch('/api/actividad/registrar', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ idUsuario: 9999, idObra: parseInt(idPendiente), tipo: 'vista_detalle' })
+                    }).catch(() => { });
+
+                    fetch(`/api/obra/${idPendiente}`)
+                        .then(r => r.json())
+                        .then(obra => {
+                            if (obra && obra._id) {
+                                const imgSource = obra.fotografia || '/assets/images/placeholder.jpg';
+                                const autorNombreCompleto = obra.autores?.map(a => `${a.nombre} ${a.apellido}`).join(', ') || '';
+                                const detallesHTML = construirDetallesTecnicos({
+                                    GeneroNombre: obra.genero?.nombre,
+                                    PrecioFormateado: '$' + Number(obra.precio).toLocaleString(),
+                                    Fecha_creacion: obra.fecha_creacion?.split('T')[0],
+                                    ...obra.genero?.detalles
+                                });
+                                abrirModal(imgSource, obra.nombre, autorNombreCompleto, detallesHTML, obra.genero?.nombre || '', obra._id);
+                            }
+                        })
+                        .catch(() => { });
+                }
+            }
+
+            // DESPUÉS: Cargar galería
             renderGallery();
         };
 
@@ -450,73 +527,38 @@
                 }).catch(error => console.error('Error al cargar usuario:', error));
         });
 
-        // Al cargar art-catalog.html, verificar si hay una obra pendiente de abrir
-        document.addEventListener('DOMContentLoaded', async () => {
-            const idPendiente = sessionStorage.getItem('abrirObra');
-            if (idPendiente) {
-                sessionStorage.removeItem('abrirObra');
-                // REGISTRAR ACTIVIDAD
-                fetch('/api/actividad/registrar', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        idUsuario: 9999,
-                        idObra: parseInt(idPendiente),
-                        tipo: 'vista_detalle'
-                    })
-                }).catch(() => { });
-                // Esperar a que la galería se renderice
-                setTimeout(async () => {
-                    try {
-                        const resp = await fetch('/api/obras-filtradas?artista=all&genero=all&orden=asc');
-                        const obras = await resp.json();
-                        const obra = obras.find(o => o.id_Obra == idPendiente);
-                        if (obra) {
-                            const imgSource = obra.imagen_url || '/assets/images/placeholder.jpg';
-                            const autorNombreCompleto = `${obra.AutorNombre || ''} ${obra.AutorApellido || ''}`.trim();
-                            const detallesHTML = construirDetallesTecnicos(obra);
-                            abrirModal(imgSource, obra.Nombre, autorNombreCompleto, detallesHTML, obra.GeneroNombre || '', obra.id_Obra);
-                        }
-                    } catch (e) {
-                        console.error('Error abriendo obra pendiente:', e);
-                    }
-                }, 1000);
-            }
-        });
-
         let timeoutBuscador = null;
 
         async function buscarObras(query) {
             clearTimeout(timeoutBuscador);
 
             if (!query || query.trim().length < 2) {
+                isSearching = false;
                 renderGallery();
                 return;
             }
 
             timeoutBuscador = setTimeout(async () => {
                 try {
-                    const [respExacta, respVisual] = await Promise.all([
-                        fetch('/api/buscar?q=' + encodeURIComponent(query)),
-                        fetch('/api/buscar/visual?q=' + encodeURIComponent(query))
-                    ]);
-
+                    const respExacta = await fetch('/api/buscar?q=' + encodeURIComponent(query));
                     const exactas = respExacta.ok ? await respExacta.json() : [];
-                    const visuales = respVisual.ok ? await respVisual.json() : [];
+                    allObras = exactas;
+                    // Aplicar filtros de género y autor sobre los resultados
+                    const genero = document.getElementById('filterGenre').value;
+                    const artista = document.getElementById('filterAuthor').value;
+                    const GENRE_MAP = { 'Fotografia': 'Fotografía' };
 
-                    const idsVistos = new Set();
-                    allObras = [];
-
-                    for (const o of [...exactas, ...visuales]) {
-                        const id = o.id_Obra;
-                        if (!idsVistos.has(id)) {
-                            idsVistos.add(id);
-                            allObras.push(o);
-                        }
+                    if (genero !== 'all') {
+                        const gf = GENRE_MAP[genero] || genero;
+                        allObras = allObras.filter(o => o.GeneroNombre === gf);
+                    }
+                    if (artista !== 'all') {
+                        allObras = allObras.filter(o => o.id_Autor == artista);
                     }
 
                     isSearching = true;
                     currentPage = 1;
+                    totalObras = allObras.length;
                     irPagina(1);
                 } catch (e) {
                     console.error('Error en búsqueda:', e);

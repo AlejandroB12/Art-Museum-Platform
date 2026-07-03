@@ -1,347 +1,325 @@
 const { getSession } = require('../config/database');
-const neo4j = require('neo4j-driver');
-
 function toNum(value) {
-    if (value == null) return null;
+    if (value == null) return 0;
     if (typeof value === 'object' && value.toNumber) return value.toNumber();
-    return Number(value);
+    return Math.floor(Number(value));
 }
 
-async function findSameGenre(idUsuario) {
+async function runQuery(cypher, params = {}) {
     const session = getSession();
     try {
-        const result = await session.run(`
-            MATCH (u:Usuario {id_usuario: $idUsuario})-[:VIO|COMPRO]->(o:Obra)-[:PERTENECE_A_EPOCA]->(e:Epoca)
-            MATCH (o2:Obra)-[:PERTENECE_A_EPOCA]->(e)
-            WHERE o2.id_obra <> o.id_obra AND o2.estado = 'Disponible'
-            RETURN DISTINCT o2.id_obra AS id_Obra, o2.nombre AS Nombre, o2.precio AS Precio, e.nombre AS Genero
-            LIMIT 10
-        `, { idUsuario: parseInt(idUsuario) });
+        const result = await session.run(cypher, params);
         return result.records;
-    } finally { await session.close(); }
+    } finally {
+        await session.close();
+    }
 }
 
-async function findCollaborative(idUsuario) {
-    const session = getSession();
-    try {
-        const result = await session.run(`
-            MATCH (u:Usuario {id_usuario: $idUsuario})-[:VIO|COMPRO]->(o:Obra)
-            MATCH (o)<-[:VIO|COMPRO]-(otros:Usuario)-[:VIO|COMPRO]->(rec:Obra)
-            WHERE rec.id_obra <> o.id_obra AND rec.estado = 'Disponible'
-            RETURN rec.id_obra AS id_Obra, rec.nombre AS Nombre, rec.precio AS Precio,
-                   COUNT(DISTINCT otros) AS CantidadCoincidencias
-            ORDER BY CantidadCoincidencias DESC LIMIT 10
-        `, { idUsuario: parseInt(idUsuario) });
-        return result.records;
-    } finally { await session.close(); }
+async function findSameGenre(userId, limit = 10) {
+    return runQuery(`
+        MATCH (c:Comprador {id_usuario: $idUsuario})-[:COMPRO]->(:Obra)<-[:CREO]-(:Artista)-[:TRABAJA_EN]->(g:Genero)
+        MATCH (g)<-[:TRABAJA_EN]-(:Artista)-[:CREO]->(recomendada:Obra)
+        WHERE NOT EXISTS { MATCH (c)-[:COMPRO]->(recomendada) }
+        AND recomendada.estado = 'Disponible'
+        RETURN DISTINCT recomendada.id_obra AS id_Obra,
+               recomendada.nombre AS Nombre,
+               recomendada.precio AS Precio,
+               g.nombre AS Genero
+        ORDER BY recomendada.precio DESC
+        LIMIT 50
+    `, { idUsuario: parseInt(userId), limit });
 }
 
-async function findPersonalized(idUsuario) {
-    const session = getSession();
-    try {
-        const result = await session.run(`
-            MATCH (u:Usuario {id_usuario: $idUsuario})-[:VIO|COMPRO]->(o:Obra)
-            MATCH (o)-[:PERTENECE_A_EPOCA]->(e:Epoca)
-            MATCH (rec:Obra)-[:PERTENECE_A_EPOCA]->(e)
-            WHERE rec.id_obra <> o.id_obra AND rec.estado = 'Disponible'
-            RETURN DISTINCT rec.id_obra AS id_Obra, rec.nombre AS Nombre, rec.precio AS Precio, e.nombre AS Genero
-            ORDER BY e.nombre LIMIT 10
-        `, { idUsuario: parseInt(idUsuario) });
-        return result.records;
-    } finally { await session.close(); }
+async function findCollaborative(userId, limit = 10) {
+    return runQuery(`
+        MATCH (c:Comprador {id_usuario: $idUsuario})-[:COMPRO]->(o:Obra)
+        MATCH (c2:Comprador)-[:COMPRO]->(o)
+        MATCH (c2)-[:COMPRO]->(recomendada:Obra)
+        WHERE NOT EXISTS { MATCH (c)-[:COMPRO]->(recomendada) }
+        AND recomendada.estado = 'Disponible'
+        RETURN recomendada.id_obra AS id_Obra,
+               recomendada.nombre AS Nombre,
+               recomendada.precio AS Precio,
+               COUNT(DISTINCT c2) AS CantidadCoincidencias
+        ORDER BY CantidadCoincidencias DESC
+        LIMIT 50
+    `, { idUsuario: parseInt(userId), limit });
+}
+
+async function findPersonalized(userId, limit = 10) {
+    return runQuery(`
+        MATCH (c:Comprador {id_usuario: $idUsuario})-[:COMPRO]->(obraComprada:Obra)
+        WITH c, obraComprada
+        MATCH (obraComprada)<-[:CREO]-(artistaFavorito:Artista)
+        WITH c, COLLECT(DISTINCT artistaFavorito) AS artistasPreferidos
+        UNWIND artistasPreferidos AS artista
+        MATCH (artista)-[:TRABAJA_EN]->(g:Genero)
+        WITH c, COLLECT(DISTINCT g) AS generosPreferidos
+        UNWIND generosPreferidos AS genero
+        MATCH (genero)<-[:TRABAJA_EN]-(:Artista)-[:CREO]->(recomendada:Obra)
+        WHERE NOT EXISTS { MATCH (c)-[:COMPRO]->(recomendada) }
+        AND recomendada.estado = 'Disponible'
+        RETURN DISTINCT recomendada.id_obra AS id_Obra,
+               recomendada.nombre AS Nombre,
+               recomendada.precio AS Precio,
+               genero.nombre AS Genero
+        ORDER BY recomendada.precio DESC
+        LIMIT 50
+    `, { idUsuario: parseInt(userId), limit });
 }
 
 async function findPopularArtists() {
     const session = getSession();
     try {
         const result = await session.run(`
-            MATCH (a:Artista)<-[:CREO]-(o:Obra)<-[:COMPRO]-(:Usuario)
-            RETURN a.id_artista AS id_Artista, a.nombre + ' ' + a.apellido AS Artista,
-                   COUNT(o) AS ObrasVendidas, COUNT(DISTINCT o) AS CompradoresUnicos
-            ORDER BY ObrasVendidas DESC LIMIT 10
+            MATCH (a:Artista)-[:CREO]->(o:Obra)
+            OPTIONAL MATCH (o)<-[r:VIO]-(:Usuario)
+            WITH a, o, COUNT(r) AS vistasObra
+            WITH a, 
+                 SUM(vistasObra) AS totalVistas,
+                 COLLECT({id: o.id_obra, nombre: o.nombre, fotografia: o.fotografia, vistas: vistasObra}) AS obras
+            OPTIONAL MATCH (a)-[:CREO]->(v:Obra {estado: 'Vendida'})
+            WITH a, obras, totalVistas, COUNT(DISTINCT v) AS obrasVendidas
+            ORDER BY obrasVendidas DESC, totalVistas DESC
+            LIMIT 6
+            RETURN a.id_artista AS idArtista,
+                   a.nombre AS nombre,
+                   a.apellido AS apellido,
+                   obrasVendidas,
+                   totalVistas,
+                   obras
         `);
         return result.records;
     } finally { await session.close(); }
 }
 
 async function findPopularGenres() {
-    const session = getSession();
-    try {
-        const result = await session.run(`
-            MATCH (o:Obra)<-[:COMPRO]-(:Usuario)
-            WITH o.genero AS Genero, COUNT(o) AS ObrasVendidas,
-                 COUNT(DISTINCT o) AS CompradoresDistintos, AVG(o.precio) AS PrecioPromedio
-            RETURN Genero, ObrasVendidas, CompradoresDistintos, PrecioPromedio,
-                   ObrasVendidas * PrecioPromedio AS IngresoTotal
-            ORDER BY IngresoTotal DESC
-        `);
-        return result.records;
-    } finally { await session.close(); }
+    return runQuery(`
+        MATCH (c:Comprador)-[:COMPRO]->(o:Obra)<-[:CREO]-(:Artista)-[:TRABAJA_EN]->(g:Genero)
+        RETURN g.nombre AS Genero,
+               COUNT(o) AS ObrasVendidas,
+               COUNT(DISTINCT c) AS CompradoresDistintos,
+               ROUND(AVG(o.precio), 2) AS PrecioPromedio,
+               ROUND(SUM(o.precio), 2) AS IngresoTotal
+        ORDER BY ObrasVendidas DESC
+    `);
 }
 
 async function findObrasByGenero(genero) {
-    const session = getSession();
-    try {
-        const result = await session.run(`
-            MATCH (o:Obra {genero: $genero})
-            RETURN o.id_obra AS id_Obra, o.nombre AS Nombre, o.precio AS Precio
-            LIMIT 10
-        `, { genero });
-        return result.records;
-    } finally { await session.close(); }
+    const Obra = require('../models/obra_model');
+    const obras = await Obra.find({ estado_obra: 'Disponible', 'genero.nombre': genero })
+        .select('_id nombre precio fotografia').sort({ precio: 1 }).limit(6).lean();
+    return obras.map(o => ({
+        get: (key) => {
+            const map = { id_Obra: o._id, Nombre: o.nombre, Precio: o.precio, fotografia: o.fotografia || '' };
+            return map[key];
+        }
+    }));
 }
 
 async function getGraphStats() {
-    const session = getSession();
-    try {
-        const nodos = await session.run("MATCH (n) RETURN labels(n)[0] AS Tipo, COUNT(n) AS Cantidad");
-        const relaciones = await session.run("MATCH ()-[r]->() RETURN type(r) AS Tipo, COUNT(r) AS Cantidad");
-        return { nodos: nodos.records, relaciones: relaciones.records };
-    } finally { await session.close(); }
-}
-
-async function findSimilarIA(idObra) {
-    const session = getSession();
-    try {
-        const result = await session.run(
-            "MATCH (o:Obra {id_obra: $idObra}) RETURN o.embedding AS embedding, o.tagsClip AS tagsClip",
-            { idObra: parseInt(idObra) }
-        );
-        return result.records;
-    } finally { await session.close(); }
-}
-
-async function findObraInfo(idObra) {
-    const session = getSession();
-    try {
-        const result = await session.run(`
-            MATCH (o:Obra {id_obra: $idObra})
-            OPTIONAL MATCH (o)-[:PERTENECE_A_EPOCA]->(e:Epoca)
-            OPTIONAL MATCH (o)<-[:CREO]-(a:Artista)
-            RETURN COLLECT(DISTINCT e.nombre) AS generos, COLLECT(DISTINCT a.id_artista) AS artistas
-        `, { idObra: parseInt(idObra) });
-        return result.records;
-    } finally { await session.close(); }
-}
-
-async function findAvailableWithEmbedding(idObra, limit = 50) {
-    const session = getSession();
-    try {
-        const result = await session.run(`
-            MATCH (o:Obra)
-            WHERE o.id_obra <> $idObra AND o.estado = 'Disponible' AND o.embedding IS NOT NULL
-            RETURN o.id_obra AS idObra, o.nombre AS nombre, o.precio AS precio,
-                   o.fotografia AS fotografia, o.embedding AS embedding, o.tagsClip AS tagsClip,
-                   o.genero AS genero, o.artistas AS artistas
-            LIMIT $limit
-        `, { idObra: parseInt(idObra), limit: neo4j.int(limit) });
-        return result.records;
-    } finally { await session.close(); }
-}
-
-async function findActivityGeneros(idUsuario) {
-    const session = getSession();
-    try {
-        const result = await session.run(`
-            MATCH (u:Usuario {id_usuario: $idUsuario})-[:VIO|COMPRO]->(o:Obra)
-            RETURN o.genero AS genero, COUNT(*) AS peso
-            ORDER BY peso DESC LIMIT 3
-        `, { idUsuario: parseInt(idUsuario) });
-        return result.records;
-    } finally { await session.close(); }
-}
-
-async function findActivityPrices(idUsuario) {
-    const session = getSession();
-    try {
-        const result = await session.run(`
-            MATCH (u:Usuario {id_usuario: $idUsuario})-[:VIO|COMPRO]->(o:Obra)
-            RETURN AVG(o.precio) AS promedio
-        `, { idUsuario: parseInt(idUsuario) });
-        return result.records;
-    } finally { await session.close(); }
-}
-
-async function findRecommendedByActivity(generos, precioMin, precioMax, idUsuario) {
-    const session = getSession();
-    try {
-        const result = await session.run(`
-            MATCH (o:Obra)
-            WHERE o.genero IN $generos AND o.precio >= $precioMin AND o.precio <= $precioMax
-              AND o.id_obra <> $idUsuario AND o.estado = 'Disponible'
-            RETURN o.id_obra AS idObra, o.nombre AS nombre, o.precio AS precio, o.genero AS genero
-            LIMIT 10
-        `, { generos, precioMin: neo4j.int(precioMin), precioMax: neo4j.int(precioMax), idUsuario: parseInt(idUsuario) });
-        return result.records;
-    } finally { await session.close(); }
-}
-
-async function findUserById(idUsuario) {
-    const session = getSession();
-    try {
-        const result = await session.run(
-            "MATCH (u:Usuario {id_usuario: $idUsuario}) RETURN u",
-            { idUsuario: parseInt(idUsuario) }
-        );
-        return result.records;
-    } finally { await session.close(); }
-}
-
-async function findPopularObras() {
-    const session = getSession();
-    try {
-        const result = await session.run(`
-            MATCH (o:Obra) WHERE o.estado = 'Disponible'
-            RETURN o.id_obra AS idObra, o.nombre AS nombre, o.precio AS precio
-            ORDER BY o.precio DESC LIMIT 10
-        `);
-        return result.records;
-    } finally { await session.close(); }
-}
-
-async function findForUser(idUsuario) {
-    const session = getSession();
-    try {
-        const result = await session.run(`
-            MATCH (u:Usuario {id_usuario: $idUsuario})-[:VIO|COMPRO]->(o:Obra)
-            MATCH (o)-[:PERTENECE_A_EPOCA]->(e:Epoca)
-            MATCH (rec:Obra)-[:PERTENECE_A_EPOCA]->(e)
-            WHERE NOT EXISTS { MATCH (u)-[:VIO|COMPRO]->(rec) }
-              AND rec.estado = 'Disponible'
-            RETURN DISTINCT rec.id_obra AS idObra, rec.nombre AS nombre,
-                   rec.precio AS precio, e.nombre AS genero
-            LIMIT 10
-        `, { idUsuario: parseInt(idUsuario) });
-        return result.records;
-    } finally { await session.close(); }
-}
-
-async function findCollabForTi(idUsuario) {
-    const session = getSession();
-    try {
-        const result = await session.run(`
-            MATCH (u:Usuario {id_usuario: $idUsuario})-[:VIO|COMPRO]->(o:Obra)
-            MATCH (o)<-[:VIO|COMPRO]-(otros:Usuario)-[:VIO|COMPRO]->(rec:Obra)
-            WHERE NOT EXISTS { MATCH (u)-[:VIO|COMPRO]->(rec) }
-              AND rec.estado = 'Disponible'
-            RETURN rec.id_obra AS idObra, rec.nombre AS nombre,
-                   rec.precio AS precio, rec.fotografia AS fotografia,
-                   COUNT(DISTINCT otros) AS peso
-            ORDER BY peso DESC LIMIT 15
-        `, { idUsuario: parseInt(idUsuario) });
-        return result.records;
-    } finally { await session.close(); }
-}
-
-async function findSameArtist(idUsuario) {
-    const session = getSession();
-    try {
-        const result = await session.run(`
-            MATCH (u:Usuario {id_usuario: $idUsuario})-[:VIO|COMPRO]->(o:Obra)<-[:CREO]-(a:Artista)
-            MATCH (a)-[:CREO]->(rec:Obra)
-            WHERE NOT EXISTS { MATCH (u)-[:VIO|COMPRO]->(rec) }
-              AND rec.estado = 'Disponible'
-            RETURN DISTINCT rec.id_obra AS idObra, rec.nombre AS nombre,
-                   rec.precio AS precio, rec.fotografia AS fotografia,
-                   a.nombre + ' ' + a.apellido AS artista
-            LIMIT 5
-        `, { idUsuario: parseInt(idUsuario) });
-        return result.records;
-    } finally { await session.close(); }
-}
-
-async function findSameGenreForTi(idUsuario) {
-    const session = getSession();
-    try {
-        const result = await session.run(`
-            MATCH (u:Usuario {id_usuario: $idUsuario})-[:VIO|COMPRO]->(o:Obra)
-            MATCH (rec:Obra {genero: o.genero})
-            WHERE NOT EXISTS { MATCH (u)-[:VIO|COMPRO]->(rec) }
-              AND rec.estado = 'Disponible'
-            RETURN DISTINCT rec.id_obra AS idObra, rec.nombre AS nombre,
-                   rec.precio AS precio, rec.fotografia AS fotografia,
-                   rec.genero AS genero
-            LIMIT 5
-        `, { idUsuario: parseInt(idUsuario) });
-        return result.records;
-    } finally { await session.close(); }
-}
-
-async function findDestacadas() {
-    const session = getSession();
-    try {
-        const result = await session.run(`
-            MATCH (o:Obra)
-            WHERE o.estado = 'Disponible'
-            OPTIONAL MATCH (o)<-[:CREO]-(a:Artista)
-            RETURN o.id_obra AS idObra, o.nombre AS nombre, o.precio AS precio,
-                   o.fotografia AS fotografia,
-                   COALESCE(a.nombre + ' ' + a.apellido, 'Anónimo') AS autor,
-                   o.clicks AS clicks
-            ORDER BY o.precio DESC LIMIT 10
-        `);
-        return result.records;
-    } finally { await session.close(); }
-}
-
-async function buscar(cypherQuery, params) {
-    const session = getSession();
-    try {
-        const result = await session.run(cypherQuery, params);
-        return result.records;
-    } finally { await session.close(); }
-}
-
-async function buscarVisual(q) {
-    const session = getSession();
-    try {
-        const result = await session.run(`
-            MATCH (o:Obra) WHERE o.estado = 'Disponible'
-            RETURN o.id_obra AS idObra, o.nombre AS nombre, o.precio AS precio,
-                   o.fotografia AS fotografia, o.tagsClip AS tagsClip
-            LIMIT 50
-        `);
-        return result.records;
-    } finally { await session.close(); }
-}
-
-async function hasUserActivity(idUsuario) {
-    const session = getSession();
-    try {
-        const result = await session.run(
-            "MATCH (u:Usuario {id_usuario: $idUsuario})-[:VIO|COMPRO]->() RETURN COUNT(*) AS total",
-            { idUsuario: parseInt(idUsuario) }
-        );
-        return result.records[0]?.get('total').toNumber() > 0;
-    } finally { await session.close(); }
+    const nodos = await runQuery(`
+        MATCH (n) RETURN labels(n) AS Tipo, count(n) AS Cantidad ORDER BY Tipo
+    `);
+    const relaciones = await runQuery(`
+        MATCH ()-[r]->() RETURN type(r) AS Tipo, count(r) AS Cantidad ORDER BY Tipo
+    `);
+    return { nodos, relaciones };
 }
 
 async function registrarActividad(idUsuario, idObra, tipo) {
-    const session = getSession();
-    try {
-        await session.run(`
-            MERGE (u:Usuario {id_usuario: $idUsuario})
-            MERGE (o:Obra {id_obra: $idObra})
-            MERGE (u)-[r:${tipo === 'compra' ? 'COMPRO' : 'VIO'}]->(o)
-            ON CREATE SET r.fecha = datetime()
-        `, { idUsuario: parseInt(idUsuario), idObra: parseInt(idObra) });
-    } finally { await session.close(); }
+    return runQuery(`
+        MATCH (c:Comprador {id_usuario: $idUsuario})
+        MATCH (o:Obra {id_obra: $idObra})
+        MERGE (c)-[r:INTERACTUO]->(o)
+        SET r.tipo = $tipo, r.timestamp = datetime()
+        RETURN r
+    `, { idUsuario: toNum(idUsuario), idObra: toNum(idObra), tipo });
+}
+
+async function findSimilarIA(idObra, limit = 200) {
+    return runQuery(`
+        MATCH (o:Obra {id_obra: $idObra})
+        WHERE o.embedding IS NOT NULL
+        RETURN o.embedding AS embedding, o.tagsClip AS tagsClip
+    `, { idObra: toNum(idObra) });
+}
+
+async function findObraInfo(idObra) {
+    return runQuery(`
+        MATCH (o:Obra {id_obra: $idObra})
+        OPTIONAL MATCH (o)<-[:CREO]-(a:Artista)-[:TRABAJA_EN]->(g:Genero)
+        RETURN collect(DISTINCT g.nombre) AS generos,
+               collect(DISTINCT a.id_artista) AS artistas
+    `, { idObra: toNum(idObra) });
+}
+
+async function findAvailableWithEmbedding(excludeId, limit = 200) {
+    return runQuery(`
+        MATCH (o:Obra)
+        OPTIONAL MATCH (o)<-[:CREO]-(a:Artista)-[:TRABAJA_EN]->(g:Genero)
+        WHERE o.estado = 'Disponible' AND o.embedding IS NOT NULL AND o.id_obra <> $excludeId
+        RETURN o.id_obra AS idObra, o.nombre AS nombre, o.precio AS precio,
+               o.fotografia AS fotografia, o.embedding AS embedding, o.tagsClip AS tagsClip,
+               collect(DISTINCT g.nombre) AS generos, collect(DISTINCT a.id_artista) AS artistas
+        LIMIT 50
+    `, { excludeId: toNum(excludeId), limit });
+}
+
+async function findActivityGeneros(userId) {
+    return runQuery(`
+        MATCH (c:Comprador {id_usuario: $idUsuario})-[r:INTERACTUO]->(o:Obra)
+        MATCH (o)<-[:CREO]-(:Artista)-[:TRABAJA_EN]->(g:Genero)
+        RETURN g.nombre AS genero, SUM(r.contador) AS total
+        ORDER BY total DESC LIMIT 3
+    `, { idUsuario: parseInt(userId) });
+}
+
+async function findActivityPrices(userId) {
+    return runQuery(`
+        MATCH (c:Comprador {id_usuario: $idUsuario})-[r:INTERACTUO]->(o:Obra)
+        RETURN AVG(o.precio) AS promedio, MIN(o.precio) AS minimo, MAX(o.precio) AS maximo
+    `, { idUsuario: parseInt(userId) });
+}
+
+async function findRecommendedByActivity(generos, precioMin, precioMax, userId, limit = 10) {
+    return runQuery(`
+        MATCH (g:Genero)<-[:TRABAJA_EN]-(:Artista)-[:CREO]->(o:Obra)
+        WHERE g.nombre IN $generos AND o.estado = 'Disponible'
+          AND o.precio >= $precioMin AND o.precio <= $precioMax
+          AND NOT EXISTS { MATCH (:Comprador {id_usuario: $idUsuario})-[r:INTERACTUO]->(o) }
+        RETURN DISTINCT o.id_obra AS idObra, o.nombre AS nombre,
+               o.precio AS precio, g.nombre AS genero
+        ORDER BY o.precio DESC LIMIT 50
+    `, { generos, precioMin, precioMax, idUsuario: parseInt(userId), limit });
+}
+
+async function findUserById(userId) {
+    return runQuery(`MATCH (c:Comprador {id_usuario: $id}) RETURN c`, { id: parseInt(userId) });
+}
+
+async function findPopularObras(limit = 10) {
+    return runQuery(`
+        MATCH (c:Comprador)-[:COMPRO]->(o:Obra)
+        WHERE o.estado = 'Disponible'
+        RETURN DISTINCT o.id_obra AS idObra, o.nombre AS nombre,
+               o.precio AS precio, COUNT(c) AS popularidad
+        ORDER BY popularidad DESC LIMIT 50
+    `, { limit });
+}
+
+async function findForUser(userId, limit = 10) {
+    return runQuery(`
+        MATCH (c:Comprador {id_usuario: $idUsuario})-[:COMPRO]->(:Obra)<-[:CREO]-(a:Artista)-[:TRABAJA_EN]->(g:Genero)
+        MATCH (g)<-[:TRABAJA_EN]-(:Artista)-[:CREO]->(recomendada:Obra)
+        WHERE NOT EXISTS { MATCH (c)-[:COMPRO]->(recomendada) }
+        AND recomendada.estado = 'Disponible'
+        RETURN DISTINCT recomendada.id_obra AS idObra, recomendada.nombre AS nombre,
+               recomendada.precio AS precio, g.nombre AS genero,
+               a.nombre + ' ' + a.apellido AS artista
+        ORDER BY recomendada.precio DESC LIMIT 50
+    `, { idUsuario: parseInt(userId), limit });
+}
+
+async function findCollabForTi(userId, limit = 4) {
+    return runQuery(`
+        MATCH (c:Comprador {id_usuario: $idUsuario})-[:INTERACTUO|COMPRO]->(o:Obra)
+        MATCH (c2:Comprador)-[:INTERACTUO|COMPRO]->(o)
+        WHERE c2.id_usuario <> $idUsuario
+        MATCH (c2)-[:INTERACTUO|COMPRO]->(recomendada:Obra)
+        WHERE recomendada.estado = 'Disponible'
+          AND NOT EXISTS { MATCH (:Comprador {id_usuario: $idUsuario})-[:INTERACTUO|COMPRO]->(recomendada) }
+        RETURN recomendada.id_obra AS idObra, recomendada.nombre AS nombre,
+               recomendada.precio AS precio, recomendada.fotografia AS fotografia,
+               COUNT(DISTINCT c2) AS afinidad
+        ORDER BY afinidad DESC LIMIT 50
+    `, { idUsuario: toNum(userId), limit });
+}
+
+async function findSameArtist(userId, limit = 3) {
+    return runQuery(`
+        MATCH (c:Comprador {id_usuario: $idUsuario})-[:INTERACTUO|COMPRO]->(:Obra)<-[:CREO]-(a:Artista)
+        MATCH (a)-[:CREO]->(recomendada:Obra)
+        WHERE recomendada.estado = 'Disponible'
+          AND NOT EXISTS { MATCH (c)-[:INTERACTUO|COMPRO]->(recomendada) }
+        RETURN DISTINCT recomendada.id_obra AS idObra, recomendada.nombre AS nombre,
+               recomendada.precio AS precio, recomendada.fotografia AS fotografia,
+               a.nombre + ' ' + a.apellido AS artista
+        ORDER BY recomendada.precio DESC LIMIT 50
+    `, { idUsuario: toNum(userId), limit });
+}
+
+async function findSameGenreForTi(userId, limit = 3) {
+    return runQuery(`
+        MATCH (c:Comprador {id_usuario: $idUsuario})-[:INTERACTUO|COMPRO]->(:Obra)<-[:CREO]-(:Artista)-[:TRABAJA_EN]->(g:Genero)
+        MATCH (g)<-[:TRABAJA_EN]-(:Artista)-[:CREO]->(recomendada:Obra)
+        WHERE recomendada.estado = 'Disponible'
+          AND NOT EXISTS { MATCH (c)-[:INTERACTUO|COMPRO]->(recomendada) }
+        RETURN DISTINCT recomendada.id_obra AS idObra, recomendada.nombre AS nombre,
+               recomendada.precio AS precio, recomendada.fotografia AS fotografia,
+               g.nombre AS genero
+        ORDER BY recomendada.precio DESC LIMIT 50
+    `, { idUsuario: toNum(userId), limit });
 }
 
 async function createGuestUser() {
+    return runQuery(`
+        MERGE (c:Comprador {id_usuario: 9999})
+        SET c.nombre = 'Invitado', c.apellido = 'Prueba', c.email = 'guest@museo.com'
+        RETURN c
+    `);
+}
+
+async function findDestacadas() {
+    return runQuery(`
+        MATCH (o:Obra) WHERE o.estado = 'Disponible'
+        OPTIONAL MATCH (c:Comprador)-[r:INTERACTUO]->(o)
+        WITH o, COUNT(r) AS clicks 
+        OPTIONAL MATCH (o)<-[:CREO]-(a:Artista)
+        RETURN o.id_obra AS idObra, o.nombre AS nombre, o.precio AS precio,
+               o.fotografia AS fotografia, a.nombre + ' ' + a.apellido AS autor, clicks
+        ORDER BY clicks DESC
+        LIMIT 15
+    `);
+}
+
+async function buscar(query, params = {}) {
+    return runQuery(query, params);
+}
+
+async function buscarVisual(query) {
+    return runQuery(`
+        MATCH (o:Obra)
+        WHERE o.estado = 'Disponible' AND o.tagsClip IS NOT NULL
+        AND toLower(o.tagsClip) CONTAINS $query
+        OPTIONAL MATCH (o)<-[:CREO]-(a:Artista)
+        RETURN o.id_obra AS idObra, o.nombre AS nombre, o.precio AS precio,
+               o.fotografia AS fotografia, o.tagsClip AS tagsClip,
+               a.nombre + ' ' + a.apellido AS autor
+        LIMIT 15
+    `, { query: query.toLowerCase() });
+}
+
+async function createCompraRelation(compradorId, obraId) {
     const session = getSession();
     try {
-        await session.run("MERGE (u:Usuario {id_usuario: 9999})");
-    } finally { await session.close(); }
+        await session.run(
+            `MERGE (c:Comprador {id_usuario: $compradorId})
+             MERGE (o:Obra {id_obra: $obraId})
+             MERGE (c)-[:COMPRO {fecha: datetime()}]->(o)`,
+            { compradorId: parseInt(compradorId), obraId: parseInt(obraId) }
+        );
+    } finally {
+        await session.close();
+    }
 }
 
 module.exports = {
-    toNum, findSameGenre, findCollaborative, findPersonalized,
+    toNum, runQuery, findSameGenre, findCollaborative, findPersonalized,
     findPopularArtists, findPopularGenres, findObrasByGenero, getGraphStats,
-    findSimilarIA, findObraInfo, findAvailableWithEmbedding,
+    registrarActividad, findSimilarIA, findObraInfo, findAvailableWithEmbedding,
     findActivityGeneros, findActivityPrices, findRecommendedByActivity,
     findUserById, findPopularObras, findForUser, findCollabForTi,
-    findSameArtist, findSameGenreForTi, findDestacadas, buscar, buscarVisual,
-    hasUserActivity, registrarActividad,
-    createGuestUser
+    findSameArtist, findSameGenreForTi, createGuestUser, findDestacadas,
+    buscar, buscarVisual, createCompraRelation
 };
