@@ -66,7 +66,7 @@ const apiProxy = createProxyMiddleware({
         ) return RECOMMENDATIONS_URL;
 
         if (path.startsWith('/api/buscar') && !path.startsWith('/api/buscar-comprador'))
-            return RECOMMENDATIONS_URL;
+            return CATALOG_URL;
 
         if (
             path === '/confirmar-reserva' ||
@@ -83,11 +83,12 @@ const apiProxy = createProxyMiddleware({
         ) return CHATBOT_URL;
 
         return ADMIN_URL;
-    }
+    },
+
 });
 
 const shouldProxy = (pathname) => {
-    
+
     return (
         pathname.startsWith('/api/') ||
         pathname.startsWith('/login-') ||
