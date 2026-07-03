@@ -1,4 +1,4 @@
-const Autor = require('./models/autor_model');
+const Autor = require('../models/autor_model');
 
 async function findAll(select = '', sort = { _id: 1 }) {
     let query = Autor.find();

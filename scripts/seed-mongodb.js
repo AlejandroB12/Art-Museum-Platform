@@ -6,11 +6,10 @@ const path = require('path');
 
 dns.setServers(['8.8.8.8', '1.1.1.1']);
 
-const Autor = require('../backend/models/autor_model');
-const Obra = require('../backend/models/obra_model');
-const Genero = require('../backend/models/genero_model');
-const Nacionalidad = require('../backend/models/nacionalidad_model');
-const Especializacion = require('../backend/models/especializacion_model');
+const Autor = require('../modules/catalog/src/models/autor_model');
+const Obra = require('../modules/catalog/src/models/obra_model');
+const Genero = require('../modules/catalog/src/models/genero_model');
+const Nacionalidad = require('../modules/catalog/src/models/nacionalidad_model');
 
 const seed = async () => {
     try {
@@ -46,8 +45,12 @@ const seed = async () => {
         const nacionalidades = await Nacionalidad.insertMany(data1.nacionalidades);
         console.log(`Insertadas ${nacionalidades.length} nacionalidades`);
 
-        const especializaciones = await Especializacion.insertMany(data1.especializaciones);
-        console.log(`Insertadas ${especializaciones.length} especializaciones`);
+        if (data1.especializaciones) {
+            const espCol = mongoose.connection.db.collection('especializaciones');
+            await espCol.deleteMany({});
+            const especializaciones = await espCol.insertMany(data1.especializaciones);
+            console.log(`Insertadas ${especializaciones.length} especializaciones`);
+        }
 
         console.log('Seed completado exitosamente');
         await mongoose.connection.close();

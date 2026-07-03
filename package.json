@@ -2,10 +2,10 @@
   "name": "art-museum-platform",
   "version": "1.0.0",
   "description": "Art Museum Platform - Virtual art marketplace with membership system",
-  "main": "server/server.js",
+  "main": "api/src/index.js",
   "scripts": {
-    "start": "node server/server.js",
-    "dev": "node --watch server/server.js",
+    "start": "node api/src/index.js",
+    "dev": "node --watch api/src/index.js",
     "gateway": "node api/src/index.js",
     "seed": "node scripts/seed-mongodb.js",
     "seed:cassandra": "node scripts/seed-cassandra.js",
@@ -32,7 +32,10 @@
     "nodemailer": "^6.9.15",
     "swagger-jsdoc": "^6.3.0",
     "swagger-ui-express": "^5.0.1",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "neode": "^0.4.9",
+    "express-cassandra": "^2.9.1",
+    "@prisma/client": "^7.1.0"
   },
   "keywords": [
     "art",
@@ -42,6 +45,7 @@
   ],
   "license": "ISC",
   "devDependencies": {
-    "docx": "^9.7.1"
+    "docx": "^9.7.1",
+    "prisma": "^7.1.0"
   }
 }

@@ -1,4 +1,4 @@
-const Obra = require('./models/obra_model');
+const Obra = require('../models/obra_model');
 
 async function findAll(filters = {}, sort = { _id: 1 }) {
     return Obra.find(filters).sort(sort).lean();
