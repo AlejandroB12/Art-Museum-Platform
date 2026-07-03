@@ -155,5 +155,5 @@ async function listObrasDestacadas() {
 
 module.exports = {
     listAutores, listObrasFiltradas, getAutorDetalle,
-    listArtistasCatalogo, listObrasDestacadas
+    listArtistasCatalogo, listObrasDestacadas, mapObraToFrontend
 };

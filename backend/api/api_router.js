@@ -10,6 +10,7 @@ const adminRoutes = require('./routers/admin_router');
 const recommendationRoutes = require('./routers/recommendations_router');
 const geographyRoutes = require('./routers/geography_router');
 const witcherRoutes = require('../witcher_bot/witcher_router');
+const searchRouter = require('./routers/search_router');
 
 router.use(authRoutes);
 router.use(userRoutes);
@@ -19,5 +20,6 @@ router.use('/api', catalogRoutes);
 router.use('/api', geographyRoutes);
 router.use('/api', recommendationRoutes);
 router.use('/api', witcherRoutes);
+router.use('/api', searchRouter);
 
 module.exports = router;

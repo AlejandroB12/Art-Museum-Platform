@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
 * {
     margin: 0;
     padding: 0;
@@ -91,16 +92,18 @@ body {
 
 .main-content {
     flex: 1;
-    padding: 50px;
+    padding: 30px 40px;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
 }
 
 .view {
     display: none;
-    width: 100%;
-    max-width: 800px;
+}
+
+.view.active-view {
+    display: block;
 }
 
 .active-view {
@@ -280,20 +283,95 @@ select.input-select option {
     border-color: #00ff00 !important;
 }
 
+.rec-mini-obra {
+    cursor: pointer;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+
+.rec-mini-obra:hover {
+    transform: scale(1.1);
+    z-index: 2;
+}
+
+.genero-tag:hover {
+    border-color: #00ff00 !important;
+    color: #fff !important;
+}
+
 /* --- Utility classes --- */
-.welcome-title { font-size: 3rem; }
-.welcome-sub { color: #666; margin-top: 10px; font-size: 1.2rem; }
-.section-title { margin-bottom: 20px; }
-.section-title-green { margin-bottom: 20px; color: #00ff00; }
-.question-block { margin-bottom: 20px; }
-.question-title { font-size: 16px; }
-.status-msg { color: #666; font-size: 14px; margin-bottom: 30px; }
-.card-divider { margin-top: 30px; border-top: 1px solid #333; padding-top: 20px; }
-.flex-row { display: flex; gap: 10px; margin-top: 10px; }
-.flex-half { flex: 0.5; }
-.flex-04 { flex: 0.4; }
-.btn-blue-bg { background: #0088ff; color: white; }
-.btn-blue-bg:hover { background: #0077ee; }
-.recomendaciones-container { width: 100%; margin-top: 40px; }
-.premium-badge { font-size: 12px; color: #00ff00; }
-.sidebar-name { font-weight: 600; }
+.welcome-title {
+    font-size: 3rem;
+}
+
+.welcome-sub {
+    color: #666;
+    margin-top: 10px;
+    font-size: 1.2rem;
+}
+
+.section-title {
+    margin-bottom: 20px;
+}
+
+.section-title-green {
+    margin-bottom: 20px;
+    color: #00ff00;
+}
+
+.question-block {
+    margin-bottom: 20px;
+}
+
+.question-title {
+    font-size: 16px;
+}
+
+.status-msg {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 30px;
+}
+
+.card-divider {
+    margin-top: 30px;
+    border-top: 1px solid #333;
+    padding-top: 20px;
+}
+
+.flex-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.flex-half {
+    flex: 0.5;
+}
+
+.flex-04 {
+    flex: 0.4;
+}
+
+.btn-blue-bg {
+    background: #0088ff;
+    color: white;
+}
+
+.btn-blue-bg:hover {
+    background: #0077ee;
+}
+
+.recomendaciones-container {
+    width: 100%;
+    margin-top: 40px;
+}
+
+.premium-badge {
+    font-size: 12px;
+    color: #00ff00;
+}
+
+.sidebar-name {
+    font-weight: 600;
+}

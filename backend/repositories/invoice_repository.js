@@ -1,4 +1,4 @@
-const { db } = require('../../config/database');
+const { db } = require('../config/database');
 const { promisify } = require('util');
 const query = promisify(db.query).bind(db);
 

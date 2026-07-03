@@ -50,12 +50,34 @@ async function personalizadas(idUsuario) {
 
 async function artistasPopulares() {
     const records = await neoRepo.findPopularArtists();
-    return records.map(r => ({
-        id_Artista: neoRepo.toNum(r.get('id_Artista')),
-        Artista: r.get('Artista'),
-        ObrasVendidas: neoRepo.toNum(r.get('ObrasVendidas')),
-        CompradoresUnicos: neoRepo.toNum(r.get('CompradoresUnicos'))
-    }));
+    const Autor = require('../../../backend/models/autor_model');
+    const ids = records.map(r => neoRepo.toNum(r.get('idArtista')));
+    const autores = await Autor.find({ _id: { $in: ids } }).select('_id fotografia').lean();
+    const fotosMap = {};
+    autores.forEach(a => { fotosMap[a._id] = a.fotografia || ''; });
+
+    return records.map(r => {
+        const id = neoRepo.toNum(r.get('idArtista'));
+        const obrasRaw = r.get('obras') || [];
+        const topObras = obrasRaw
+            .sort((a, b) => Number(b.vistas || 0) - Number(a.vistas || 0))
+            .slice(0, 5)
+            .map(o => ({
+                id: neoRepo.toNum(o.id),
+                nombre: o.nombre,
+                fotografia: o.fotografia || '',
+                vistas: neoRepo.toNum(o.vistas)
+            }));
+
+        return {
+            idArtista: id,
+            artista: (r.get('nombre') || '') + ' ' + (r.get('apellido') || ''),
+            fotoArtista: fotosMap[id] || '',
+            obrasVendidas: neoRepo.toNum(r.get('obrasVendidas')),
+            totalVistas: neoRepo.toNum(r.get('totalVistas')),
+            obras: topObras
+        };
+    });
 }
 
 async function generosPopulares() {
@@ -74,7 +96,8 @@ async function obrasPorGenero(genero) {
     return records.map(r => ({
         id_Obra: neoRepo.toNum(r.get('id_Obra')),
         Nombre: r.get('Nombre'),
-        Precio: r.get('Precio')
+        Precio: r.get('Precio'),
+        fotografia: r.get('fotografia') || ''
     }));
 }
 

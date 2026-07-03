@@ -55,10 +55,53 @@ async function findPopularArtists() {
     const session = getSession();
     try {
         const result = await session.run(`
-            MATCH (a:Artista)<-[:CREO]-(o:Obra)<-[:COMPRO]-(:Usuario)
-            RETURN a.id_artista AS id_Artista, a.nombre + ' ' + a.apellido AS Artista,
-                   COUNT(o) AS ObrasVendidas, COUNT(DISTINCT o) AS CompradoresUnicos
-            ORDER BY ObrasVendidas DESC LIMIT 10
+            MATCH (a:Artista)-[:CREO]->(o:Obra)
+            OPTIONAL MATCH (o)<-[r:VIO]-(:Usuario)
+            WITH a, o, COUNT(r) AS vistasObra
+            WITH a, 
+                 SUM(vistasObra) AS totalVistas,
+                 COLLECT({id: o.id_obra, nombre: o.nombre, fotografia: o.fotografia, vistas: vistasObra}) AS obras
+            OPTIONAL MATCH (a)-[:CREO]->(v:Obra {estado: 'Vendida'})
+            WITH a, obras, totalVistas, COUNT(DISTINCT v) AS obrasVendidas
+            ORDER BY obrasVendidas DESC, totalVistas DESC
+            LIMIT 6
+            RETURN a.id_artista AS idArtista,
+                   a.nombre AS nombre,
+                   a.apellido AS apellido,
+                   obrasVendidas,
+                   totalVistas,
+                   obras
+        `);
+        return result.records;
+    } finally { await session.close(); }
+}
+
+async function findObrasByGenero(genero) {
+    const Obra = require('../../../backend/models/obra_model');
+    const obras = await Obra.find({ estado_obra: 'Disponible', 'genero.nombre': genero })
+        .select('_id nombre precio fotografia').sort({ precio: 1 }).limit(6).lean();
+    return obras.map(o => ({
+        get: (key) => {
+            const map = { id_Obra: o._id, Nombre: o.nombre, Precio: o.precio, fotografia: o.fotografia || '' };
+            return map[key];
+        }
+    }));
+}
+
+async function findDestacadas() {
+    const session = getSession();
+    try {
+        const result = await session.run(`
+            MATCH (o:Obra)
+            WHERE o.estado = 'Disponible'
+            OPTIONAL MATCH (o)<-[r:VIO]-(:Usuario)
+            WITH o, COUNT(r) AS clicks
+            ORDER BY clicks DESC
+            OPTIONAL MATCH (o)<-[:CREO]-(a:Artista)
+            RETURN o.id_obra AS idObra, o.nombre AS nombre, o.precio AS precio,
+                   o.fotografia AS fotografia,
+                   COALESCE(a.nombre + ' ' + a.apellido, 'Anónimo') AS autor,
+                   clicks
         `);
         return result.records;
     } finally { await session.close(); }

@@ -1,4 +1,4 @@
-const { client } = require('../../config/database');
+const { client } = require('../config/database');
 
 async function registrarEvento(id_usuario, tipo_evento, descripcion, req) {
     await client.execute(

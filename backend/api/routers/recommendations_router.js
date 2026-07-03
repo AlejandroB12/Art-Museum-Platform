@@ -132,22 +132,4 @@ router.get('/recomendaciones/obras-destacadas', async (req, res) => {
     }
 });
 
-router.get('/buscar', async (req, res) => {
-    try {
-        const result = await recService.buscar((req.query.q || '').trim());
-        res.json(result);
-    } catch (err) {
-        res.json([]);
-    }
-});
-
-router.get('/buscar/visual', async (req, res) => {
-    try {
-        const result = await recService.buscarVisual((req.query.q || '').trim());
-        res.json(result);
-    } catch (err) {
-        res.json([]);
-    }
-});
-
 module.exports = router;

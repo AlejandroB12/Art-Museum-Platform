@@ -1,4 +1,4 @@
-const { client } = require('../../config/database');
+const { client } = require('../config/database');
 
 async function findObrasVendidasPorMes(anio_mes) {
     const result = await client.execute(

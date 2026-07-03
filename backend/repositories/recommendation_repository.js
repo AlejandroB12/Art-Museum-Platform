@@ -1,5 +1,9 @@
-const { getSession } = require('../../config/database');
-const toNum = (v) => v != null ? Number(v) : 0;
+const { getSession } = require('../config/database');
+function toNum(value) {
+    if (value == null) return 0;
+    if (typeof value === 'object' && value.toNumber) return value.toNumber();
+    return Math.floor(Number(value));
+}
 
 async function runQuery(cypher, params = {}) {
     const session = getSession();
@@ -22,7 +26,7 @@ async function findSameGenre(userId, limit = 10) {
                recomendada.precio AS Precio,
                g.nombre AS Genero
         ORDER BY recomendada.precio DESC
-        LIMIT $limit
+        LIMIT 50
     `, { idUsuario: parseInt(userId), limit });
 }
 
@@ -38,7 +42,7 @@ async function findCollaborative(userId, limit = 10) {
                recomendada.precio AS Precio,
                COUNT(DISTINCT c2) AS CantidadCoincidencias
         ORDER BY CantidadCoincidencias DESC
-        LIMIT $limit
+        LIMIT 50
     `, { idUsuario: parseInt(userId), limit });
 }
 
@@ -60,20 +64,33 @@ async function findPersonalized(userId, limit = 10) {
                recomendada.precio AS Precio,
                genero.nombre AS Genero
         ORDER BY recomendada.precio DESC
-        LIMIT $limit
+        LIMIT 50
     `, { idUsuario: parseInt(userId), limit });
 }
 
-async function findPopularArtists(limit = 10) {
-    return runQuery(`
-        MATCH (c:Comprador)-[:COMPRO]->(:Obra)<-[:CREO]-(a:Artista)
-        RETURN a.id_artista AS id_Artista,
-               a.nombre + ' ' + a.apellido AS Artista,
-               COUNT(*) AS ObrasVendidas,
-               COUNT(DISTINCT c) AS CompradoresUnicos
-        ORDER BY ObrasVendidas DESC
-        LIMIT $limit
-    `, { limit });
+async function findPopularArtists() {
+    const session = getSession();
+    try {
+        const result = await session.run(`
+            MATCH (a:Artista)-[:CREO]->(o:Obra)
+            OPTIONAL MATCH (o)<-[r:VIO]-(:Usuario)
+            WITH a, o, COUNT(r) AS vistasObra
+            WITH a, 
+                 SUM(vistasObra) AS totalVistas,
+                 COLLECT({id: o.id_obra, nombre: o.nombre, fotografia: o.fotografia, vistas: vistasObra}) AS obras
+            OPTIONAL MATCH (a)-[:CREO]->(v:Obra {estado: 'Vendida'})
+            WITH a, obras, totalVistas, COUNT(DISTINCT v) AS obrasVendidas
+            ORDER BY obrasVendidas DESC, totalVistas DESC
+            LIMIT 6
+            RETURN a.id_artista AS idArtista,
+                   a.nombre AS nombre,
+                   a.apellido AS apellido,
+                   obrasVendidas,
+                   totalVistas,
+                   obras
+        `);
+        return result.records;
+    } finally { await session.close(); }
 }
 
 async function findPopularGenres() {
@@ -88,14 +105,16 @@ async function findPopularGenres() {
     `);
 }
 
-async function findObrasByGenero(genero, limit = 6) {
-    return runQuery(`
-        MATCH (g:Genero {nombre: $genero})<-[:TRABAJA_EN]-(:Artista)-[:CREO]->(o:Obra)
-        WHERE o.estado = 'Disponible'
-        RETURN o.id_obra AS id_Obra, o.nombre AS Nombre, o.precio AS Precio
-        ORDER BY o.precio ASC
-        LIMIT $limit
-    `, { genero, limit });
+async function findObrasByGenero(genero) {
+    const Obra = require('../models/obra_model');
+    const obras = await Obra.find({ estado_obra: 'Disponible', 'genero.nombre': genero })
+        .select('_id nombre precio fotografia').sort({ precio: 1 }).limit(6).lean();
+    return obras.map(o => ({
+        get: (key) => {
+            const map = { id_Obra: o._id, Nombre: o.nombre, Precio: o.precio, fotografia: o.fotografia || '' };
+            return map[key];
+        }
+    }));
 }
 
 async function getGraphStats() {
@@ -143,7 +162,7 @@ async function findAvailableWithEmbedding(excludeId, limit = 200) {
         RETURN o.id_obra AS idObra, o.nombre AS nombre, o.precio AS precio,
                o.fotografia AS fotografia, o.embedding AS embedding, o.tagsClip AS tagsClip,
                collect(DISTINCT g.nombre) AS generos, collect(DISTINCT a.id_artista) AS artistas
-        LIMIT $limit
+        LIMIT 50
     `, { excludeId: toNum(excludeId), limit });
 }
 
@@ -171,7 +190,7 @@ async function findRecommendedByActivity(generos, precioMin, precioMax, userId, 
           AND NOT EXISTS { MATCH (:Comprador {id_usuario: $idUsuario})-[r:INTERACTUO]->(o) }
         RETURN DISTINCT o.id_obra AS idObra, o.nombre AS nombre,
                o.precio AS precio, g.nombre AS genero
-        ORDER BY o.precio DESC LIMIT $limit
+        ORDER BY o.precio DESC LIMIT 50
     `, { generos, precioMin, precioMax, idUsuario: parseInt(userId), limit });
 }
 
@@ -185,7 +204,7 @@ async function findPopularObras(limit = 10) {
         WHERE o.estado = 'Disponible'
         RETURN DISTINCT o.id_obra AS idObra, o.nombre AS nombre,
                o.precio AS precio, COUNT(c) AS popularidad
-        ORDER BY popularidad DESC LIMIT $limit
+        ORDER BY popularidad DESC LIMIT 50
     `, { limit });
 }
 
@@ -198,7 +217,7 @@ async function findForUser(userId, limit = 10) {
         RETURN DISTINCT recomendada.id_obra AS idObra, recomendada.nombre AS nombre,
                recomendada.precio AS precio, g.nombre AS genero,
                a.nombre + ' ' + a.apellido AS artista
-        ORDER BY recomendada.precio DESC LIMIT $limit
+        ORDER BY recomendada.precio DESC LIMIT 50
     `, { idUsuario: parseInt(userId), limit });
 }
 
@@ -213,7 +232,7 @@ async function findCollabForTi(userId, limit = 4) {
         RETURN recomendada.id_obra AS idObra, recomendada.nombre AS nombre,
                recomendada.precio AS precio, recomendada.fotografia AS fotografia,
                COUNT(DISTINCT c2) AS afinidad
-        ORDER BY afinidad DESC LIMIT $limit
+        ORDER BY afinidad DESC LIMIT 50
     `, { idUsuario: toNum(userId), limit });
 }
 
@@ -226,7 +245,7 @@ async function findSameArtist(userId, limit = 3) {
         RETURN DISTINCT recomendada.id_obra AS idObra, recomendada.nombre AS nombre,
                recomendada.precio AS precio, recomendada.fotografia AS fotografia,
                a.nombre + ' ' + a.apellido AS artista
-        ORDER BY recomendada.precio DESC LIMIT $limit
+        ORDER BY recomendada.precio DESC LIMIT 50
     `, { idUsuario: toNum(userId), limit });
 }
 
@@ -239,7 +258,7 @@ async function findSameGenreForTi(userId, limit = 3) {
         RETURN DISTINCT recomendada.id_obra AS idObra, recomendada.nombre AS nombre,
                recomendada.precio AS precio, recomendada.fotografia AS fotografia,
                g.nombre AS genero
-        ORDER BY recomendada.precio DESC LIMIT $limit
+        ORDER BY recomendada.precio DESC LIMIT 50
     `, { idUsuario: toNum(userId), limit });
 }
 

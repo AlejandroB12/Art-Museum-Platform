@@ -50,12 +50,34 @@ async function personalizadas(idUsuario) {
 
 async function artistasPopulares() {
     const records = await neoRepo.findPopularArtists();
-    return records.map(r => ({
-        id_Artista: neoRepo.toNum(r.get('id_Artista')),
-        Artista: r.get('Artista'),
-        ObrasVendidas: neoRepo.toNum(r.get('ObrasVendidas')),
-        CompradoresUnicos: neoRepo.toNum(r.get('CompradoresUnicos'))
-    }));
+    const Autor = require('../models/autor_model');
+    const ids = records.map(r => neoRepo.toNum(r.get('idArtista')));
+    const autores = await Autor.find({ _id: { $in: ids } }).select('_id fotografia').lean();
+    const fotosMap = {};
+    autores.forEach(a => { fotosMap[a._id] = a.fotografia || ''; });
+
+    return records.map(r => {
+        const id = neoRepo.toNum(r.get('idArtista'));
+        const obrasRaw = r.get('obras') || [];
+        const topObras = obrasRaw
+            .sort((a, b) => Number(b.vistas || 0) - Number(a.vistas || 0))
+            .slice(0, 5)
+            .map(o => ({
+                id: neoRepo.toNum(o.id),
+                nombre: o.nombre,
+                fotografia: o.fotografia || '',
+                vistas: neoRepo.toNum(o.vistas)
+            }));
+
+        return {
+            idArtista: id,
+            artista: (r.get('nombre') || '') + ' ' + (r.get('apellido') || ''),
+            fotoArtista: fotosMap[id] || '',
+            obrasVendidas: neoRepo.toNum(r.get('obrasVendidas')),
+            totalVistas: neoRepo.toNum(r.get('totalVistas')),
+            obras: topObras
+        };
+    });
 }
 
 async function generosPopulares() {
@@ -74,7 +96,8 @@ async function obrasPorGenero(genero) {
     return records.map(r => ({
         id_Obra: neoRepo.toNum(r.get('id_Obra')),
         Nombre: r.get('Nombre'),
-        Precio: r.get('Precio')
+        Precio: r.get('Precio'),
+        fotografia: r.get('fotografia') || ''
     }));
 }
 
@@ -104,45 +127,35 @@ async function registrarActividad(idUsuario, idObra, tipo) {
 }
 
 async function porSimilitudIA(idObra) {
-    const obraRef = await neoRepo.findSimilarIA(idObra);
-    if (obraRef.length === 0) return [];
+    const session = require('../config/database').getSession();
+    try {
+        const result = await session.run(
+            `MATCH (o:Obra {id_obra: $idObra})-[r:SIMILAR_A]->(similar:Obra)
+             WHERE similar.estado = 'Disponible'
+             RETURN similar.id_obra AS idObra,
+                    similar.nombre AS nombre,
+                    similar.precio AS precio,
+                    similar.fotografia AS fotografia,
+                    r.score AS similitud
+             ORDER BY r.score DESC
+             LIMIT 5`,
+            { idObra: parseInt(idObra) }
+        );
 
-    const embeddingRef = obraRef[0].get('embedding');
-    let tagsRef = [];
-    try { tagsRef = JSON.parse(obraRef[0].get('tagsClip') || '[]'); } catch (e) { }
-    const palabrasRef = new Set(tagsRef.map(t => t.tag));
-
-    const infoObra = await neoRepo.findObraInfo(idObra);
-    const generosRef = infoObra[0]?.get('generos') || [];
-    const artistasRef = (infoObra[0]?.get('artistas') || []).map(a => neoRepo.toNum(a));
-
-    const result = await neoRepo.findAvailableWithEmbedding(idObra);
-
-    const puntuadas = result.map(r => {
-        const similitudBase = cosineSimilarity(embeddingRef, r.get('embedding'));
-        let tagsObra = [];
-        try { tagsObra = JSON.parse(r.get('tagsClip') || '[]'); } catch (e) { }
-        const palabrasObra = new Set(tagsObra.map(t => t.tag));
-        const interseccion = [...palabrasRef].filter(t => palabrasObra.has(t)).length;
-        const bonusCLIP = palabrasRef.size > 0 ? interseccion / palabrasRef.size * 0.3 : 0;
-        const generosObra = r.get('generos') || [];
-        const artistasObra = (r.get('artistas') || []).map(a => neoRepo.toNum(a));
-        const bonusGenero = generosObra.some(g => generosRef.includes(g)) ? 0.15 : 0;
-        const bonusAutor = artistasObra.some(a => artistasRef.includes(a)) ? 0.25 : 0;
-        const puntuacionFinal = Math.min(1, similitudBase + bonusCLIP + bonusGenero + bonusAutor);
-        return {
+        return result.records.map(r => ({
             idObra: neoRepo.toNum(r.get('idObra')),
             nombre: r.get('nombre'),
             precio: neoRepo.toNum(r.get('precio')),
             fotografia: r.get('fotografia') || '',
-            similitud: Math.round(puntuacionFinal * 100)
-        };
-    });
-
-    return puntuadas.sort((a, b) => b.similitud - a.similitud).slice(0, 5).map(o => ({
-        ...o,
-        label: getSimilitudLabel(o.similitud)
-    }));
+            similitud: Math.round(neoRepo.toNum(r.get('similitud')) * 100),
+            label: getSimilitudLabel(Math.round(neoRepo.toNum(r.get('similitud')) * 100))
+        }));
+    } catch (err) {
+        console.error('Error en similitud IA:', err);
+        return [];
+    } finally {
+        await session.close();
+    }
 }
 
 async function porActividad(idUsuario) {
@@ -267,93 +280,9 @@ async function obrasDestacadas() {
     }));
 }
 
-async function buscar(q) {
-    if (!q || q.length < 2) return [];
-    const palabras = q.split(/\s+/).filter(p => p.length > 0);
-    let cypherQuery, params;
-
-    if (palabras.length === 1) {
-        cypherQuery = `
-            MATCH (o:Obra) WHERE o.estado = 'Disponible'
-            AND (toLower(o.nombre) CONTAINS toLower($q)
-                 OR EXISTS { MATCH (o)<-[:CREO]-(a:Artista) WHERE toLower(a.nombre) CONTAINS toLower($q) OR toLower(a.apellido) CONTAINS toLower($q) })
-            OPTIONAL MATCH (o)<-[:CREO]-(a:Artista)
-            RETURN o.id_obra AS idObra, o.nombre AS nombre, o.precio AS precio,
-                   o.fotografia AS fotografia, a.nombre + ' ' + a.apellido AS autor
-            ORDER BY o.nombre LIMIT 10`;
-        params = { q };
-    } else {
-        const condiciones = palabras.map((p, i) => `
-            (toLower(o.nombre) CONTAINS toLower($p${i})
-             OR EXISTS { MATCH (o)<-[:CREO]-(a:Artista) WHERE toLower(a.nombre) CONTAINS toLower($p${i}) OR toLower(a.apellido) CONTAINS toLower($p${i}) })`).join(' AND ');
-        cypherQuery = `
-            MATCH (o:Obra) WHERE o.estado = 'Disponible' AND (${condiciones})
-            OPTIONAL MATCH (o)<-[:CREO]-(a:Artista)
-            RETURN o.id_obra AS idObra, o.nombre AS nombre, o.precio AS precio,
-                   o.fotografia AS fotografia, a.nombre + ' ' + a.apellido AS autor
-            ORDER BY o.nombre LIMIT 10`;
-        params = {};
-        palabras.forEach((p, i) => params[`p${i}`] = p);
-    }
-
-    const neoResult = await neoRepo.buscar(cypherQuery, params);
-    let resultados = neoResult.map(r => ({
-        id_Obra: neoRepo.toNum(r.get('idObra')),
-        Nombre: r.get('nombre'),
-        Precio: neoRepo.toNum(r.get('precio')),
-        imagen_url: r.get('fotografia') || '',
-        AutorNombre: r.get('autor') || '',
-        PrecioFormateado: '$' + Number(neoRepo.toNum(r.get('precio'))).toLocaleString(),
-        tipo: 'exacta'
-    }));
-
-    if (resultados.length === 0) {
-        const { pipeline } = require('@xenova/transformers');
-        const embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-        const embResult = await embedder(q, { pooling: 'mean', normalize: true });
-        const queryEmb = Array.from(embResult.data);
-
-        const obrasEmb = await neoRepo.findAvailableWithEmbedding(0, 200);
-        resultados = obrasEmb.map(r => ({
-            id_Obra: neoRepo.toNum(r.get('idObra')),
-            Nombre: r.get('nombre'),
-            Precio: neoRepo.toNum(r.get('precio')),
-            imagen_url: r.get('fotografia') || '',
-            PrecioFormateado: '$' + Number(neoRepo.toNum(r.get('precio'))).toLocaleString(),
-            similitud: Math.round(cosineSimilarity(queryEmb, r.get('embedding')) * 100),
-            tipo: 'semántica'
-        }))
-            .filter(r => r.similitud > 40)
-            .sort((a, b) => b.similitud - a.similitud)
-            .slice(0, 10);
-    }
-
-    return resultados;
-}
-
-async function buscarVisual(q) {
-    if (!q || q.length < 2) return [];
-    const result = await neoRepo.buscarVisual(q);
-    return result.map(r => {
-        let tags = [];
-        try { tags = JSON.parse(r.get('tagsClip') || '[]'); } catch (e) { }
-        const tagMatch = tags.find(t => t.tag.includes(q.toLowerCase()));
-        return {
-            id_Obra: neoRepo.toNum(r.get('idObra')),
-            Nombre: r.get('nombre'),
-            Precio: neoRepo.toNum(r.get('precio')),
-            imagen_url: r.get('fotografia') || '',
-            AutorNombre: r.get('autor') || '',
-            PrecioFormateado: '$' + Number(neoRepo.toNum(r.get('precio'))).toLocaleString(),
-            score: tagMatch ? tagMatch.score : 0,
-            tipo: 'visual'
-        };
-    }).sort((a, b) => b.score - a.score);
-}
-
 module.exports = {
     mismoGenero, colaborativo, personalizadas, artistasPopulares,
     generosPopulares, obrasPorGenero, estadisticas, registrarActividad,
     porSimilitudIA, porActividad, paraUsuario, paraTi, guestLogin,
-    obrasDestacadas, buscar, buscarVisual
+    obrasDestacadas
 };

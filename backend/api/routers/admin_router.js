@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { db } = require('../../../config/database');
+const { db } = require('../../config/database');
 
 // Startup: asegurar columnas de Factura
 db.query("ALTER TABLE Factura MODIFY COLUMN Fecha_Venta timestamp NULL DEFAULT CURRENT_TIMESTAMP", (errMod) => {
