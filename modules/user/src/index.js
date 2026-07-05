@@ -17,6 +17,15 @@ app.use(sessionFromToken);
 const userRouter = require('./routers/user_router');
 app.use(userRouter);
 
+const membresiaUsuarioRouter = require('./routers/membresia-usuario-routes');
+app.use(membresiaUsuarioRouter);
+
+const comprasUsuarioRouter = require('./routers/compras-usuario-routes');
+app.use(comprasUsuarioRouter);
+
+const solicitudPagoRouter = require('./routers/solicitud-pago-routes');
+app.use(solicitudPagoRouter);
+
 const { errorHandler, notFoundHandler } = require('../../../shared/middlewares/error_middleware');
 app.use(notFoundHandler);
 app.use(errorHandler);
