@@ -1,0 +1,10 @@
+model Membresia {
+  idMembresia  Int       @id @default(autoincrement())
+  FechaPago    DateTime  @db.Date
+  MontoPagado  Decimal   @db.Decimal(10, 2)
+  id_usuario   Int
+
+  usuario Usuario @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+
+  @@map("Membresia")
+}

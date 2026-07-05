@@ -1,27 +1,34 @@
-const { query, queryRaw } = require('../config/database');
+const { prisma } = require('../models');
 
 async function findLastPayment(userId) {
-    return query(
-        "SELECT FechaPago, MontoPagado FROM Membresia WHERE id_usuario = ? ORDER BY FechaPago DESC LIMIT 1",
-        [userId]
-    );
+    const membresia = await prisma.membresia.findFirst({
+        where: { id_usuario: Number(userId) },
+        orderBy: { FechaPago: 'desc' },
+        select: { FechaPago: true, MontoPagado: true }
+    });
+    return membresia ? [membresia] : [];
 }
 
 async function findMaxExpiry(userId) {
-    return query(
-        `SELECT MAX(DATE_ADD(FechaPago, INTERVAL (MontoPagado / 10 * 30) DAY)) AS vencimiento_actual
-         FROM Membresia WHERE id_usuario = ?`,
-        [userId]
-    );
+    const result = await prisma.$queryRawUnsafe(`
+        SELECT MAX(DATE_ADD(FechaPago, INTERVAL (MontoPagado / 10 * 30) DAY)) AS vencimiento_actual
+        FROM Membresia WHERE id_usuario = ?
+    `, [Number(userId)]);
+    return result;
 }
 
 async function insert(userId, fecha, monto = 10.00) {
-    return queryRaw("INSERT INTO Membresia (FechaPago, MontoPagado, id_usuario) VALUES (?, ?, ?)",
-        [fecha, monto, userId]);
+    await prisma.membresia.create({
+        data: {
+            id_usuario: Number(userId),
+            FechaPago: fecha === 'NOW()' ? new Date() : new Date(fecha),
+            MontoPagado: monto
+        }
+    });
 }
 
 async function findMembershipDetails(userId) {
-    return query(`
+    const result = await prisma.$queryRawUnsafe(`
         SELECT CONCAT('Pago $', MontoPagado) AS Concepto,
                FechaPago AS FechaInicio, MontoPagado AS TotalPagado,
                DATE_ADD(FechaPago, INTERVAL (MontoPagado / 10 * 30) DAY) AS FechaVencimiento,
@@ -38,35 +45,46 @@ async function findMembershipDetails(userId) {
                'total' AS Tipo
         FROM Membresia WHERE id_usuario = ?
         ORDER BY CASE Tipo WHEN 'total' THEN 2 WHEN 'detalle' THEN 1 ELSE 0 END, FechaInicio ASC
-    `, [userId, userId]);
+    `, [Number(userId), Number(userId)]);
+    return result;
 }
 
 async function findPendingPayments() {
-    return query(`
+    const result = await prisma.$queryRawUnsafe(`
         SELECT s.*, u.Email
         FROM SolicitudPago s
         JOIN Usuario u ON s.id_usuario = u.id_usuario
         WHERE s.Estatus = 'Pendiente'
     `);
+    return result;
 }
 
 async function findPendingRequests(userId) {
-    return query(`
+    const result = await prisma.$queryRawUnsafe(`
         SELECT 'Solicitud de Pago' AS Concepto, FechaSolicitud AS FechaInicio,
                Monto AS TotalPagado, NULL AS FechaVencimiento, Estatus AS EstadoPago,
                NULL AS DiasRestantes, 'solicitud' AS Tipo
         FROM SolicitudPago WHERE id_usuario = ? AND Estatus = 'Pendiente'
         ORDER BY FechaSolicitud DESC
-    `, [userId]);
+    `, [Number(userId)]);
+    return result;
 }
 
 async function approvePayment(idSolicitud) {
-    return query("UPDATE SolicitudPago SET Estatus = 'Aprobado' WHERE id_solicitud = ?", [idSolicitud]);
+    await prisma.solicitudPago.update({
+        where: { id_solicitud: Number(idSolicitud) },
+        data: { Estatus: 'Aprobado' }
+    });
 }
 
 async function insertPaymentRequest(userId, monto = 10.00) {
-    return queryRaw("INSERT INTO SolicitudPago (id_usuario, FechaSolicitud, Monto, Estatus) VALUES (?, NOW(), ?, 'Pendiente')",
-        [userId, monto]);
+    await prisma.solicitudPago.create({
+        data: {
+            id_usuario: Number(userId),
+            Monto: monto,
+            Estatus: 'Pendiente'
+        }
+    });
 }
 
 module.exports = {
