@@ -1,26 +1,34 @@
-const { db, query, beginTransaction, commit, rollback, queryRaw } = require('../config/database');
+const { prisma } = require('../models');
 
 async function findByEmail(email) {
-    return query("SELECT * FROM Usuario WHERE Email = ?", [email]);
+    const user = await prisma.usuario.findUnique({ where: { Email: email } });
+    return user ? [user] : [];
 }
 
 async function findById(id) {
-    return query("SELECT * FROM Usuario WHERE id_usuario = ?", [id]);
+    const user = await prisma.usuario.findUnique({ where: { id_usuario: Number(id) } });
+    return user ? [user] : [];
 }
 
 async function findWithComprador(id) {
-    return query(
-        `SELECT u.id_usuario, u.Email, u.Rol, u.Estatus, u.Nombre, u.Apellido,
-                c.PuedeAdquirir, c.Cedula, c.Telefono, c.CodigoVerificacion,
-                c.id_parroquia, c.Calle
-         FROM Usuario u
-         LEFT JOIN Comprador c ON u.id_usuario = c.id_usuario
-         WHERE u.id_usuario = ?`, [id]
-    );
+    const user = await prisma.usuario.findUnique({
+        where: { id_usuario: Number(id) },
+        include: { Comprador: true }
+    });
+    if (!user) return [];
+    return [{
+        ...user,
+        PuedeAdquirir: user.Comprador?.PuedeAdquirir,
+        Cedula: user.Comprador?.Cedula,
+        Telefono: user.Comprador?.Telefono,
+        CodigoVerificacion: user.Comprador?.CodigoVerificacion,
+        id_parroquia: user.Comprador?.id_parroquia,
+        Calle: user.Comprador?.Calle
+    }];
 }
 
 async function findWithMembresiaStatus(id) {
-    return query(`
+    const result = await prisma.$queryRawUnsafe(`
         SELECT u.Rol, c.PuedeAdquirir,
                CASE WHEN EXISTS (
                    SELECT 1 FROM Membresia m
@@ -30,23 +38,30 @@ async function findWithMembresiaStatus(id) {
         FROM Usuario u
         LEFT JOIN Comprador c ON u.id_usuario = c.id_usuario
         WHERE u.id_usuario = ?
-    `, [id]);
+    `, [Number(id)]);
+    return result;
 }
 
 async function updateEstatus(id, estatus) {
-    return query("UPDATE Usuario SET Estatus = ? WHERE id_usuario = ?", [estatus, id]);
+    await prisma.usuario.update({
+        where: { id_usuario: Number(id) },
+        data: { Estatus: estatus }
+    });
 }
 
 async function updatePassword(id, password) {
-    return query("UPDATE Usuario SET Contraseña = ? WHERE id_usuario = ?", [password, id]);
+    await prisma.usuario.update({
+        where: { id_usuario: Number(id) },
+        data: { Contraseña: password }
+    });
 }
 
 async function deleteById(id) {
-    return query("DELETE FROM Usuario WHERE id_usuario = ?", [id]);
+    await prisma.usuario.delete({ where: { id_usuario: Number(id) } });
 }
 
 async function findAllUsers() {
-    return query(`
+    const result = await prisma.$queryRawUnsafe(`
         SELECT u.id_usuario, u.Email, u.Rol, u.Estatus,
                c.PuedeAdquirir,
                CASE WHEN EXISTS (
@@ -57,37 +72,68 @@ async function findAllUsers() {
         FROM Usuario u
         LEFT JOIN Comprador c ON u.id_usuario = c.id_usuario
     `);
+    return result;
 }
 
 async function findPendingUsers() {
-    return query(`
-        SELECT u.id_usuario, u.Email, u.Rol, u.Estatus, c.CodigoVerificacion
-        FROM Usuario u
-        LEFT JOIN Comprador c ON u.id_usuario = c.id_usuario
-        WHERE u.Estatus = 0 AND u.Rol != 'administrador'
-    `);
+    const users = await prisma.usuario.findMany({
+        where: { Estatus: 0, Rol: { not: 'administrador' } },
+        include: { Comprador: { select: { CodigoVerificacion: true } } }
+    });
+    return users.map(u => ({
+        id_usuario: u.id_usuario,
+        Email: u.Email,
+        Rol: u.Rol,
+        Estatus: u.Estatus,
+        CodigoVerificacion: u.Comprador?.CodigoVerificacion
+    }));
 }
 
 async function findUserNamesByIds(ids) {
-    if (ids.length === 0) return [];
-    const placeholders = ids.map(() => '?').join(',');
-    return query(
-        `SELECT id_usuario, Nombre, Apellido FROM Usuario WHERE id_usuario IN (${placeholders})`, ids
-    );
+    const users = await prisma.usuario.findMany({
+        where: { id_usuario: { in: ids.map(Number) } },
+        select: { id_usuario: true, Nombre: true, Apellido: true }
+    });
+    return users;
 }
 
 async function updatePuedeAdquirir(id, value) {
-    return query("UPDATE Comprador SET PuedeAdquirir = ? WHERE id_usuario = ?", [value, id]);
+    await prisma.comprador.update({
+        where: { id_usuario: Number(id) },
+        data: { PuedeAdquirir: value === 1 }
+    });
 }
 
 async function searchBuyer(email, cedula) {
-    let sql = "SELECT u.id_usuario, u.Email, u.Nombre, u.Apellido, c.Cedula FROM Usuario u LEFT JOIN Comprador c ON u.id_usuario = c.id_usuario WHERE";
-    const params = [];
-    const conditions = [];
-    if (email) { conditions.push("u.Email = ?"); params.push(email); }
-    if (cedula) { conditions.push("c.Cedula = ?"); params.push(cedula); }
-    sql += " " + conditions.join(" OR ") + " LIMIT 1";
-    return query(sql, params);
+    const where = {};
+    if (email) where.Email = email;
+    const user = await prisma.usuario.findFirst({
+        where,
+        include: { Comprador: { select: { Cedula: true } } }
+    });
+    if (!user) return [];
+    if (cedula && user.Comprador?.Cedula !== cedula) return [];
+    return [{
+        id_usuario: user.id_usuario,
+        Email: user.Email,
+        Nombre: user.Nombre,
+        Apellido: user.Apellido,
+        Cedula: user.Comprador?.Cedula
+    }];
+}
+
+async function beginTransaction() {
+    await prisma.$transaction(async (tx) => {
+        return tx;
+    });
+}
+
+async function commit() {}
+
+async function rollback() {}
+
+async function queryRaw(sql, params = []) {
+    return prisma.$executeRawUnsafe(sql, ...params);
 }
 
 module.exports = {

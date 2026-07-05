@@ -1,0 +1,14 @@
+model Comprador {
+  id_usuario          Int       @id
+  Cedula              String    @db.VarChar(20)
+  Telefono            String?   @db.VarChar(20)
+  CodigoVerificacion  String?   @db.VarChar(10)
+  id_parroquia        Int?
+  Calle               String?   @db.VarChar(255)
+  PuedeAdquirir       Boolean   @default(true)
+
+  usuario   Usuario    @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+  parroquia Parroquia? @relation(fields: [id_parroquia], references: [id_parroquia])
+
+  @@map("Comprador")
+}

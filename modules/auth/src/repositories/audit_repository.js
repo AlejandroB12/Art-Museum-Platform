@@ -1,19 +1,34 @@
 const { client } = require('../config/database');
+const { RegistrarEventoSeguridadInput, RegistrarCambioEstatusInput } = require('../models');
 
 async function registrarEvento(id_usuario, tipo_evento, descripcion, req) {
+    const payload = RegistrarEventoSeguridadInput.parse({
+        id_usuario,
+        tipo_evento,
+        descripcion,
+        ip_origen: req?.ip || '',
+        dispositivo: req?.headers?.['user-agent'] || ''
+    });
+
     await client.execute(
         `INSERT INTO bitacora_seguridad (id_usuario, fecha_evento, tipo_evento, descripcion, ip_origen, dispositivo)
          VALUES (?, toTimestamp(now()), ?, ?, ?, ?)`,
-        [id_usuario, tipo_evento, descripcion, req?.ip || '', req?.headers?.['user-agent'] || ''],
+        [payload.id_usuario, payload.tipo_evento, payload.descripcion, payload.ip_origen, payload.dispositivo],
         { prepare: true }
     );
 }
 
 async function registrarCambioEstatus(id_obra, estatus_anterior, estatus_nuevo, modificado_por, motivo) {
+    const payload = RegistrarCambioEstatusInput.parse({
+        id_obra, estatus_anterior, estatus_nuevo,
+        modificado_por: modificado_por ?? null,
+        motivo: motivo || ''
+    });
+
     await client.execute(
         `INSERT INTO historial_estatus_obra (id_obra, fecha_cambio, estatus_anterior, estatus_nuevo, modificado_por, motivo)
          VALUES (?, toTimestamp(now()), ?, ?, ?, ?)`,
-        [id_obra, estatus_anterior, estatus_nuevo, modificado_por, motivo],
+        [payload.id_obra, payload.estatus_anterior, payload.estatus_nuevo, payload.modificado_por, payload.motivo],
         { prepare: true }
     );
 }

@@ -1,0 +1,16 @@
+model Usuario {
+  id_usuario  Int       @id @default(autoincrement())
+  Email       String    @unique @db.VarChar(255)
+  Contraseña  String    @db.VarChar(255)
+  Nombre      String    @db.VarChar(255)
+  Apellido    String    @db.VarChar(255)
+  Estatus     Int       @default(0)
+  Rol         String    @default("comprador") @db.VarChar(50)
+
+  Comprador         Comprador?
+  Membresia         Membresia[]
+  CodigoSeguridad   CodigoSeguridad[]
+  SolicitudPago     SolicitudPago[]
+
+  @@map("Usuario")
+}
