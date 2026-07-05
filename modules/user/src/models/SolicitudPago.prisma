@@ -1,0 +1,20 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model SolicitudPago {
+  id_solicitud   Int      @id @default(autoincrement())
+  id_usuario     Int
+  FechaSolicitud DateTime
+  Monto          Decimal  @db.Decimal(10, 2)
+  Estatus        String
+
+  usuario Usuario @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@map("SolicitudPago")
+}
