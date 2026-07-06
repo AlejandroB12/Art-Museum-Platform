@@ -1,8 +1,0 @@
-model Estado {
-  id_estado Int    @id @default(autoincrement())
-  nombre    String @db.VarChar(255)
-
-  municipios Municipio[]
-
-  @@map("Estado")
-}

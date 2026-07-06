@@ -135,7 +135,7 @@
  *           text/plain:
  *             schema:
  *               type: string
- *               example: Error al crear usuario: La cédula es obligatoria para compradores.
+ *               example: "Error al crear usuario: La cédula es obligatoria para compradores."
  */
 
 /**
@@ -266,7 +266,7 @@
  *           text/plain:
  *             schema:
  *               type: string
- *               example: Error al guardar: mensaje
+ *               example: "Error al guardar: mensaje"
  */
 
 /**

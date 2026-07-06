@@ -6,9 +6,6 @@ require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 const rateLimit = require('express-rate-limit');
 const getSessionConfig = require('../../shared/middlewares/session_config');
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
 app.use(require('express-session')(getSessionConfig()));
 
 const limiter = rateLimit({
@@ -66,6 +63,9 @@ app.use((req, res, next) => {
     }
     next();
 });
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 const { errorHandler, notFoundHandler } = require('../../shared/middlewares/error_middleware');
 app.use(notFoundHandler);

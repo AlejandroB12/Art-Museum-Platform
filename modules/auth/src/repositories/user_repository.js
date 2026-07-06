@@ -38,7 +38,7 @@ async function findWithMembresiaStatus(id) {
         FROM Usuario u
         LEFT JOIN Comprador c ON u.id_usuario = c.id_usuario
         WHERE u.id_usuario = ?
-    `, [Number(id)]);
+    `, Number(id));
     return result;
 }
 

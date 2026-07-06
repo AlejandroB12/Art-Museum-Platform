@@ -15,7 +15,7 @@ async function findShippingData(idUsuario) {
         LEFT JOIN Parroquia p ON c.id_parroquia = p.id_parroquia
         LEFT JOIN Municipio m ON p.id_municipio = m.id_municipio
         WHERE c.id_usuario = ?
-    `, [Number(idUsuario)]);
+    `, Number(idUsuario));
     return result;
 }
 
@@ -34,7 +34,7 @@ async function findPurchaseHistory(idUsuario) {
         LEFT JOIN Genero g ON o.id_Genero = g.id_Genero
         WHERE r.id_usuario = ?
         ORDER BY Fecha_emision DESC
-    `, [Number(idUsuario), Number(idUsuario)]);
+    `, Number(idUsuario), Number(idUsuario));
     return result;
 }
 

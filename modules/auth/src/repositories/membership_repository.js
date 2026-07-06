@@ -13,7 +13,7 @@ async function findMaxExpiry(userId) {
     const result = await prisma.$queryRawUnsafe(`
         SELECT MAX(DATE_ADD(FechaPago, INTERVAL (MontoPagado / 10 * 30) DAY)) AS vencimiento_actual
         FROM Membresia WHERE id_usuario = ?
-    `, [Number(userId)]);
+    `, Number(userId));
     return result;
 }
 
@@ -45,7 +45,7 @@ async function findMembershipDetails(userId) {
                'total' AS Tipo
         FROM Membresia WHERE id_usuario = ?
         ORDER BY CASE Tipo WHEN 'total' THEN 2 WHEN 'detalle' THEN 1 ELSE 0 END, FechaInicio ASC
-    `, [Number(userId), Number(userId)]);
+    `, Number(userId), Number(userId));
     return result;
 }
 
@@ -66,7 +66,7 @@ async function findPendingRequests(userId) {
                NULL AS DiasRestantes, 'solicitud' AS Tipo
         FROM SolicitudPago WHERE id_usuario = ? AND Estatus = 'Pendiente'
         ORDER BY FechaSolicitud DESC
-    `, [Number(userId)]);
+    `, Number(userId));
     return result;
 }
 
