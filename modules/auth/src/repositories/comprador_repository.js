@@ -39,15 +39,18 @@ async function findPurchaseHistory(idUsuario) {
 }
 
 async function create(data) {
+    const parroquia = data.id_parroquia
+        ? { connect: { id_parroquia: Number(data.id_parroquia) } }
+        : undefined;
     await prisma.comprador.create({
         data: {
-            id_usuario: data.id_usuario,
             Cedula: data.Cedula,
             Telefono: data.Telefono || null,
             CodigoVerificacion: data.CodigoVerificacion || null,
-            id_parroquia: data.id_parroquia || null,
             Calle: data.Calle || null,
-            PuedeAdquirir: true
+            PuedeAdquirir: true,
+            usuario: { connect: { id_usuario: data.id_usuario } },
+            ...(parroquia ? { parroquia } : {})
         }
     });
 }
