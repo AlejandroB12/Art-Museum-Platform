@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const authService = require('../../services/auth_service');
+const authService = require('../services/auth_services');
 
 router.post('/guardar-seguridad', (req, res) => {
     if (!req.session.id_usuario) {

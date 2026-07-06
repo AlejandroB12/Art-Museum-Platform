@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const authService = require('../../services/auth_service');
+const authService = require('../services/auth_services');
 
 router.get('/api/estado-usuario', async (req, res) => {
     try {
