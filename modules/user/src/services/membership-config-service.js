@@ -1,5 +1,3 @@
-const membershipRepo = require('../repositories/membership_repository');
-
 const MEMBERSHIP_PRICE = 10.00;
 
 async function getMembershipConfig() {

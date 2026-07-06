@@ -1,8 +1,8 @@
-const { getMembershipConfig } = require('./get-membership-config-service');
-const { getMembresiaUsuario } = require('./get-membresia-usuario-service');
+const { getMembershipConfig } = require('./membership-config-service');
+const { getMembresiaUsuario } = require('./membresia-usuario-service');
 const { solicitarPago } = require('./solicitar-pago-service');
-const { getMisCompras } = require('./get-mis-compras-service');
-const { getDatosEnvioPago } = require('./get-datos-envio-pago-service');
+const { getMisCompras } = require('./mis-compras-service');
+const { getDatosEnvioPago } = require('./datos-envio-pago-service');
 
 module.exports = {
     getMembershipConfig,
