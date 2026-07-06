@@ -25,6 +25,10 @@ app.get('/', (req, res) => {
     res.redirect('/public/home.html');
 });
 
+app.get('/health', (req, res) => {
+    res.json({ success: true, service: 'gateway', timestamp: new Date().toISOString() });
+});
+
 try {
     const swaggerJsdoc = require('swagger-jsdoc');
     const swaggerUi = require('swagger-ui-express');

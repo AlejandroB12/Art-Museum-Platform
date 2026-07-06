@@ -17,13 +17,13 @@ app.use(sessionFromToken);
 const authRouter = require('./routers/auth_router');
 app.use(authRouter);
 
-const { errorHandler, notFoundHandler } = require('../../../shared/middlewares/error_middleware');
-app.use(notFoundHandler);
-app.use(errorHandler);
-
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', service: 'auth', timestamp: new Date().toISOString() });
 });
+
+const { errorHandler, notFoundHandler } = require('../../../shared/middlewares/error_middleware');
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 const PORT = process.env.AUTH_SERVICE_PORT || 3001;
 
