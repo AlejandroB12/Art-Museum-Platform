@@ -53,7 +53,9 @@ const apiProxy = createProxyMiddleware({
             path.startsWith('/api/obras-filtradas') ||
             path.startsWith('/api/autor-detalle') ||
             path.startsWith('/api/artistas-catalogo') ||
-            path.startsWith('/api/obras-destacadas')
+            path.startsWith('/api/obras-destacadas') ||
+            path.startsWith('/api/artworks') ||
+            path.startsWith('/api/artists')
 
         ) return CATALOG_URL;
 

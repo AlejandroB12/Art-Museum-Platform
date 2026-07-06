@@ -11,7 +11,7 @@ const sessionFromToken = (req, _res, next) => {
 
     const token = req.headers['x-user-token'];
 
-    if (token) 
+    if (token)
     {
 
         try 

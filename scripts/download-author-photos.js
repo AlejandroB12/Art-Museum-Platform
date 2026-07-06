@@ -61,7 +61,7 @@ function sleep(ms) {
 (async () => {
   const dataFile = path.join(__dirname, '..', 'data', '1000_obras_seed.json');
   const data = JSON.parse(fs.readFileSync(dataFile, 'utf-8'));
-  const authorsDir = path.join(__dirname, '..', 'assets', 'images', 'authors');
+  const authorsDir = path.join(__dirname, '..', 'assets', 'images', 'artists');
 
   let success = 0;
   let failed = 0;
@@ -76,7 +76,7 @@ function sleep(ms) {
     // Saltar si ya existe
     if (fs.existsSync(outputFile)) {
       console.log(`  [SKIP] author_${autor._id}.webp ya existe`);
-      autor.fotografia = `/images/authors/author_${autor._id}.webp`;
+      autor.fotografia = `/images/artists/author_${autor._id}.webp`;
       success++;
       continue;
     }
@@ -103,7 +103,7 @@ function sleep(ms) {
         .webp({ quality: 85 })
         .toFile(outputFile);
 
-      autor.fotografia = `/images/authors/author_${autor._id}.webp`;
+      autor.fotografia = `/images/artists/author_${autor._id}.webp`;
       success++;
       console.log(`  [OK] author_${autor._id}.webp (${autor.nombre} ${autor.apellido}, ~${edad}a, ${gender})`);
 

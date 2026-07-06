@@ -354,9 +354,9 @@ async function createObraAdmin(data) {
             const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
             const buffer = Buffer.from(matches[2], 'base64');
             const fileName = `${Date.now()}-${fotografia_nombre || `imagen.${ext}`}`;
-            const filePath = path.join(__dirname, '..', '..', 'assets', 'images', 'art_previews', fileName);
+            const filePath = path.join(__dirname, '..', '..', 'assets', 'images', 'artworks', fileName);
             fs.writeFileSync(filePath, buffer);
-            rutaFoto = `/images/art_previews/${fileName}`;
+            rutaFoto = `/images/artworks/${fileName}`;
         }
     }
 
@@ -469,9 +469,9 @@ async function createAutorAdmin(data) {
             const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
             const buffer = Buffer.from(matches[2], 'base64');
             const fileName = `${Date.now()}-${fotografia_nombre || `imagen.${ext}`}`;
-            const filePath = path.join(__dirname, '..', '..', 'assets', 'images', 'authors', fileName);
+            const filePath = path.join(__dirname, '..', '..', 'assets', 'images', 'artists', fileName);
             fs.writeFileSync(filePath, buffer);
-            rutaFoto = `/images/authors/${fileName}`;
+            rutaFoto = `/images/artists/${fileName}`;
         }
     }
     const maxId = await autorRepo.findMaxId();

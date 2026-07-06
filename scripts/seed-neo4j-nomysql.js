@@ -1,8 +1,8 @@
 require('dotenv').config();
 const { getSession, connectNeo4j, closeNeo4j } = require('../shared/database/neo4j');
 const mongoose = require('mongoose');
-const Obra = require('../modules/catalog/src/models/obra_model');
-const Autor = require('../modules/catalog/src/models/autor_model');
+const Artwork = require('../modules/catalog/src/models/artwork_model');
+const Artist = require('../modules/catalog/src/models/artist_model');
 
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGO_URI_FALLBACK;
 
@@ -36,7 +36,7 @@ async function seedNeo4j() {
 
     // 4. Cargar obras desde MongoDB
     console.log('--- Cargando obras desde MongoDB ---');
-    const obras = await Obra.find().lean();
+    const obras = await Artwork.find().lean();
     for (const o of obras) {
         await session.run(
             `CREATE (:Obra {
@@ -59,7 +59,7 @@ async function seedNeo4j() {
 
     // 5. Cargar autores desde MongoDB
     console.log('--- Cargando autores desde MongoDB ---');
-    const autores = await Autor.find().lean();
+    const autores = await Artist.find().lean();
     for (const a of autores) {
         await session.run(
             `CREATE (:Artista {

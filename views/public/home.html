@@ -104,7 +104,7 @@
                 // Cargar en paralelo
                 const [popResp, todasResp] = await Promise.all([
                     fetch('/api/recomendaciones/obras-destacadas?_=' + Date.now()),
-                    fetch('/api/obras-filtradas?genero=all&artista=all&orden=desc&page=1&limit=12')
+                    fetch('/api/artworks/filtered?genero=all&artista=all&orden=desc&pagina=1&limite=12')
                 ]);
 
                 const populares = await popResp.json();
@@ -130,11 +130,11 @@
             const lote = todasLasObras.slice(obrasMostradas, obrasMostradas + OBRAS_POR_CARGA);
 
             lote.forEach(o => {
-                const img = o.imagen_url || o.fotografia || '';
-                const nombre = o.Nombre || o.nombre || '';
-                const autor = o.AutorNombre || o.autor || '';
-                const precio = o.PrecioFormateado || (o.precio ? '$' + Number(o.precio).toLocaleString() : '');
-                const id = Number(o.id_Obra || o.idObra);
+                const img = o.fotografia || o.imagen_url || '';
+                const nombre = o.nombre || o.Nombre || '';
+                const autor = (o.artista_nombre && o.artista_apellido) ? o.artista_nombre + ' ' + o.artista_apellido : o.AutorNombre || o.autor || '';
+                const precio = o.precio_formateado || o.PrecioFormateado || (o.precio ? '$' + Number(o.precio).toLocaleString() : '');
+                const id = Number(o.id_obra || o.id_Obra || o.idObra);
 
                 const card = document.createElement('div');
                 card.className = 'art-card';
@@ -160,7 +160,7 @@
         window.addEventListener('scroll', () => {
             if (obrasMostradas >= todasLasObras.length && window._currentPageHome * 12 < window._totalObrasHome) {
                 window._currentPageHome++;
-                fetch(`/api/obras-filtradas?genero=all&artista=all&orden=desc&page=${window._currentPageHome}&limit=12`)
+                fetch(`/api/artworks/filtered?genero=all&artista=all&orden=desc&pagina=${window._currentPageHome}&limite=12`)
                     .then(r => r.json())
                     .then(data => {
                         todasLasObras = [...todasLasObras, ...data.obras];
