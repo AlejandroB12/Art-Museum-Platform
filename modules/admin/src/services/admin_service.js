@@ -354,7 +354,7 @@ async function createObraAdmin(data) {
             const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
             const buffer = Buffer.from(matches[2], 'base64');
             const fileName = `${Date.now()}-${fotografia_nombre || `imagen.${ext}`}`;
-            const filePath = path.join(__dirname, '..', '..', 'assets', 'images', 'artworks', fileName);
+            const filePath = path.join(__dirname, '..', '..', '..', '..', 'assets', 'images', 'artworks', fileName);
             fs.writeFileSync(filePath, buffer);
             rutaFoto = `/images/artworks/${fileName}`;
         }
@@ -469,7 +469,7 @@ async function createArtistaAdmin(data) {
             const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
             const buffer = Buffer.from(matches[2], 'base64');
             const fileName = `${Date.now()}-${fotografia_nombre || `imagen.${ext}`}`;
-            const filePath = path.join(__dirname, '..', '..', 'assets', 'images', 'artists', fileName);
+            const filePath = path.join(__dirname, '..', '..', '..', '..', 'assets', 'images', 'artists', fileName);
             fs.writeFileSync(filePath, buffer);
             rutaFoto = `/images/artists/${fileName}`;
         }

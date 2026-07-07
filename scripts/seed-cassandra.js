@@ -1,6 +1,6 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
-const { connectCassandra, client } = require('../config/database');
+const { connectCassandra, client } = require('../shared/database/cassandra');
 
 const seedData = [
     {

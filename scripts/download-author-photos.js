@@ -59,7 +59,7 @@ function sleep(ms) {
 }
 
 (async () => {
-  const dataFile = path.join(__dirname, '..', 'data', '1000_obras_seed.json');
+  const dataFile = path.join(__dirname, '..', 'data', 'json', '1000_obras_seed.json');
   const data = JSON.parse(fs.readFileSync(dataFile, 'utf-8'));
   const authorsDir = path.join(__dirname, '..', 'assets', 'images', 'artists');
 

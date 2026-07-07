@@ -5,6 +5,9 @@ const tls = require('tls');
 const dns = require('dns');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
+const projectRoot = path.resolve(__dirname, '..');
+const resolveBundle = (p) => path.isAbsolute(p) ? p : path.resolve(projectRoot, p);
+
 const PASS = '\x1b[32m✓\x1b[0m';
 const FAIL = '\x1b[31m✗\x1b[0m';
 const SKIP = '\x1b[33m-\x1b[0m';
@@ -15,7 +18,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 async function testSecureBundle() {
     console.log(`\n${BOLD}[1/5] Secure Bundle${RESET}`);
-    const bundlePath = path.resolve(process.env.CASSANDRA_SECURE_BUNDLE_PATH || './secure-connect-museo-db.zip');
+    const bundlePath = resolveBundle(process.env.CASSANDRA_SECURE_BUNDLE_PATH || './secure-connect-museo-db.zip');
     if (!fs.existsSync(bundlePath)) {
         console.log(`  ${FAIL} Archivo no encontrado: ${bundlePath}`);
         return null;
@@ -46,7 +49,7 @@ function testMetadataService(config) {
     return new Promise(async (resolve) => {
         console.log(`\n${BOLD}[2/5] Metadata Service (HTTPS)${RESET}`);
         if (!config) { console.log(`  ${SKIP} Saltado (bundle inválido)`); return resolve(false); }
-        const bundlePath = path.resolve(process.env.CASSANDRA_SECURE_BUNDLE_PATH || './secure-connect-museo-db.zip');
+        const bundlePath = resolveBundle(process.env.CASSANDRA_SECURE_BUNDLE_PATH || './secure-connect-museo-db.zip');
         try {
             const AdmZip = require('adm-zip');
             const zip = new AdmZip(bundlePath);
@@ -97,7 +100,7 @@ async function testTlsHandshake(config) {
     return new Promise(async (resolve) => {
         console.log(`\n${BOLD}[3/5] TLS Handshake (CQL port ${config?.cql_port || 29042})${RESET}`);
         if (!config) { console.log(`  ${SKIP} Saltado (sin configuración)`); return resolve(false); }
-        const bundlePath = path.resolve(process.env.CASSANDRA_SECURE_BUNDLE_PATH || './secure-connect-museo-db.zip');
+        const bundlePath = resolveBundle(process.env.CASSANDRA_SECURE_BUNDLE_PATH || './secure-connect-museo-db.zip');
         try {
             const AdmZip = require('adm-zip');
             const zip = new AdmZip(bundlePath);
@@ -144,7 +147,7 @@ async function testFullDriver(config) {
     console.log(`\n${BOLD}[5/5] Conexión completa con cassandra-driver${RESET}`);
     if (!config) { console.log(`  ${SKIP} Saltado (sin configuración)`); return; }
     try {
-        const { client, connectCassandra } = require('../config/database');
+        const { client, connectCassandra } = require('../shared/database/cassandra');
         client.options.socketOptions = { ...client.options.socketOptions, connectTimeout: 30000, readTimeout: 30000 };
         console.log('  Conectando (timeout: 30s)...');
         await connectCassandra();

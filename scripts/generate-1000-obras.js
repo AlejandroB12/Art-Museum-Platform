@@ -286,7 +286,7 @@ const output = {
   obras
 };
 
-const outputPath = path.join(__dirname, '..', 'data', '1000_obras_seed.json');
+const outputPath = path.join(__dirname, '..', 'data', 'json', '1000_obras_seed.json');
 fs.writeFileSync(outputPath, JSON.stringify(output, null, 2), 'utf-8');
 
 console.log(`✅ Generados ${autores.length} autores (IDs 21-250)`);

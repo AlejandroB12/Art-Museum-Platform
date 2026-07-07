@@ -1,6 +1,7 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
-const { db, connectCassandra, client } = require('../config/database');
+const { db } = require('../shared/database/mysql');
+const { connectCassandra, client } = require('../shared/database/cassandra');
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 

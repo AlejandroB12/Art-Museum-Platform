@@ -1,4 +1,5 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const { getSession, connectNeo4j, closeNeo4j } = require('../shared/database/neo4j');
 const mongoose = require('mongoose');
 const Artwork = require('../modules/catalog/src/models/artwork_model');

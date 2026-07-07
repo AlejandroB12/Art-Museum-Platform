@@ -90,7 +90,7 @@ $jobs = @()
 $ok = $true
 
 foreach ($svc in $services) {
-    $svcFile = Join-Path $PWD "$($svc.Dir)/$($svc.File)"
+    $svcFile = Join-Path $PWD $svc.Dir $svc.File
     $argList = if ($watch) { @($watch, $svcFile) } else { @($svcFile) }
     $job = Start-Job -Name $svc.Name -ScriptBlock {
         param($f, $wl, $wd)
@@ -102,7 +102,7 @@ foreach ($svc in $services) {
     Write-Host "  [$($svc.Name)] Job $($job.Id) -> puerto $($svc.Port)" -ForegroundColor Green
 }
 
-$chatDir = "$PWD/modules/chatbot/src"
+$chatDir = Join-Path $PWD "modules" "chatbot" "src"
 $pyJob = Start-Job -Name "Chatbot" -ScriptBlock {
     param($d)
     Set-Location $d

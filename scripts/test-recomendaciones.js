@@ -1,5 +1,6 @@
-require('dotenv').config();
-const { getSession, connectNeo4j, closeNeo4j } = require('../config/database');
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+const { getSession, connectNeo4j, closeNeo4j } = require('../shared/database/neo4j');
 
 async function testRecomendaciones() {
     console.log('=== TEST DEL SISTEMA DE RECOMENDACIONES ===\n');
