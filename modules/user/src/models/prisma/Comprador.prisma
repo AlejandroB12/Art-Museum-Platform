@@ -1,0 +1,23 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Comprador {
+  id_usuario          Int     @id
+  Cedula              String  @unique
+  Telefono            String?
+  CodigoVerificacion  String?
+  id_parroquia        Int?
+  Calle               String?
+  PuedeAdquirir       Boolean @default(true)
+
+  usuario   Usuario    @relation(fields: [id_usuario], references: [id_usuario])
+  parroquia Parroquia? @relation(fields: [id_parroquia], references: [id_parroquia])
+
+  @@map("Comprador")
+}

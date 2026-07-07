@@ -1,0 +1,19 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Membresia {
+  idMembresia Int      @id @default(autoincrement())
+  FechaPago   DateTime
+  MontoPagado Decimal  @db.Decimal(10, 2)
+  id_usuario  Int
+
+  usuario Usuario @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@map("Membresia")
+}

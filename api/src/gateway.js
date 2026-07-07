@@ -43,6 +43,7 @@ const apiProxy = createProxyMiddleware({
             path === '/api/precio-membresia' ||
             path === '/api/membresia-usuario' ||
             path === '/solicitar-pago' ||
+            path === '/api/solicitar-pago' ||
             path === '/mis-compras' ||
             path === '/api/datos-envio-pago'
 

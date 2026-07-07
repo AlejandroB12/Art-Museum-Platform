@@ -14,16 +14,16 @@ const { sessionFromToken } = require('../../../shared/middlewares/auth_jwt');
 app.use(require('express-session')(getSessionConfig()));
 app.use(sessionFromToken);
 
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok', service: 'user', timestamp: new Date().toISOString() });
+});
+
 const userRouter = require('./routers/user_router');
 app.use(userRouter);
 
 const { errorHandler, notFoundHandler } = require('../../../shared/middlewares/error_middleware');
 app.use(notFoundHandler);
 app.use(errorHandler);
-
-app.get('/health', (req, res) => {
-    res.json({ status: 'ok', service: 'user', timestamp: new Date().toISOString() });
-});
 
 const PORT = process.env.USER_SERVICE_PORT || 3003;
 
