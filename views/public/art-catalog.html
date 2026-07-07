@@ -167,7 +167,7 @@
                     <span style="color: #ccc; font-size: 0.85rem; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${o.nombre}</span>
                     <span style="color: #888; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">${motivo}</span>
                 </div>
-                <span style="color: #00ff00; font-size: 0.8rem; flex-shrink: 0;">$${Number(o.precio).toLocaleString()}</span>
+                <span style="color: #18b2af; font-size: 0.8rem; flex-shrink: 0;">$${Number(o.precio).toLocaleString()}</span>
             </div>`;
                 }).join('');
             } catch (e) {
@@ -204,7 +204,7 @@
                 container.innerHTML = obras.map(o =>
                     `<div style="padding: 8px 0; border-bottom: 1px solid #1a1a1a; display: flex; justify-content: space-between;">
                     <span>${o.Nombre}</span>
-                    <span style="color: #00ff00;">$${Number(o.Precio).toLocaleString()}</span>
+                    <span style="color: #18b2af;">$${Number(o.Precio).toLocaleString()}</span>
                 </div>`
                 ).join('');
             } catch (e) {
@@ -297,7 +297,16 @@
         function renderCards(obras) {
             gallery.innerHTML = '';
             if (obras.length === 0) {
-                gallery.innerHTML = '<p style="text-align:center; width:100%; color:#444;">No hay piezas disponibles.</p>';
+                gallery.innerHTML = `
+    <div style="grid-column:1 / -1; text-align:center; padding:60px 20px;">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:16px; opacity:0.5;">
+            <rect x="2" y="2" width="20" height="20" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+            <line x1="3" y1="3" x2="21" y2="21"/>
+        </svg>
+        <p style="margin:0; font-size:1rem; color:#666;">No hay obras disponibles.</p>
+    </div>`;
                 return;
             }
             obras.forEach(obra => {

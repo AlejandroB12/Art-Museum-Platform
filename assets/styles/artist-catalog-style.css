@@ -16,7 +16,7 @@ body { padding-top: 100px; background: #0F0F0F; color: white; margin: 0; }
 .nav-container { display: flex; align-items: center; gap: 40px; }
 .nav-links { display: flex; list-style: none; gap: 30px; margin: 0; padding: 0; }
 .nav-links a { color: white; text-decoration: none; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px; transition: 0.3s; }
-.nav-links a:hover, .nav-links a.active { color: #00ff00; }
+.nav-links a:hover, .nav-links a.active { color: #18b2af; }
 
 .auth-buttons { display: flex; align-items: center; gap: 15px; }
 
@@ -27,8 +27,8 @@ body { padding-top: 100px; background: #0F0F0F; color: white; margin: 0; }
 }
 
 .btn-register {
-    border: 1px solid #00ff00;
-    color: #00ff00;
+    border: 1px solid #18b2af;
+    color: #18b2af;
     padding: 8px 15px;
     text-decoration: none;
     font-size: 0.75rem;
@@ -54,15 +54,15 @@ body { padding-top: 100px; background: #0F0F0F; color: white; margin: 0; }
 }
 
 .btn-panel {
-    color: #00ff00;
-    border: 1px solid #00ff00;
+    color: #18b2af;
+    border: 1px solid #18b2af;
     margin-right: 10px;
 }
 
 .btn-panel:hover {
-    background: #00ff00;
+    background: #18b2af;
     color: #0F0F0F;
-    box-shadow: 0 0 20px #00ff00;
+    box-shadow: 0 0 20px #18b2af;
     cursor: pointer;
 }
 
@@ -85,7 +85,7 @@ body { padding-top: 100px; background: #0F0F0F; color: white; margin: 0; }
 
 .section-header { text-align: center; margin-bottom: 60px; }
 .section-header h1 { text-transform: uppercase; letter-spacing: 15px; font-size: 2.5rem; color: #fff; margin-bottom: 10px; }
-.section-header p { color: #00ff00; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 3px; }
+.section-header p { color: #832aa0; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 3px; }
 
 .artists-grid {
     display: grid;
@@ -104,9 +104,9 @@ body { padding-top: 100px; background: #0F0F0F; color: white; margin: 0; }
 }
 
 .artist-card:hover {
-    border-color: #00ff00;
+    border-color: #18b2af;
     transform: translateY(-10px);
-    box-shadow: 0 10px 30px rgba(0, 255, 0, 0.05);
+    box-shadow: 0 10px 30px rgba(24, 178, 175, 0.05);
 }
 
 .artist-photo-frame {
@@ -118,7 +118,7 @@ body { padding-top: 100px; background: #0F0F0F; color: white; margin: 0; }
     transition: 0.4s;
 }
 
-.artist-card:hover .artist-photo-frame { border-color: #00ff00; }
+.artist-card:hover .artist-photo-frame { border-color: #18b2af; }
 
 .artist-photo-frame img {
     width: 100%; height: 100%;
@@ -136,7 +136,7 @@ body { padding-top: 100px; background: #0F0F0F; color: white; margin: 0; }
 .tag {
     font-size: 0.6rem;
     background: #0F0F0F;
-    color: #00ff00;
+    color: #18b2af;
     padding: 4px 10px;
     border: 1px solid #222;
     text-transform: uppercase;

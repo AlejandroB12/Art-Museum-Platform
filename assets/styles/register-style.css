@@ -30,7 +30,7 @@ body {
 
 .login-form h2 {
     text-align: center;
-    color: #00ff00;
+    color: #832aa0;
     font-size: 30px;
     font-weight: 800;
     margin-top: -15px;
@@ -75,14 +75,14 @@ body {
     top: -17px;
     left: 4px;
     font-size: 11px;
-    color: #00ff00;
+    color: #18b2af;
     font-weight: 700;
     text-transform: uppercase;
 }
 
 .input-group input:focus {
-    border-color: #00ff00;
-    box-shadow: 0 0 10px rgba(0, 255, 0, 0.1);
+    border-color: #18b2af;
+    box-shadow: 0 0 10px rgba(24, 178, 175, 0.1);
 }
 
 .input-group select {
@@ -100,15 +100,15 @@ body {
 }
 
 .input-group select:focus {
-    border-color: #00ff00;
-    box-shadow: 0 0 10px rgba(0, 255, 0, 0.1);
+    border-color: #18b2af;
+    box-shadow: 0 0 10px rgba(24, 178, 175, 0.1);
 }
 
 .input-group select ~ label {
     top: -17px;
     left: 4px;
     font-size: 11px;
-    color: #00ff00;
+    color: #18b2af;
     font-weight: 700;
     text-transform: uppercase;
 }
@@ -117,7 +117,7 @@ body {
     width: 100%;
     padding: 16px;
     margin-top: 10px;
-    background: #00ff00;
+    background: #18b2af;
     border: none;
     border-radius: 5px;
     color: #0F0F0F;
@@ -129,9 +129,9 @@ body {
 }
 
 .login-btn:hover {
-    background: #00cc00;
+    background: #139592;
     transform: translateY(-2px);
-    box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+    box-shadow: 0 0 20px rgba(24, 178, 175, 0.3);
 }
 
 .register-link {
@@ -142,13 +142,13 @@ body {
 }
 
 .register-link a {
-    color: #00ff00;
+    color: #18b2af;
     text-decoration: none;
     font-weight: 700;
 }
 
 .forgot-password {
-    color: #00ff00;
+    color: #18b2af;
     text-decoration: none;
     font-size: 13px;
     font-weight: 600;
@@ -156,7 +156,7 @@ body {
 }
 
 .electric-title {
-    color: #00ff00;
+    color: #832aa0;
     font-size: 14px;
     text-transform: uppercase;
     text-align: center;
@@ -175,7 +175,7 @@ body {
 
 .order-summary {
     background: rgba(255, 255, 255, 0.05);
-    border-left: 4px solid #00ff00;
+    border-left: 4px solid #18b2af;
     padding: 15px;
     border-radius: 8px;
     margin-bottom: 25px;
@@ -189,13 +189,13 @@ body {
 .order-info strong { color: #fff; font-size: 1.1rem; }
 
 .price-tag {
-    background: #00ff00;
+    background: #18b2af;
     color: #0F0F0F;
     padding: 8px 15px;
     border-radius: 5px;
     font-weight: 900;
     font-size: 1.4rem;
-    box-shadow: 0 0 15px rgba(0, 255, 0, 0.6);
+    box-shadow: 0 0 15px rgba(24, 178, 175, 0.6);
 }
 
 .payment-section {
@@ -215,7 +215,7 @@ select {
     outline: none;
 }
 
-select:focus { border-color: #00ff00; }
+select:focus { border-color: #18b2af; }
 select option { background: #1a1a1a; color: #fff; }
 
 .input-row.no-stack { display: flex; gap: 10px; }
@@ -229,8 +229,8 @@ select option { background: #1a1a1a; color: #fff; }
 .success-icon {
     font-size: 60px;
     margin-bottom: 20px;
-    color: #00ff00;
-    filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.4));
+    color: #18b2af;
+    filter: drop-shadow(0 0 15px rgba(24, 178, 175, 0.4));
     text-align: center;
 }
 
@@ -245,7 +245,7 @@ select option { background: #1a1a1a; color: #fff; }
 }
 
 .welcome-text span {
-    color: #00ff00;
+    color: #832aa0;
     font-weight: 700;
 }
 
@@ -262,7 +262,7 @@ select option { background: #1a1a1a; color: #fff; }
 }
 
 .info-box .email-display {
-    color: #00ff00;
+    color: #18b2af;
     font-weight: 600;
     font-size: 16px;
 }

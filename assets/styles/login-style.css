@@ -30,7 +30,7 @@ body {
 
 .login-form h2 {
     text-align: center;
-    color: #00ff00;
+    color: #832aa0;
     font-size: 30px;
     font-weight: 800;
     margin-top: -15px;
@@ -76,16 +76,16 @@ body {
     top: -17px;
     left: 4px;
     font-size: 12px;
-    color: #00ff00;
+    color: #18b2af;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .input-group input:focus {
-    border-color: #00ff00;
+    border-color: #18b2af;
     background-color: #1e1e1e;
-    box-shadow: 0 0 10px rgba(0, 255, 0, 0.1);
+    box-shadow: 0 0 10px rgba(24, 178, 175, 0.1);
 }
 
 .options {
@@ -95,7 +95,7 @@ body {
 }
 
 .forgot-password {
-    color: #00ff00;
+    color: #18b2af;
     text-decoration: none;
     font-size: 13px;
     font-weight: 600;
@@ -110,7 +110,7 @@ body {
 .login-btn {
     width: 100%;
     padding: 16px;
-    background: #00ff00;
+    background: #18b2af;
     border: none;
     border-radius: 5px;
     color: #0F0F0F;
@@ -123,9 +123,9 @@ body {
 }
 
 .login-btn:hover {
-    background: #00cc00;
+    background: #139592;
     transform: translateY(-2px);
-    box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+    box-shadow: 0 0 20px rgba(24, 178, 175, 0.3);
 }
 
 .register-link {
@@ -136,7 +136,7 @@ body {
 }
 
 .register-link a {
-    color: #00ff00;
+    color: #18b2af;
     text-decoration: none;
     font-weight: 700;
 }

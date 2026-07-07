@@ -707,7 +707,7 @@ async function buscarCompradorModal() {
             document.getElementById('modal-apellido').value = u.Apellido || '';
             document.getElementById('modal-email').value = u.Email || '';
             document.getElementById('modal-cedula').value = u.Cedula || '';
-            resultadoDiv.innerHTML = `<span style="color:#00ff00;">✅ Usuario encontrado: ${u.Nombre || ''} ${u.Apellido || ''} (${u.Email})</span>`;
+            resultadoDiv.innerHTML = `<span style="color:#18b2af;">✅ Usuario encontrado: ${u.Nombre || ''} ${u.Apellido || ''} (${u.Email})</span>`;
         } else {
             resultadoDiv.innerHTML = '<span style="color:#e53e3e;">❌ Usuario no registrado. Complete los datos manualmente o verifique.</span>';
         }
@@ -1381,7 +1381,7 @@ async function cargarTendencias() {
                 container.innerHTML = artistas.slice(0, 5).map(a =>
                     `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #222;">
                         <span>${a.Artista}</span>
-                        <span style="color:#00ff00;font-weight:bold;">${a.ObrasVendidas} ventas</span>
+                        <span style="color:#18b2af;font-weight:bold;">${a.ObrasVendidas} ventas</span>
                     </div>`
                 ).join('');
             }
@@ -1397,7 +1397,7 @@ async function cargarTendencias() {
                 container.innerHTML = generos.slice(0, 5).map(g =>
                     `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #222;">
                         <span>${g.Genero}</span>
-                        <span style="color:#00ff00;font-weight:bold;">${g.ObrasVendidas} vendidas</span>
+                        <span style="color:#18b2af;font-weight:bold;">${g.ObrasVendidas} vendidas</span>
                     </div>`
                 ).join('');
             }
@@ -1412,7 +1412,7 @@ async function cargarTendencias() {
                 stats.nodos.forEach(n => {
                     html += `<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:0.85rem;">
                         <span>${n.tipo}</span>
-                        <span style="color:#00ff00;">${n.cantidad}</span>
+                        <span style="color:#18b2af;">${n.cantidad}</span>
                     </div>`;
                 });
             }

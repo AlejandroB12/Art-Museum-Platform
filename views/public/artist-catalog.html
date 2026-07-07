@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nuestros Artistas | DoArt Magic</title>
+    <title>DoArt Magic | Catálogo de Artistas</title>
     <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
     <link rel="stylesheet" href="/styles/artist-catalog-style.css">
 </head>
@@ -66,7 +66,7 @@
             
             if (!artistas || artistas.length === 0) 
             {
-                container.innerHTML = '<p style="text-align:center; color:#00ff00;">No hay artistas disponibles en este momento.</p>';
+                container.innerHTML = '<p style="text-align:center; color:#18b2af;">No hay artistas disponibles en este momento.</p>';
                 return;
             }
             
@@ -132,7 +132,7 @@
                     <div style="text-align:center; width:100%; padding: 40px;">
                         <p style="color:#ff4444;">⚠️ Error al cargar los artistas</p>
                         <p style="color:#666; font-size:0.8rem;">${error.message}</p>
-                        <button onclick="location.reload()" style="margin-top:20px; background:#00ff00; color:#000; border:none; padding:10px 20px; cursor:pointer;">
+                        <button onclick="location.reload()" style="margin-top:20px; background:#18b2af; color:#000; border:none; padding:10px 20px; cursor:pointer;">
                             Reintentar
                         </button>
                     </div>

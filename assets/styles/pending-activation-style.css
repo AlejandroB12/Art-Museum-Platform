@@ -31,11 +31,11 @@ body {
 .icon-box {
     font-size: 50px;
     margin-bottom: 15px;
-    filter: drop-shadow(0 0 10px rgba(0, 255, 0, 0.5));
+    filter: drop-shadow(0 0 10px rgba(24, 178, 175, 0.5));
 }
 
 h2 {
-    color: #00ff00;
+    color: #832aa0;
     font-size: 28px;
     font-weight: 800;
     margin-bottom: 8px;
@@ -51,8 +51,8 @@ h2 {
 }
 
 .info-alert {
-    background: rgba(0, 255, 0, 0.05);
-    border-left: 4px solid #00ff00;
+    background: rgba(24, 178, 175, 0.05);
+    border-left: 4px solid #18b2af;
     padding: 15px;
     border-radius: 8px;
     margin-bottom: 25px;
@@ -67,7 +67,7 @@ h2 {
 }
 
 .info-alert strong {
-    color: #00ff00;
+    color: #18b2af;
     font-weight: 700;
 }
 
@@ -80,7 +80,7 @@ h2 {
 .login-btn {
     width: 100%;
     padding: 16px;
-    background: #00ff00;
+    background: #18b2af;
     border: none;
     border-radius: 5px;
     color: #0F0F0F;
@@ -96,7 +96,7 @@ h2 {
 }
 
 .login-btn:hover {
-    background: #00cc00;
+    background: #139592;
     transform: translateY(-2px);
-    box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+    box-shadow: 0 0 20px rgba(24, 178, 175, 0.3);
 }

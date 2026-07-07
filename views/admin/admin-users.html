@@ -93,10 +93,10 @@
         }
 
         const colores = {
-            success: '#00ff00',
+            success: '#18b2af',
             error: '#e53e3e',
             warning: '#ecc94b',
-            info: '#00ff00'
+            info: '#18b2af'
         };
 
         notificacion.style.backgroundColor = colores[tipo] || colores.info;
@@ -148,7 +148,7 @@
                         </select>
                     </td>
                     <td>
-                        <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:0.75rem;font-weight:bold;${membresiaActiva ? 'background:rgba(0,255,0,0.2);color:#00ff00;' : 'background:rgba(255,68,68,0.2);color:#ff4444;'}">
+                        <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:0.75rem;font-weight:bold;${membresiaActiva ? 'background:rgba(24, 178, 175,0.2);color:#18b2af;' : 'background:rgba(255,68,68,0.2);color:#ff4444;'}">
                             ${membresiaActiva ? '✅ Activa' : '❌ Vencida'}
                         </span>
                     </td>
@@ -217,7 +217,7 @@
                 const fila = document.getElementById(`usuario-fila-${id}`);
                 if (fila) {
                     fila.style.transition = "background-color 0.5s ease";
-                    fila.style.backgroundColor = nuevoEstatus == 1 ? 'rgba(0,255,0,0.1)' : 'rgba(255,68,68,0.1)';
+                    fila.style.backgroundColor = nuevoEstatus == 1 ? 'rgba(24, 178, 175,0.1)' : 'rgba(255,68,68,0.1)';
                     setTimeout(() => {
                         fila.style.backgroundColor = '';
                     }, 2000);
