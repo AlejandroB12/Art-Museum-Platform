@@ -3,25 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nuestros Artistas | MUSEO CONTEMPORANEO</title>
+    <title>Nuestros Artistas | DoArt Magic</title>
     <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
     <link rel="stylesheet" href="/styles/artist-catalog-style.css">
 </head>
 <body>
 
    <nav class="navbar">
-        <a href="/public/home.html" class="logo"> ARTE CONTEMPORANEO</a>
+        <a href="/home" class="logo"> ARTE CONTEMPORANEO</a>
         
         <div class="nav-container">
             <ul class="nav-links">
-                <li><a href="art-catalog.html">Catálogo</a></li>
-                <li><a href="artist-catalog.html">Artistas</a></li>
+                <li><a href="/catalog/artwork">Catálogo</a></li>
+                <li><a href="/catalog/artist">Artistas</a></li>
                 
             </ul>
 
             <div class="auth-buttons" id="auth-buttons">
-                <a href="/public/login.html" class="btn-login">INICIAR SESION</a>
-                <a href="/public/register.html" class="btn-register">REGISTRARTE</a>
+                <a href="/login" class="btn-login">INICIAR SESION</a>
+                <a href="/register" class="btn-register">REGISTRARTE</a>
             </div>
         </div>
     </nav>
@@ -36,94 +36,79 @@
             </div>
     </div>
 
+<script src="/controllers/authController.js"></script>
+<script src="/controllers/catalogController.js"></script>
+
 <script>
     // Asegurar que el DOM esté completamente cargado
-    document.addEventListener('DOMContentLoaded', async function() {
+    document.addEventListener('DOMContentLoaded', async function() 
+    {
         await cargarArtistas();
     });
     
-    async function cargarArtistas() {
-        try {
-            console.log("=== INICIANDO CARGA DE ARTISTAS ===");
-            
-            // Esperar un momento para asegurar que todo esté listo
+    async function cargarArtistas() 
+    {
+        try 
+        {
             await new Promise(resolve => setTimeout(resolve, 100));
             
-            const resp = await fetch('/api/artistas-catalogo');
-            
-            console.log("Status de respuesta:", resp.status);
-            console.log("Respuesta ok?", resp.ok);
-            
-            if (!resp.ok) {
-                const errorText = await resp.text();
-                console.error("Error response:", errorText);
-                throw new Error(`Error ${resp.status}: ${errorText}`);
-            }
-            
-            const artistas = await resp.json();
-            console.log("Datos recibidos del backend:", artistas);
-            console.log("Tipo de datos:", typeof artistas);
-            console.log("¿Es array?", Array.isArray(artistas));
-            console.log("Cantidad de artistas:", artistas ? artistas.length : 0);
+            const artistas = await CatalogController.getArtistsCatalog();
             
             const container = document.getElementById('artistsList');
-            console.log("Contenedor encontrado:", container);
             
-            if (!container) {
-                console.error("❌ No se encontró el elemento con id 'artistsList'");
+            if (!container) 
+            {
                 return;
             }
             
             // Limpiar el contenedor
             container.innerHTML = '';
             
-            if (!artistas || artistas.length === 0) {
-                console.warn("No hay artistas para mostrar");
+            if (!artistas || artistas.length === 0) 
+            {
                 container.innerHTML = '<p style="text-align:center; color:#00ff00;">No hay artistas disponibles en este momento.</p>';
                 return;
             }
             
-            console.log(`🎨 Mostrando ${artistas.length} artistas`);
-            
-            // Crear las tarjetas
-            artistas.forEach((autor, index) => {
-                console.log(`Procesando artista ${index + 1}: ${autor.Nombre} ${autor.Apellido}`);
-                
-                // Verificar datos del artista
-                if (!autor.Nombre || !autor.Apellido) {
-                    console.warn(`Artista ${index} tiene datos incompletos:`, autor);
+            artistas.forEach((artista, index) => {
+
+                if (!artista.nombre || !artista.apellido) 
+                {
                     return;
                 }
                 
-                const imgSrc = autor.Fotografia || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22160%22 height=%22160%22%3E%3Crect fill=%22%231a1a1a%22 width=%22160%22 height=%22160%22/%3E%3Ctext fill=%22%23666%22 font-size=%2212%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3ESin%20Imagen%3C/text%3E%3C/svg%3E';
+                const imgSrc = artista.fotografia || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22160%22 height=%22160%22%3E%3Crect fill=%22%231a1a1a%22 width=%22160%22 height=%22160%22/%3E%3Ctext fill=%22%23666%22 font-size=%2212%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3ESin%20Imagen%3C/text%3E%3C/svg%3E';
                 
-                const fechaNac = autor.Fecha_nacimiento 
-                    ? new Date(autor.Fecha_nacimiento).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })
+                const fechaNac = artista.fecha_nacimiento 
+                    ? new Date(artista.fecha_nacimiento).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })
                     : 'Fecha no disponible';
                 
-                // Procesar especialidades
                 let especialidadesHtml = '';
-                if (autor.Especialidades && autor.Especialidades !== 'Sin especialidades' && autor.Especialidades !== 'NULL') {
-                    const especialidades = autor.Especialidades.split(',');
+                if (artista.generos && artista.generos !== 'Sin géneros' && artista.generos !== 'NULL') {
+                    const especialidades = artista.generos.split(',');
                     especialidadesHtml = especialidades.map(esp => `<span class="tag">${esp.trim()}</span>`).join('');
-                } else {
+                } 
+                
+                else 
+                {
                     especialidadesHtml = '<span class="tag">Varias disciplinas</span>';
                 }
                 
                 const card = document.createElement('div');
                 card.className = 'artist-card';
+
                 card.onclick = () => {
-                    console.log(`Abriendo perfil de: ${autor.Nombre} ${autor.Apellido} (ID: ${autor.id_Autor})`);
-                    window.location.href = `Autor.html?id=${autor.id_Autor}`;
+
+                    window.location.href = `/artist/profile/${artista.nombre}${artista.apellido}`;
                 };
                 
                 card.innerHTML = `
                     <div class="artist-photo-frame">
                         <img src="${imgSrc}" 
-                             alt="${autor.Nombre} ${autor.Apellido}" 
-                             onerror="console.log('Error cargando imagen para ${autor.Nombre}'); this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22160%22 height=%22160%22%3E%3Crect fill=%22%231a1a1a%22 width=%22160%22 height=%22160%22/%3E%3Ctext fill=%22%23666%22 font-size=%2212%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3ESin%20Imagen%3C/text%3E%3C/svg%3E'">
+                             alt="${artista.nombre} ${artista.apellido}" 
+                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22160%22 height=%22160%22%3E%3Crect fill=%22%231a1a1a%22 width=%22160%22 height=%22160%22/%3E%3Ctext fill=%22%23666%22 font-size=%2212%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3ESin%20Imagen%3C/text%3E%3C/svg%3E'">
                     </div>
-                    <h3 class="artist-name">${autor.Nombre} ${autor.Apellido}</h3>
+                    <h3 class="artist-name">${artista.nombre} ${artista.apellido}</h3>
                     <div class="artist-specialty">
                         ${especialidadesHtml}
                     </div>
@@ -135,14 +120,14 @@
                 container.appendChild(card);
             });
             
-            console.log(`✅ Carga completada. Total tarjetas: ${container.children.length}`);
-            
-        } catch (error) {
-            console.error("❌ Error detallado:", error);
-            console.error("Stack trace:", error.stack);
-            
+        } 
+        
+        catch (error) 
+        {
             const container = document.getElementById('artistsList');
-            if (container) {
+
+            if (container) 
+            {
                 container.innerHTML = `
                     <div style="text-align:center; width:100%; padding: 40px;">
                         <p style="color:#ff4444;">⚠️ Error al cargar los artistas</p>
@@ -158,8 +143,7 @@
     
     // Cargar información del usuario
     document.addEventListener('DOMContentLoaded', () => {
-        fetch('/api/estado-usuario')
-            .then(response => response.json())
+        AuthController.checkSession()
             .then(data => {
                 const authContainer = document.querySelector('.auth-buttons');
                 const navContainer = document.querySelector('.nav-container');
@@ -167,12 +151,11 @@
                 if (data.autenticado) {
                     authContainer.style.display = 'none';
 
-                    fetch('/api/usuario-actual')
-                        .then(res => res.json())
+                    AuthController.getCurrentUser()
                         .then(user => {
                             const userDiv = document.createElement('div');
                             userDiv.className = 'user-profile';
-                            const panelLink = user.Rol === 'administrador' ? '/admin/admin-dashboard.html' : '/private/user-dashboard.html';
+                            const panelLink = user.Rol === 'administrador' ? '/admin' : '/dashboard';
                             const panelLabel = user.Rol === 'administrador' ? 'Panel Admin' : 'Panel de control';
                             userDiv.innerHTML = `
                                 <span style="margin-right: 15px; color: #eee; font-size: 0.75rem;">HOLA, ${user.Nombre}</span>

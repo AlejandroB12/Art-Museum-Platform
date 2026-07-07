@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const autorSchema = new mongoose.Schema({
+const artistaSchema = new mongoose.Schema({
     _id: Number,
     nombre: { type: String, required: true },
     apellido: { type: String, required: true },
@@ -10,4 +10,4 @@ const autorSchema = new mongoose.Schema({
     nacionalidad: String
 });
 
-module.exports = mongoose.model('Autor', autorSchema, 'autores');
+module.exports = mongoose.model('Artista', artistaSchema, 'artistas');

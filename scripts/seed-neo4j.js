@@ -2,8 +2,8 @@ require('dotenv').config();
 const { getSession, connectNeo4j, closeNeo4j } = require('../shared/database/neo4j');
 const mysql = require('mysql2');
 const mongoose = require('mongoose');
-const Obra = require('../modules/catalog/src/models/obra_model');
-const Autor = require('../modules/catalog/src/models/autor_model');
+const Artwork = require('../modules/catalog/src/models/artwork_model');
+const Artist = require('../modules/catalog/src/models/artist_model');
 
 const db = mysql.createConnection({
     host: process.env.DB_HOST_MYSQL,
@@ -67,7 +67,7 @@ async function seedNeo4j() {
     console.log('\n--- Cargando obras desde MongoDB ---');
     let obras = [];
     try {
-        obras = await Obra.find().lean();
+        obras = await Artwork.find().lean();
         console.log(`  ${obras.length} obras cargadas desde MongoDB`);
     } catch (err) {
         console.log('  MongoDB no disponible, cargando desde MySQL');
@@ -108,7 +108,7 @@ async function seedNeo4j() {
     console.log('\n--- Cargando artistas desde MongoDB ---');
     let artistas = [];
     try {
-        artistas = await Autor.find().lean();
+        artistas = await Artist.find().lean();
         console.log(`  ${artistas.length} artistas cargados desde MongoDB`);
     } catch (err) {
         console.log('  MongoDB no disponible, cargando desde MySQL');
@@ -155,7 +155,7 @@ async function seedNeo4j() {
 
         let autoresObra = [];
         try {
-            const obraDoc = await Obra.findById(o._id).lean();
+            const obraDoc = await Artwork.findById(o._id).lean();
             autoresObra = obraDoc?.autores || [];
         } catch {
             const [rows] = await db.promise().query(

@@ -15,7 +15,7 @@ const { getSession, connectNeo4j, closeNeo4j } = require('../shared/database/neo
 const fs = require('fs');
 const path = require('path');
 
-const Obra = require('../modules/catalog/src/models/obra_model');
+const Artwork = require('../modules/catalog/src/models/artwork_model');
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGO_URI_FALLBACK;
 const FORCE = process.argv.includes('--force');
 
@@ -220,7 +220,7 @@ async function crearNodoUnico(session, label, propiedad, valor) {
     await session.run(`MERGE (n:${label} {${propiedad}: $valor})`, { valor });
 }
 
-async function crearRelacion(session, idObra, labelNodo, propiedadNodo, valorNodo, tipoRelacion) {
+ async function crearRelacion(session, idObra, labelNodo, propiedadNodo, valorNodo, tipoRelacion) {
     await session.run(
         `MATCH (o:Obra {id_obra: $idObra})
          MERGE (n:${labelNodo} {${propiedadNodo}: $valorNodo})
@@ -274,7 +274,7 @@ async function enriquecerGrafo() {
 
     // 4. Obtener obras de MongoDB
     console.log('Obteniendo obras de MongoDB...');
-    const obras = await Obra.find().lean();
+    const obras = await Artwork.find().lean();
     const todosLosPrecios = obras.map(o => o.precio || 0).filter(p => p > 0).sort((a, b) => a - b);
     console.log(`  ${obras.length} obras en MongoDB\n`);
 

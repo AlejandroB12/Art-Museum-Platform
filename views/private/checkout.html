@@ -15,7 +15,7 @@
         <img id="img-obra" src="" class="obra-img" alt="Miniatura de la obra">
         <div>
             <div id="titulo-obra" class="obra-title">Cargando obra...</div>
-            <div id="autor-obra" class="obra-author">Autor</div>
+            <div id="artista-obra" class="obra-author">Artista</div>
             <div id="precio-obra" class="obra-price">0$</div>
         </div>
     </div>
@@ -42,21 +42,23 @@
     </div>
 </div>
 
+<script src="/controllers/authController.js"></script>
+<script src="/controllers/userController.js"></script>
+<script src="/controllers/checkoutController.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', async () => {
 
         // --- 0. VERIFICAR SESIÓN PRIMERO ---
         try {
-            const sesionResp = await fetch('/api/estado-usuario');
-            const sesionData = await sesionResp.json();
+            const sesionData = await AuthController.checkSession();
             if (!sesionData.autenticado) {
                 alert("Debes iniciar sesión para adquirir una obra.");
-                window.location.href = "/public/login.html";
+                window.location.href = "/login";
                 return;
             }
         } catch (e) {
             console.error("Error verificando sesión:", e);
-            window.location.href = "/public/login.html";
+            window.location.href = "/login";
             return;
         }
         
@@ -67,40 +69,36 @@
                 const obra = JSON.parse(obraData);
                 document.getElementById('img-obra').src = obra.imagen;
                 document.getElementById('titulo-obra').innerText = obra.nombre;
-                document.getElementById('autor-obra').innerText = obra.autor;
+                document.getElementById('artista-obra').innerText = obra.artista;
                 document.getElementById('precio-obra').innerText = `${obra.precio}$`;
             } else {
                 alert("No se ha seleccionado ninguna obra.");
-                window.location.href = "/public/art-catalog.html";
+                window.location.href = "/catalog/artwork";
             }
         };
 
         const cargarUsuarioSesion = async () => {
             try {
-                const response = await fetch('/api/datos-envio-pago'); 
+                const user = await UserController.getShippingPaymentData();
                 const datosEnvio = document.getElementById('datos-envio');
 
-                if (response.ok) {
-                    const user = await response.json();
-                    if (!user) {
-                        datosEnvio.innerHTML = `
-                            <div style="color: #ffaa00;">No has registrado tus datos de envío.</div>
-                            <a href="/private/user-dashboard.html" style="font-size: 0.8rem; color: #00ff00; text-decoration: none;">Completar dirección</a>
-                        `;
-                    } else {
-                        datosEnvio.innerHTML = `
-                            <div style="font-weight:bold; color: #fff;">${user.Nombre} ${user.Apellido}</div>
-                            <div style="color: #aaa;">Dirección: ${user.Calle || 'No registrada'}</div>
-                            <div style="color: #aaa;">${user.Parroquia || ''}${user.Parroquia && user.Municipio ? ', ' : ''}${user.Municipio || ''}</div>
-                            <a href="/private/user-dashboard.html" style="font-size: 0.7rem; color: #00ff00; text-decoration: none;">Editar dirección</a>
-                        `;
-                    }
+                if (!user) {
+                    datosEnvio.innerHTML = `
+                        <div style="color: #ffaa00;">No has registrado tus datos de envío.</div>
+                        <a href="/dashboard" style="font-size: 0.8rem; color: #00ff00; text-decoration: none;">Completar dirección</a>
+                    `;
                 } else {
-                    const errData = await response.json().catch(() => ({}));
-                    datosEnvio.innerHTML = `<div style="color: #ff4444;">Error al cargar datos de envío.</div>`;
+                    datosEnvio.innerHTML = `
+                        <div style="font-weight:bold; color: #fff;">${user.Nombre} ${user.Apellido}</div>
+                        <div style="color: #aaa;">Dirección: ${user.Calle || 'No registrada'}</div>
+                        <div style="color: #aaa;">${user.Parroquia || ''}${user.Parroquia && user.Municipio ? ', ' : ''}${user.Municipio || ''}</div>
+                        <a href="/dashboard" style="font-size: 0.7rem; color: #00ff00; text-decoration: none;">Editar dirección</a>
+                    `;
                 }
             } catch (error) {
                 console.error("Error al obtener datos de envío:", error);
+                const datosEnvio = document.getElementById('datos-envio');
+                if (datosEnvio) datosEnvio.innerHTML = `<div style="color: #ff4444;">Error al cargar datos de envío.</div>`;
             }
         };
 
@@ -193,22 +191,14 @@
             btnPagar.disabled = true;
 
             try {
-                const response = await fetch('/confirmar-reserva', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        id_obra: idObra
-                    })
-                });
+                const resultado = await CheckoutController.confirmReservation({ id_obra: idObra });
 
-                const resultado = await response.json();
-                
-                if (response.ok) {
+                if (resultado && resultado.success !== false) {
                     alert("¡Pago procesado y reserva guardada!");
                     localStorage.removeItem('obraSeleccionada');
-                    window.location.href = "/public/art-catalog.html";
+                    window.location.href = "/catalog/artwork";
                 } else {
-                    mostrarError(resultado.error || "No se pudo procesar el pago");
+                    mostrarError(resultado?.error || "No se pudo procesar el pago");
                     btnPagar.innerText = "PAGAR AHORA";
                     btnPagar.disabled = false;
                 }

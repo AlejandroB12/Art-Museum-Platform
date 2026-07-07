@@ -5,7 +5,7 @@ function validate(schema) {
             if (!result.success) {
                 return res.status(400).json({
                     success: false,
-                    message: 'Error de validación',
+                    message: 'Error de validacion',
                     errors: result.error.issues.map(i => ({
                         field: i.path.join('.'),
                         message: i.message
@@ -27,7 +27,7 @@ function validateQuery(schema) {
             if (!result.success) {
                 return res.status(400).json({
                     success: false,
-                    message: 'Error de validación',
+                    message: 'Error de validacion',
                     errors: result.error.issues.map(i => ({
                         field: i.path.join('.'),
                         message: i.message
@@ -42,4 +42,26 @@ function validateQuery(schema) {
     };
 }
 
-module.exports = { validate, validateQuery };
+function validateParams(schema) {
+    return (req, res, next) => {
+        try {
+            const result = schema.safeParse(req.params);
+            if (!result.success) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Error de validacion',
+                    errors: result.error.issues.map(i => ({
+                        field: i.path.join('.'),
+                        message: i.message
+                    }))
+                });
+            }
+            req.params = result.data;
+            next();
+        } catch (err) {
+            next(err);
+        }
+    };
+}
+
+module.exports = { validate, validateQuery, validateParams };

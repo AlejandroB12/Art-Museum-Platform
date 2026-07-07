@@ -188,7 +188,7 @@ while (autores.length < 230) {
     nombre,
     apellido,
     fecha_nacimiento: fechaNac,
-    fotografia: `/images/authors/author_${autorId}.webp`,
+    fotografia: `/images/artists/author_${autorId}.webp`,
     biografia,
     nacionalidad
   });
@@ -223,7 +223,7 @@ for (let obraId = 71; obraId <= 1070; obraId++) {
 
   // Ruta de imagen (usando las imágenes abstractas)
   const imgIndex = obraId - 71; // 0..999
-  const fotografia = `/images/art_previews/obra_${obraId}.webp`;
+  const fotografia = `/images/artworks/Abstract_image_${imgIndex}.webp`;
 
   // Detalles según género
   let detalles = {};
@@ -270,9 +270,9 @@ for (let obraId = 71; obraId <= 1070; obraId++) {
     nombre: nombreObra,
     fecha_creacion: fechaCreacion,
     precio,
-    estado_obra: estado,
+    estatus: estado,
     fotografia,
-    autores: autoresObra,
+    artista: autoresObra[0],
     genero: {
       nombre: generoElegido.nombre,
       detalles

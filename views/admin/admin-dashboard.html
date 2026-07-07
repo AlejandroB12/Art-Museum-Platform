@@ -91,9 +91,9 @@
         };
 
         const moduleFiles = {
-            catalog: 'admin-catalog.html',
-            users: 'admin-users.html',
-            security: 'admin-security.html'
+            catalog: 'catalog',
+            users: 'users',
+            security: 'security'
         };
 
         async function mostrarTab(tab) {
@@ -255,13 +255,16 @@
 
         window.onload = () => mostrarTab('gestion');
 
-        // Re-listen to document clicks for autor dropdown (re-binds after module load)
+        // Re-listen to document clicks for artista dropdown (re-binds after module load)
         document.addEventListener('click', function (e) {
-            const c = document.getElementById('autor-selector-container');
+            const c = document.getElementById('artista-selector-container');
             const fn = window.cerrarDropdownAutores;
             if (c && !c.contains(e.target) && typeof fn === 'function') fn();
         });
     </script>
+    <script src="/controllers/authController.js"></script>
+    <script src="/controllers/adminController.js"></script>
+    <script src="/controllers/recommendationsController.js"></script>
 </body>
 
 </html>

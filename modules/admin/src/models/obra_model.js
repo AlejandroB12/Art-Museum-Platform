@@ -34,7 +34,7 @@ const obraSchema = new mongoose.Schema({
         default: 'Disponible'
     },
     fotografia: String,
-    autores: [{ type: Number, ref: 'Autor' }],
+    autores: [{ type: Number, ref: 'Artista' }],
     genero: {
         nombre: {
             type: String,

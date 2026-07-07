@@ -11,17 +11,17 @@
 <body>
     <div id="main-wrapper"> 
         <nav class="navbar">
-            <a href="/public/home.html" class="logo">ARTE CONTEMPORANEO</a>
+            <a href="/home" class="logo">ARTE CONTEMPORANEO</a>
             
             <div class="nav-container">
                 <ul class="nav-links">
-                    <li><a href="art-catalog.html">Catálogo</a></li>
-                    <li><a href="artist-catalog.html">Artistas</a></li>
+                    <li><a href="/catalog/artwork">Catálogo</a></li>
+                    <li><a href="/catalog/artist">Artistas</a></li>
                 </ul>
 
                 <div class="auth-buttons" id="auth-buttons">
-                    <a href="/public/login.html" class="btn-login">INICIAR SESION</a>
-                    <a href="/public/login.html" class="btn-register">REGISTRARTE</a>
+                    <a href="/login" class="btn-login">INICIAR SESION</a>
+                    <a href="/login" class="btn-register">REGISTRARTE</a>
                 </div>
             </div>
         </nav>
@@ -75,6 +75,8 @@
         </div>
     </div>
 
+    <script src="/controllers/authController.js"></script>
+<script src="/controllers/catalogController.js"></script>
     <script>
         const modal = document.getElementById('obra-modal');
 
@@ -97,51 +99,46 @@
             if (event.target == modal) cerrarModal(); 
         }
 
-        const params = new URLSearchParams(window.location.search);
-        const idAutor = params.get('id');
+        const pathParts = window.location.pathname.split('/');
+        const profileIdx = pathParts.indexOf('profile');
+        const artistaName = profileIdx !== -1 ? pathParts[profileIdx + 1] : '';
 
         async function cargarPerfil() {
-            if (!idAutor) {
-                console.error("No se encontró ID de autor en la URL");
-                document.getElementById('authorGallery').innerHTML = '<p style="text-align:center; color:red;">Error: No se especificó qué autor mostrar</p>';
+            if (!artistaName) {
+                console.error("No se encontró nombre de artista en la URL");
+                document.getElementById('authorGallery').innerHTML = '<p style="text-align:center; color:red;">Error: No se especificó qué artista mostrar</p>';
                 return;
             }
 
             const ordenDate = document.getElementById('sortDate').value;
             
             try {
-                const resp = await fetch(`/api/autor-detalle/${idAutor}?ordenDate=${ordenDate}`);
-                
-                if (!resp.ok) {
-                    throw new Error(`Error HTTP: ${resp.status}`);
-                }
-                
-                const data = await resp.json();
+                const data = await CatalogController.getArtistByName(artistaName);
 
                 let nombreAutor = "Artista Desconocido";
 
-                if (data.autor) {
-                    nombreAutor = `${data.autor.Nombre || ''} ${data.autor.Apellido || ''}`.trim();
+                if (data.artista) {
+                    nombreAutor = `${data.artista.nombre || ''} ${data.artista.apellido || ''}`.trim();
                     document.getElementById('authName').textContent = nombreAutor || "Artista Desconocido";
-                    document.getElementById('authNation').textContent = data.autor.NacionalidadDesc || data.autor.Nacionalidad || "Nacionalidad no especificada";
+                    document.getElementById('authNation').textContent = data.artista.nacionalidad || "Nacionalidad no especificada";
                     
-                    if (data.autor.Fecha_nacimiento) {
-                        const fecha = new Date(data.autor.Fecha_nacimiento);
+                    if (data.artista.fecha_nacimiento) {
+                        const fecha = new Date(data.artista.fecha_nacimiento);
                         document.getElementById('authBirth').textContent = `Nacimiento: ${fecha.toLocaleDateString()}`;
                     } else {
                         document.getElementById('authBirth').textContent = "Fecha de nacimiento no disponible";
                     }
                     
-                    document.getElementById('authBio').textContent = data.autor.Biografia || "Sin biografía disponible.";
+                    document.getElementById('authBio').textContent = data.artista.biografia || "Sin biografía disponible.";
                     
-                    document.getElementById('authImg').src = data.autor.Fotografia || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Crect fill=%22%231a1a1a%22 width=%22300%22 height=%22300%22/%3E%3Ctext fill=%22%23666%22 font-size=%2214%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3ESin Imagen%3C/text%3E%3C/svg%3E';
+                    document.getElementById('authImg').src = data.artista.fotografia || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Crect fill=%22%231a1a1a%22 width=%22300%22 height=%22300%22/%3E%3Ctext fill=%22%23666%22 font-size=%2214%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3ESin Imagen%3C/text%3E%3C/svg%3E';
                 }
 
                 const typesContainer = document.getElementById('authTypes');
                 typesContainer.innerHTML = '';
                 
                 if (data.obras && data.obras.length > 0) {
-                    const generosUnicos = [...new Set(data.obras.map(o => o.GeneroNombre).filter(g => g))];
+                    const generosUnicos = [...new Set(data.obras.map(o => o.genero_nombre).filter(g => g))];
                     
                     generosUnicos.forEach(genero => {
                         const span = document.createElement('span');
@@ -154,11 +151,11 @@
                     gallery.innerHTML = '';
                     
                     data.obras.forEach(obra => {
-                        const imgPath = obra.imagen_url || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22350%22 height=%22300%22%3E%3Crect fill=%22%231a1a1a%22 width=%22350%22 height=%22300%22/%3E%3Ctext fill=%22%23666%22 font-size=%2214%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3ESin Imagen%3C/text%3E%3C/svg%3E';
+                        const imgPath = obra.fotografia || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22350%22 height=%22300%22%3E%3Crect fill=%22%231a1a1a%22 width=%22350%22 height=%22300%22/%3E%3Ctext fill=%22%23666%22 font-size=%2214%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3ESin Imagen%3C/text%3E%3C/svg%3E';
                         
                         // Preparar ficha técnica para la modal
-                        const año = obra.Fecha_creacion ? new Date(obra.Fecha_creacion).getFullYear() : 'N/A';
-                        const precio = obra.PrecioFormateado || 'Precio no disponible';
+                        const año = obra.fecha_creacion ? new Date(obra.fecha_creacion).getFullYear() : 'N/A';
+                        const precio = obra.precio_formateado || 'Precio no disponible';
                         
                         // Recopilar detalles técnicos según el tipo de obra
                         let detallesTecnicos = '';
@@ -173,7 +170,7 @@
                         if (obra.Tipo_Arcilla_Base) detallesTecnicos += `<p><strong>ARCILLA:</strong> ${obra.Tipo_Arcilla_Base}</p>`;
                         
                         const fichaTecnica = `
-                            <p><strong>GÉNERO:</strong> ${obra.GeneroNombre || 'N/A'}</p>
+                            <p><strong>GÉNERO:</strong> ${obra.genero_nombre || 'N/A'}</p>
                             <p><strong>AÑO:</strong> ${año}</p>
                             <p><strong>PRECIO:</strong> ${precio}</p>
                             ${detallesTecnicos || '<p><em>No hay detalles técnicos adicionales</em></p>'}
@@ -184,11 +181,11 @@
                         card.innerHTML = `
                             <div class="art-img" style="background-image: url('${imgPath}')"></div>
                             <div class="art-info">
-                                <h3 class="art-title">${obra.Nombre || 'Sin título'}</h3>
+                                <h3 class="art-title">${obra.nombre || 'Sin título'}</h3>
                                 <p style="color: #666; font-size: 0.7rem; margin-top: 5px;">Año: ${año}</p>
                                 <div class="art-footer" style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
                                     <span class="price">${precio}</span>
-                                    <button class="btn-buy" data-id="${obra.id_Obra}">Adquirir</button>
+                                    <button class="btn-buy" data-id="${obra.id_obra}">Adquirir</button>
                                 </div>
                             </div>
                         `;
@@ -196,24 +193,24 @@
                         // Agregar evento click a la imagen
                         const imgDiv = card.querySelector('.art-img');
                         imgDiv.addEventListener('click', () => {
-                            abrirModal(imgPath, obra.Nombre || 'Sin título', nombreAutor, fichaTecnica);
+                            abrirModal(imgPath, obra.nombre || 'Sin título', nombreAutor, fichaTecnica);
                         });
                         
                         // Agregar evento click al botón de compra
                         const buyBtn = card.querySelector('.btn-buy');
                         buyBtn.addEventListener('click', (e) => {
                             e.stopPropagation();
-                            comprar(obra.id_Obra, obra.Nombre);
+                            comprar(obra.id_obra, obra.nombre);
                         });
                         
                         gallery.appendChild(card);
                     });
                 } else {
-                    document.getElementById('authorGallery').innerHTML = '<p style="text-align:center; width:100%; color:#444; padding: 50px;">Este autor no tiene obras disponibles.</p>';
+                    document.getElementById('authorGallery').innerHTML = '<p style="text-align:center; width:100%; color:#444; padding: 50px;">Este artista no tiene obras disponibles.</p>';
                 }
             } catch (error) {
                 console.error("Error cargando perfil:", error);
-                document.getElementById('authorGallery').innerHTML = '<p style="text-align:center; width:100%; color:red; padding: 50px;">Error al cargar las obras del autor. Por favor, intenta de nuevo más tarde.</p>';
+                document.getElementById('authorGallery').innerHTML = '<p style="text-align:center; width:100%; color:red; padding: 50px;">Error al cargar las obras del artista. Por favor, intenta de nuevo más tarde.</p>';
             }
         }
 
@@ -231,8 +228,7 @@
             cargarPerfil();
             
             // Verificar estado de usuario para mostrar/ocultar botones de autenticación
-            fetch('/api/estado-usuario')
-                .then(response => response.json())
+            AuthController.checkSession()
                 .then(data => {
                     const authContainer = document.querySelector('.auth-buttons');
                     const navContainer = document.querySelector('.nav-container');
@@ -240,12 +236,11 @@
                     if (data.autenticado) {
                         if (authContainer) authContainer.style.display = 'none';
                         
-                        fetch('/api/usuario-actual')
-                            .then(res => res.json())
+                        AuthController.getCurrentUser()
                             .then(user => {
                                 const userDiv = document.createElement('div');
                                 userDiv.className = 'user-profile';
-                                const panelLink = user.Rol === 'administrador' ? '/admin/admin-dashboard.html' : '/private/user-dashboard.html';
+                                const panelLink = user.Rol === 'administrador' ? '/admin' : '/dashboard';
                                 const panelLabel = user.Rol === 'administrador' ? 'PANEL ADMIN' : 'PANEL DE USUARIO';
                                 userDiv.innerHTML = `
                                     <span style="margin-right: 15px; color:white;">Hola, ${user.Nombre || user.email || 'Usuario'}</span>

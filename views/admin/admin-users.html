@@ -113,8 +113,7 @@
     // === USUARIOS ===
     async function cargarUsuariosGestion() {
         try {
-            const res = await fetch('/api/todos-los-usuarios');
-            const data = await res.json();
+            const data = await AdminController.getAllUsers();
             const admins = data.filter(u => u.Rol === 'administrador');
             const compradores = data.filter(u => u.Rol === 'comprador');
 
@@ -174,12 +173,7 @@
         btn.disabled = true;
         btn.innerHTML = '⏳...';
         try {
-            const res = await fetch(`/api/usuarios/${id}/toggle-adquirir`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ PuedeAdquirir: nuevoValor })
-            });
-            const result = await res.json();
+            const result = await AdminController.togglePurchaseAbility(id);
             if (result.success) {
                 mostrarNotificacion(result.message, 'success');
                 cargarUsuariosGestion();
@@ -215,18 +209,7 @@
         btn.innerHTML = '⏳ Actualizando...';
 
         try {
-            const response = await fetch(`/api/usuarios/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ Estatus: parseInt(nuevoEstatus) })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || `Error HTTP: ${response.status}`);
-            }
-
-            const result = await response.json();
+            const result = await AdminController.toggleUserStatus(id, parseInt(nuevoEstatus));
 
             if (result.success) {
                 mostrarNotificacion(`✅ Usuario ${estadoTexto} correctamente`, 'success');
@@ -264,17 +247,16 @@
 
             console.log('Eliminando registros relacionados del usuario:', id);
 
-            await fetch(`/api/eliminar-reservas-usuario/${id}`, { method: 'DELETE' });
+            await AdminController.deleteUserReservations(id);
 
-            await fetch(`/api/eliminar-membresias-usuario/${id}`, { method: 'DELETE' });
+            await AdminController.deleteUserMemberships(id);
 
-            await fetch(`/api/eliminar-comprador/${id}`, { method: 'DELETE' });
+            await AdminController.deleteBuyer(id);
 
-            const res = await fetch(`/api/usuarios/${id}`, { method: 'DELETE' });
+            const result = await AdminController.deleteUser(id);
 
-            if (!res.ok) {
-                const errorText = await res.text();
-                throw new Error(errorText || 'Error al eliminar');
+            if (!result || !result.success) {
+                throw new Error(result?.message || 'Error al eliminar');
             }
 
             if (fila) {
@@ -300,8 +282,7 @@
     // === USUARIOS PENDIENTES ===
     async function cargarUsuariosPendientes() {
         try {
-            const res = await fetch('/api/usuarios-pendientes');
-            const usuarios = await res.json();
+            const usuarios = await AdminController.getPendingUsers();
             const tbody = document.getElementById('lista-usuarios-pendientes');
 
             if (usuarios.length === 0) {
@@ -329,8 +310,8 @@
         deshabilitarBoton(btn);
 
         try {
-            const res = await fetch(`/aprobar-usuario/${id}`, { method: 'PATCH' });
-            if (res.ok) {
+            const result = await AdminController.approveUser(id);
+            if (result && result.success) {
                 const fila = document.getElementById(`usuario-pendiente-${id}`);
                 if (fila) {
                     fila.style.transition = "all 0.4s ease";
@@ -356,8 +337,7 @@
     // === PAGOS MEMBRESÍA ===
     async function cargarPagos() {
         try {
-            const res = await fetch('/api/solicitudes-pago');
-            const pagos = await res.json();
+            const pagos = await AdminController.getPendingPayments();
             const tbody = document.getElementById('lista-pagos');
 
             if (pagos.length === 0) {
@@ -383,13 +363,9 @@
         deshabilitarBoton(btn);
 
         try {
-            const res = await fetch('/aprobar-pago', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id_solicitud, id_usuario })
-            });
+            const result = await AdminController.approvePayment({ id_solicitud, id_usuario });
 
-            if (res.ok) {
+            if (result && result.success) {
                 const fila = document.getElementById(`pago-fila-${id_solicitud}`);
                 if (fila) {
                     fila.style.transition = "all 0.4s ease";

@@ -14,17 +14,17 @@
 
     <div id="main-content">
         <nav class="navbar">
-            <a href="/public/home.html" class="logo"> ARTE CONTEMPORANEO</a>
+            <a href="/home" class="logo"> ARTE CONTEMPORANEO</a>
 
             <div class="nav-container">
                 <ul class="nav-links">
-                    <li><a href="art-catalog.html">Catálogo</a></li>
-                    <li><a href="artist-catalog.html">Artistas</a></li>
+                    <li><a href="/catalog/artwork">Catálogo</a></li>
+                    <li><a href="/catalog/artist">Artistas</a></li>
                 </ul>
 
                 <div class="auth-buttons" id="auth-buttons">
-                    <a href="/public/login.html" class="btn-login">INICIAR SESION</a>
-                    <a href="/public/register.html" class="btn-register">REGISTRARTE</a>
+                    <a href="/login" class="btn-login">INICIAR SESION</a>
+                    <a href="/register" class="btn-register">REGISTRARTE</a>
                 </div>
             </div>
         </nav>
@@ -96,6 +96,10 @@
         </div>
     </div>
 
+    <script src="/controllers/authController.js"></script>
+    <script src="/controllers/catalogController.js"></script>
+    <script src="/controllers/recommendationsController.js"></script>
+
     <script>
         const gallery = document.getElementById('gallery');
         const modal = document.getElementById('obra-modal');
@@ -115,15 +119,11 @@
             document.body.classList.add('modal-active');
 
             // REGISTRAR ACTIVIDAD SIEMPRE (con o sin sesión)
-            fetch('/api/actividad/registrar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    idUsuario: 9999,
-                    idObra: parseInt(idObra) || idObra,
-                    tipo: 'vista_detalle',
-                    duracion: 0
-                })
+            RecommendationsController.registerActivity({
+                idUsuario: 9999,
+                idObra: parseInt(idObra) || idObra,
+                tipo: 'vista_detalle',
+                duracion: 0
             }).catch(() => { });
 
             // CARGAR RECOMENDACIONES
@@ -134,9 +134,7 @@
             const container = document.getElementById('modal-relacionadas');
             container.innerHTML = '<p style="color: #555;">Cargando...</p>';
             try {
-                const res = await fetch(`/api/recomendaciones/por-similitud-ia/${idObra}`);
-                if (!res.ok) throw new Error('Error en API');
-                const obras = await res.json();
+                const obras = await RecommendationsController.getBySimilarity(idObra);
                 if (obras.length === 0) {
                     container.innerHTML = '<p style="color: #555;">No se encontraron obras similares.</p>';
                     return;
@@ -180,18 +178,11 @@
 
         async function abrirObraPorId(idObra) {
             try {
-                const resp = await fetch(`/api/obra/${idObra}`);
-                if (!resp.ok) return;
-                const obra = await resp.json();
-                const imgSource = obra.fotografia || '/assets/images/placeholder.jpg';
-                const autorNombreCompleto = obra.autores?.map(a => `${a.nombre} ${a.apellido}`).join(', ') || '';
-                const detallesHTML = construirDetallesTecnicos({
-                    GeneroNombre: obra.genero?.nombre,
-                    PrecioFormateado: '$' + Number(obra.precio).toLocaleString(),
-                    Fecha_creacion: obra.fecha_creacion?.split('T')[0],
-                    ...obra.genero?.detalles
-                });
-                abrirModal(imgSource, obra.nombre, autorNombreCompleto, detallesHTML, obra.genero?.nombre || '', obra._id);
+                const obra = await CatalogController.getById(idObra);
+                const imgSource = obra.fotografia || obra.imagen_url || '/assets/images/placeholder.jpg';
+                const artistaNombreCompleto = (obra.artista_nombre && obra.artista_apellido) ? obra.artista_nombre + ' ' + obra.artista_apellido : obra.AutorNombre || '';
+                const detallesHTML = construirDetallesTecnicos(obra);
+                abrirModal(imgSource, obra.nombre, artistaNombreCompleto, detallesHTML, obra.genero_nombre || obra.GeneroNombre || '', obra.id_obra || obra._id);
             } catch (e) {
                 console.error('Error abriendo obra:', e);
             }
@@ -205,9 +196,7 @@
             }
             container.innerHTML = '<p>Cargando...</p>';
             try {
-                const res = await fetch(`/api/recomendaciones/obras-por-genero/${encodeURIComponent(genero)}`);
-                if (!res.ok) throw new Error('Error en API');
-                const obras = await res.json();
+                const obras = await RecommendationsController.getByGenre(genero);
                 if (obras.length === 0) {
                     container.innerHTML = '<p>No hay otras obras disponibles de este género.</p>';
                     return;
@@ -235,16 +224,21 @@
 
         // Función para construir detalles técnicos según el género
         function construirDetallesTecnicos(obra) {
+            const genero = obra.genero_nombre || obra.GeneroNombre || '';
+            const precio = obra.precio_formateado || obra.PrecioFormateado || '';
+            const fecha = obra.fecha_creacion || obra.Fecha_creacion || 'No especificada';
+
             let detalles = `
-            <p><strong>GÉNERO:</strong> ${obra.GeneroNombre}</p>
-            <p><strong>PRECIO:</strong> ${obra.PrecioFormateado}</p>
-            <p><strong>FECHA CREACIÓN:</strong> ${obra.Fecha_creacion || 'No especificada'}</p>
+            <p><strong>GÉNERO:</strong> ${genero}</p>
+            <p><strong>PRECIO:</strong> ${precio}</p>
+            <p><strong>FECHA CREACIÓN:</strong> ${fecha}</p>
         `;
 
             // Detalles específicos por género
-            if (obra.Tecnica_Principal) {
+            const tp = obra.Tecnica_Principal;
+            if (tp) {
                 detalles += `
-                <p><strong>TÉCNICA PRINCIPAL:</strong> ${obra.Tecnica_Principal}</p>
+                <p><strong>TÉCNICA PRINCIPAL:</strong> ${tp}</p>
                 <p><strong>SOPORTE:</strong> ${obra.Soporte_Base}</p>
                 <p><strong>REQUIERE ENMARCADO:</strong> ${obra.Requiere_Enmarcado ? 'Sí' : 'No'}</p>
             `;
@@ -287,13 +281,12 @@
 
         async function cargarFiltros() {
             try {
-                const resp = await fetch('/api/autores');
-                const autores = await resp.json();
+                const artistas = await CatalogController.getArtists();
                 const select = document.getElementById('filterAuthor');
-                autores.forEach(a => {
+                artistas.forEach(a => {
                     const opt = document.createElement('option');
-                    opt.value = a.id_Autor;
-                    opt.textContent = `${a.Nombre} ${a.Apellido}`;
+                    opt.value = a.id_artista;
+                    opt.textContent = `${a.nombre} ${a.apellido}`;
                     select.appendChild(opt);
                 });
             } catch (error) {
@@ -308,24 +301,24 @@
                 return;
             }
             obras.forEach(obra => {
-                const imgSource = obra.imagen_url || '/assets/images/placeholder.jpg';
+                const imgSource = obra.fotografia || obra.imagen_url || '/assets/images/placeholder.jpg';
+                const artistaNombreCompleto = `${obra.artista_nombre || obra.AutorNombre || ''} ${obra.artista_apellido || obra.AutorApellido || ''}`.trim();
                 const detallesHTML = construirDetallesTecnicos(obra);
-                const autorNombreCompleto = `${obra.AutorNombre || ''} ${obra.AutorApellido || ''}`.trim();
 
                 const card = document.createElement('div');
                 card.className = 'art-card';
                 card.innerHTML = `
                     <div class="art-img" style="background-image: url('${imgSource}'); background-size: cover; background-position: center;" 
-                         onclick="abrirModal('${imgSource}', '${(obra.Nombre || '').replace(/'/g, "\\'")}', '${autorNombreCompleto.replace(/'/g, "\\'")}', \`${detallesHTML}\`, '${obra.GeneroNombre || ''}', '${obra.id_Obra}')">
+                         onclick="abrirModal('${imgSource}', '${(obra.nombre || obra.Nombre || '').replace(/'/g, "\\'")}', '${artistaNombreCompleto.replace(/'/g, "\\'")}', \`${detallesHTML}\`, '${obra.genero_nombre || obra.GeneroNombre || ''}', '${obra.id_obra || obra.id_Obra}')">
                     </div>
                     <div class="art-info">
-                        <a href="Autor.html?id=${obra.id_Autor}" class="author-link">
-                            ${autorNombreCompleto || 'Anónimo'}
+                        <a href="/artist/profile/${(obra.artista_nombre || '')}${(obra.artista_apellido || '')}" class="author-link">
+                            ${artistaNombreCompleto || 'Anónimo'}
                         </a>
-                        <h3 class="art-title" style="margin: 10px 0;">${obra.Nombre || ''}</h3>
+                        <h3 class="art-title" style="margin: 10px 0;">${obra.nombre || obra.Nombre || ''}</h3>
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span class="price">${obra.PrecioFormateado || ''}</span>
-                            <button class="btn-buy" onclick="adquirirObra('${obra.id_Obra}', '${(obra.Nombre || '').replace(/'/g, "\\'")}', '${autorNombreCompleto.replace(/'/g, "\\'")}', '${obra.Precio}', '${imgSource}')">Adquirir</button>
+                            <span class="price">${obra.precio_formateado || obra.PrecioFormateado || ''}</span>
+                            <button class="btn-buy" onclick="adquirirObra('${obra.id_obra || obra.id_Obra}', '${(obra.nombre || obra.Nombre || '').replace(/'/g, "\\'")}', '${artistaNombreCompleto.replace(/'/g, "\\'")}', '${obra.precio_formateado || obra.PrecioFormateado || ''}', '${imgSource}')">Adquirir</button>
                         </div>
                     </div>
                 `;
@@ -367,8 +360,7 @@
             currentPage = 1;
 
             try {
-                const resp = await fetch(`/api/obras-filtradas?genero=${genero}&artista=${artista}&orden=${orden}&page=1&limit=${ITEMS_PER_PAGE}`);
-                const data = await resp.json();
+                const data = await CatalogController.getFiltered({ genero, artista, orden, pagina: 1, limite: ITEMS_PER_PAGE });
                 allObras = data.obras;
                 totalObras = data.total;
                 renderCards(allObras);
@@ -379,40 +371,38 @@
             }
         }
 
-        function irPagina(pagina) {
+        async function irPagina(pagina) {
             currentPage = pagina;
 
             if (isSearching) {
-                // Paginar resultados de búsqueda locales
                 const start = (currentPage - 1) * ITEMS_PER_PAGE;
                 renderCards(allObras.slice(start, start + ITEMS_PER_PAGE));
                 renderPagination(allObras.length);
                 return;
             }
 
-            // Paginar desde backend
             const genero = document.getElementById('filterGenre').value;
             const artista = document.getElementById('filterAuthor').value;
             const orden = document.getElementById('sortPrice').value;
 
-            fetch(`/api/obras-filtradas?genero=${genero}&artista=${artista}&orden=${orden}&page=${pagina}&limit=${ITEMS_PER_PAGE}`)
-                .then(r => r.json())
-                .then(data => {
-                    allObras = data.obras;
-                    totalObras = data.total;
-                    renderCards(allObras);
-                    renderPagination(data.total);
-                });
+            try {
+                const data = await CatalogController.getFiltered({ genero, artista, orden, pagina, limite: ITEMS_PER_PAGE });
+                allObras = data.obras;
+                totalObras = data.total;
+                renderCards(allObras);
+                renderPagination(data.total);
+            } catch (error) {
+                console.error("Error paginando obras:", error);
+            }
         }
 
         // FUNCIÓN CON VERIFICACIÓN DE SESIÓN Y PERMISO DE COMPRA
-        async function adquirirObra(id, nombre, autor, precio, imagen) {
+        async function adquirirObra(id, nombre, artista, precio, imagen) {
             try {
-                const resp = await fetch('/api/estado-usuario');
-                const data = await resp.json();
+                const data = await AuthController.checkSession();
                 if (!data.autenticado) {
                     alert("Debes iniciar sesión para adquirir una obra.");
-                    window.location.href = "/public/login.html";
+                    window.location.href = "/login";
                     return;
                 }
                 if (!data.puedeAdquirir) {
@@ -421,18 +411,18 @@
                 }
             } catch (e) {
                 console.error("Error verificando sesión:", e);
-                window.location.href = "/public/login.html";
+                window.location.href = "/login";
                 return;
             }
             const obra = {
                 id_Obra: id,
                 nombre: nombre,
-                autor: autor,
+                artista: artista,
                 precio: precio,
                 imagen: imagen
             };
             localStorage.setItem('obraSeleccionada', JSON.stringify(obra));
-            window.location.href = "/private/checkout.html";
+            window.location.href = "/checkout";
         }
 
         // Event Listeners
@@ -462,32 +452,20 @@
                 if (dataPendiente) {
                     sessionStorage.removeItem('abrirObraData');
                     const data = JSON.parse(dataPendiente);
-                    fetch('/api/actividad/registrar', {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ idUsuario: 9999, idObra: data.id, tipo: 'vista_detalle' })
-                    }).catch(() => { });
-                    abrirModal(data.imagen, data.nombre, data.autor || '', '', data.genero || '', data.id);
+                    RecommendationsController.registerActivity({ idUsuario: 9999, idObra: data.id, tipo: 'vista_detalle' }).catch(() => { });
+                    abrirModal(data.imagen, data.nombre, data.artista || '', '', data.genero || '', data.id);
                 }
                 if (idPendiente) {
                     sessionStorage.removeItem('abrirObra');
-                    fetch('/api/actividad/registrar', {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ idUsuario: 9999, idObra: parseInt(idPendiente), tipo: 'vista_detalle' })
-                    }).catch(() => { });
+                    RecommendationsController.registerActivity({ idUsuario: 9999, idObra: parseInt(idPendiente), tipo: 'vista_detalle' }).catch(() => { });
 
-                    fetch(`/api/obra/${idPendiente}`)
-                        .then(r => r.json())
+                    CatalogController.getById(idPendiente)
                         .then(obra => {
-                            if (obra && obra._id) {
-                                const imgSource = obra.fotografia || '/assets/images/placeholder.jpg';
-                                const autorNombreCompleto = obra.autores?.map(a => `${a.nombre} ${a.apellido}`).join(', ') || '';
-                                const detallesHTML = construirDetallesTecnicos({
-                                    GeneroNombre: obra.genero?.nombre,
-                                    PrecioFormateado: '$' + Number(obra.precio).toLocaleString(),
-                                    Fecha_creacion: obra.fecha_creacion?.split('T')[0],
-                                    ...obra.genero?.detalles
-                                });
-                                abrirModal(imgSource, obra.nombre, autorNombreCompleto, detallesHTML, obra.genero?.nombre || '', obra._id);
+                            if (obra && obra.id_obra) {
+                                const imgSource = obra.fotografia || obra.imagen_url || '/assets/images/placeholder.jpg';
+                                const artistaNombreCompleto = (obra.artista_nombre && obra.artista_apellido) ? obra.artista_nombre + ' ' + obra.artista_apellido : '';
+                                const detallesHTML = construirDetallesTecnicos(obra);
+                                abrirModal(imgSource, obra.nombre, artistaNombreCompleto, detallesHTML, obra.genero_nombre || '', obra.id_obra);
                             }
                         })
                         .catch(() => { });
@@ -500,8 +478,7 @@
 
         // Estado de usuario 
         document.addEventListener('DOMContentLoaded', () => {
-            fetch('/api/estado-usuario')
-                .then(response => response.json())
+            AuthController.checkSession()
                 .then(data => {
                     const authContainer = document.querySelector('.auth-buttons');
                     const navContainer = document.querySelector('.nav-container');
@@ -509,12 +486,11 @@
                     if (data.autenticado) {
                         authContainer.style.display = 'none';
 
-                        fetch('/api/usuario-actual')
-                            .then(res => res.json())
+                        AuthController.getCurrentUser()
                             .then(user => {
                                 const userDiv = document.createElement('div');
                                 userDiv.className = 'user-profile';
-                                const panelLink = user.Rol === 'administrador' ? '/admin/admin-dashboard.html' : '/private/user-dashboard.html';
+                                const panelLink = user.Rol === 'administrador' ? '/admin' : '/dashboard';
                                 const panelLabel = user.Rol === 'administrador' ? 'Panel Admin' : 'Mi Feed';
                                 userDiv.innerHTML = `
                             <span style="margin-right: 15px; color: #eee; font-size: 0.75rem;">HOLA, ${user.Nombre}</span>
@@ -540,20 +516,19 @@
 
             timeoutBuscador = setTimeout(async () => {
                 try {
-                    const respExacta = await fetch('/api/buscar?q=' + encodeURIComponent(query));
-                    const exactas = respExacta.ok ? await respExacta.json() : [];
+                    const exactas = await CatalogController.search(query).catch(() => []);
                     allObras = exactas;
-                    // Aplicar filtros de género y autor sobre los resultados
+                    // Aplicar filtros de género y artista sobre los resultados
                     const genero = document.getElementById('filterGenre').value;
                     const artista = document.getElementById('filterAuthor').value;
                     const GENRE_MAP = { 'Fotografia': 'Fotografía' };
 
                     if (genero !== 'all') {
                         const gf = GENRE_MAP[genero] || genero;
-                        allObras = allObras.filter(o => o.GeneroNombre === gf);
+                        allObras = allObras.filter(o => o.genero_nombre === gf);
                     }
                     if (artista !== 'all') {
-                        allObras = allObras.filter(o => o.id_Autor == artista);
+                        allObras = allObras.filter(o => o.id_artista == artista);
                     }
 
                     isSearching = true;

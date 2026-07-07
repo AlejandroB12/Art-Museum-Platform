@@ -1,64 +1,61 @@
 const mongoose = require('mongoose');
 const dns = require('dns');
-require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const fs = require('fs');
 const path = require('path');
 
-dns.setServers(['8.8.8.8', '1.1.1.1']);
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+dns.setServers(['1.1.1.1', '8.8.8.8']);
 
-const Autor = require('../modules/catalog/src/models/autor_model');
-const Obra = require('../modules/catalog/src/models/obra_model');
-const Genero = require('../modules/catalog/src/models/genero_model');
-const Nacionalidad = require('../modules/catalog/src/models/nacionalidad_model');
+const Artist = require('../modules/catalog/src/models/artist_model');
+const Artwork = require('../modules/catalog/src/models/artwork_model');
+const Genre = require('../modules/catalog/src/models/genre_model');
+const Nationality = require('../modules/catalog/src/models/nationality_model');
 
-const seed = async () => {
+async function seed() {
     try {
         await mongoose.connect(process.env.MONGO_URI);
         console.log('Conectado a MongoDB Atlas');
 
-        const data1 = JSON.parse(
-            fs.readFileSync(path.join(__dirname, '..', 'data', 'museo_seed.json'), 'utf-8')
-        );
+        const basePath = path.join(__dirname, '..', 'data', 'json');
+        const data1 = JSON.parse(fs.readFileSync(path.join(basePath, 'museo_seed.json'), 'utf-8'));
+        const data2 = JSON.parse(fs.readFileSync(path.join(basePath, '1000_obras_seed.json'), 'utf-8'));
 
-        const data2 = JSON.parse(
-            fs.readFileSync(path.join(__dirname, '..', 'data', '1000_obras_seed.json'), 'utf-8')
-        );
+        const artistas = [...data1.autores, ...data2.autores];
+        const obras = [...data1.obras, ...data2.obras].map(o => ({
+            ...o,
+            genero: o.genero ? {
+                nombre: o.genero.nombre,
+                detalles: o.genero.detalles || o.genero.detallesSchema || {}
+            } : undefined
+        }));
 
-        const autores = [...data1.autores, ...data2.autores];
-        const obras = [...data1.obras, ...data2.obras];
+        await Promise.all([
+            Artist.deleteMany({}),
+            Artwork.deleteMany({}),
+            Genre.deleteMany({}),
+            Nationality.deleteMany({})
+        ]);
+        console.log('Colecciones limpiadas');
 
-        await Autor.deleteMany({});
-        await Obra.deleteMany({});
-        await Genero.deleteMany({});
-        await Nacionalidad.deleteMany({});
-        await Especializacion.deleteMany({});
+        const [artistasInsert, obrasInsert, generosInsert, nacionesInsert] = await Promise.all([
+            Artist.insertMany(artistas),
+            Artwork.insertMany(obras),
+            Genre.insertMany(data1.generos || []),
+            Nationality.insertMany(data1.nacionalidades || [])
+        ]);
 
-        const autoresInsert = await Autor.insertMany(autores);
-        console.log(`Insertados ${autoresInsert.length} autores`);
-
-        const obrasInsert = await Obra.insertMany(obras);
+        console.log(`Insertados ${artistasInsert.length} artistas`);
         console.log(`Insertadas ${obrasInsert.length} obras`);
-
-        const generos = await Genero.insertMany(data1.generos);
-        console.log(`Insertados ${generos.length} géneros`);
-
-        const nacionalidades = await Nacionalidad.insertMany(data1.nacionalidades);
-        console.log(`Insertadas ${nacionalidades.length} nacionalidades`);
-
-        if (data1.especializaciones) {
-            const espCol = mongoose.connection.db.collection('especializaciones');
-            await espCol.deleteMany({});
-            const especializaciones = await espCol.insertMany(data1.especializaciones);
-            console.log(`Insertadas ${especializaciones.length} especializaciones`);
-        }
-
+        console.log(`Insertados ${generosInsert.length} géneros`);
+        console.log(`Insertadas ${nacionesInsert.length} nacionalidades`);
         console.log('Seed completado exitosamente');
+
         await mongoose.connection.close();
         process.exit(0);
     } catch (err) {
-        console.error('Error en seed:', err);
+        console.error('Error en seed:', err.message);
         process.exit(1);
     }
-};
+}
 
 seed();

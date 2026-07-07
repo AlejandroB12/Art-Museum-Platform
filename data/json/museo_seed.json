@@ -5,7 +5,7 @@
       "nombre": "Ai-Da",
       "apellido": "Robot",
       "fecha_nacimiento": "2019-02-01",
-      "fotografia": "/images/authors/AiDARobot.webp",
+      "fotografia": "/images/artists/AiDARobot.webp",
       "biografia": "Ai-Da es el primer robot artista ultrarrrealista del mundo. Creada en Oxford, Reino Unido, utiliza inteligencia artificial para crear dibujos, pinturas y esculturas. Su obra explora la relación entre tecnología, creatividad y conciencia artificial.",
       "nacionalidad": "Reino Unido"
     },
@@ -14,7 +14,7 @@
       "nombre": "Ai",
       "apellido": "Weiwei",
       "fecha_nacimiento": "1957-08-28",
-      "fotografia": "/images/authors/AiWeiwei.webp",
+      "fotografia": "/images/artists/AiWeiwei.webp",
       "biografia": "Artista conceptual, activista y arquitecto chino. Conocido por su crítica al gobierno chino y su defensa de los derechos humanos. Su obra abarca escultura, instalación, fotografía y cine documental.",
       "nacionalidad": "China"
     },
@@ -23,7 +23,7 @@
       "nombre": "Anish",
       "apellido": "Kapoor",
       "fecha_nacimiento": "1954-03-12",
-      "fotografia": "/images/authors/AnishKapoor.webp",
+      "fotografia": "/images/artists/AnishKapoor.webp",
       "biografia": "Escultor británico-indio famoso por sus instalaciones a gran escala y esculturas monumentales. Su obra más conocida es 'Cloud Gate' en Chicago. Explora el vacío, la luz y el color, especialmente con su exclusivo Vantablack.",
       "nacionalidad": "Reino Unido"
     },
@@ -32,7 +32,7 @@
       "nombre": "Carlos",
       "apellido": "Cruz-Diez",
       "fecha_nacimiento": "1923-08-17",
-      "fotografia": "/images/authors/CarlosCruzDiez.webp",
+      "fotografia": "/images/artists/CarlosCruzDiez.webp",
       "biografia": "Pintor y escultor venezolano, uno de los máximos representantes del arte cinético y óptico. Su obra se centra en el estudio del color como realidad autónoma en constante transformación.",
       "nacionalidad": "Venezuela"
     },
@@ -41,7 +41,7 @@
       "nombre": "Cindy",
       "apellido": "Sherman",
       "fecha_nacimiento": "1954-01-19",
-      "fotografia": "/images/authors/CindySherman.webp",
+      "fotografia": "/images/artists/CindySherman.webp",
       "biografia": "Fotógrafa y cineasta estadounidense conocida por sus autorretratos conceptuales que exploran la identidad, el género y los estereotipos sociales. Su serie 'Untitled Film Stills' es icónica.",
       "nacionalidad": "Estados Unidos"
     },
@@ -50,7 +50,7 @@
       "nombre": "Damien",
       "apellido": "Hirst",
       "fecha_nacimiento": "1965-06-07",
-      "fotografia": "/images/authors/DamienHirst.webp",
+      "fotografia": "/images/artists/DamienHirst.webp",
       "biografia": "Artista británico líder del grupo Young British Artists. Conocido por obras controvertidas como tiburones en formol, pastillas, calaveras de diamante y puntos multicolores. Explora la muerte y la mortalidad.",
       "nacionalidad": "Reino Unido"
     },
@@ -59,7 +59,7 @@
       "nombre": "Doris",
       "apellido": "Salcedo",
       "fecha_nacimiento": "1958-01-01",
-      "fotografia": "/images/authors/DorisSalcedo.webp",
+      "fotografia": "/images/artists/DorisSalcedo.webp",
       "biografia": "Escultora colombiana reconocida por sus instalaciones que abordan la violencia política y el trauma social. Crea obras con muebles, ropa y objetos cotidianos intervenidos con hormigón.",
       "nacionalidad": "Colombia"
     },
@@ -68,7 +68,7 @@
       "nombre": "Edmund",
       "apellido": "de Waal",
       "fecha_nacimiento": "1964-01-02",
-      "fotografia": "/images/authors/EdmunddeWaal.webp",
+      "fotografia": "/images/artists/EdmunddeWaal.webp",
       "biografia": "Ceramista y escritor británico, autor del bestseller 'La liebre con ojos de ámbar'. Sus obras minimalistas exploran la relación entre objetos, memoria y lugar, utilizando porcelana blanca.",
       "nacionalidad": "Reino Unido"
     },
@@ -77,7 +77,7 @@
       "nombre": "Gabriel",
       "apellido": "Orozco",
       "fecha_nacimiento": "1962-04-27",
-      "fotografia": "/images/authors/GabrielOrozco.webp",
+      "fotografia": "/images/artists/GabrielOrozco.webp",
       "biografia": "Artista conceptual mexicano conocido por sus fotografías, esculturas e instalaciones que transforman objetos cotidianos en experiencias poéticas. Explora el azar, el juego y la geografía.",
       "nacionalidad": "México"
     },
@@ -86,7 +86,7 @@
       "nombre": "Grayson",
       "apellido": "Perry",
       "fecha_nacimiento": "1960-03-24",
-      "fotografia": "/images/authors/GraysonPerry.webp",
+      "fotografia": "/images/artists/GraysonPerry.webp",
       "biografia": "Ceramista, bordador y artista británico conocido por sus jarrones decorativos que narran historias controvertidas sobre clase, género y sexualidad. Viste frecuentemente como su alter ego femenino 'Claire'.",
       "nacionalidad": "Reino Unido"
     },
@@ -95,7 +95,7 @@
       "nombre": "Jeff",
       "apellido": "Koons",
       "fecha_nacimiento": "1955-01-21",
-      "fotografia": "/images/authors/JeffKoons.webp",
+      "fotografia": "/images/artists/JeffKoons.webp",
       "biografia": "Artista estadounidense famoso por sus esculturas brillantes de animales globo y objetos kitsch. Su obra explora el consumismo, la cultura pop y lo camp. Posee el récord de obra más cara de un artista vivo.",
       "nacionalidad": "Estados Unidos"
     },
@@ -104,7 +104,7 @@
       "nombre": "Kiki",
       "apellido": "Smith",
       "fecha_nacimiento": "1954-01-18",
-      "fotografia": "/images/authors/KikiSmith.webp",
+      "fotografia": "/images/artists/KikiSmith.webp",
       "biografia": "Artista estadounidense nacida en Alemania que trabaja escultura, grabado y dibujo. Aborda temas como el cuerpo humano, la mortalidad, la naturaleza y la espiritualidad con materiales orgánicos.",
       "nacionalidad": "Estados Unidos"
     },
@@ -113,7 +113,7 @@
       "nombre": "Marina",
       "apellido": "Abramović",
       "fecha_nacimiento": "1946-11-30",
-      "fotografia": "/images/authors/MarinaAbramović.webp",
+      "fotografia": "/images/artists/MarinaAbramović.webp",
       "biografia": "Pionera del arte performance, conocida por sus obras de resistencia física y mental. Su pieza 'The Artist is Present' en el MoMA la estableció como la 'abuela del arte performance'.",
       "nacionalidad": "Serbia y Montenegro"
     },
@@ -122,7 +122,7 @@
       "nombre": "Ólafur",
       "apellido": "Elíasson",
       "fecha_nacimiento": "1967-02-05",
-      "fotografia": "/images/authors/ÓlafurElíasson.webp",
+      "fotografia": "/images/artists/ÓlafurElíasson.webp",
       "biografia": "Artista danés-islandés conocido por instalaciones de gran escala que utilizan elementos naturales como luz, agua y niebla. Su obra 'The Weather Project' en la Tate Modern es legendaria.",
       "nacionalidad": "Islandia"
     },
@@ -131,7 +131,7 @@
       "nombre": "Takashi",
       "apellido": "Murakami",
       "fecha_nacimiento": "1962-02-01",
-      "fotografia": "/images/authors/TakashiMurakami.webp",
+      "fotografia": "/images/artists/TakashiMurakami.webp",
       "biografia": "Artista japonés fundador del movimiento Superflat, que fusiona el arte tradicional japonés con la cultura pop contemporánea. Conocido por sus flores sonrientes y colaboraciones con marcas de lujo.",
       "nacionalidad": "Japón"
     },
@@ -140,7 +140,7 @@
       "nombre": "Theaster",
       "apellido": "Gates",
       "fecha_nacimiento": "1973-08-28",
-      "fotografia": "/images/authors/TheasterGates.webp",
+      "fotografia": "/images/artists/TheasterGates.webp",
       "biografia": "Artista, músico y urbanista estadounidense. Transforma edificios abandonados en espacios culturales. Su obra aborda la historia afroamericana, la religión, la música y el desarrollo comunitario.",
       "nacionalidad": "Estados Unidos"
     },
@@ -149,7 +149,7 @@
       "nombre": "Vik",
       "apellido": "Muniz",
       "fecha_nacimiento": "1961-12-20",
-      "fotografia": "/images/authors/VikMuniz.webp",
+      "fotografia": "/images/artists/VikMuniz.webp",
       "biografia": "Artista conceptual brasileño conocido por recrear obras maestras con materiales inusuales como chocolate, basura o juguetes. Su documental 'Waste Land' fue nominado al Oscar.",
       "nacionalidad": "Brasil"
     },
@@ -158,7 +158,7 @@
       "nombre": "Wallace",
       "apellido": "Chan",
       "fecha_nacimiento": "1956-01-01",
-      "fotografia": "/images/authors/WallaceChan.webp",
+      "fotografia": "/images/artists/WallaceChan.webp",
       "biografia": "Artista hongkonés conocido por sus esculturas cinéticas que utilizan máquinas para explorar la relación entre cuerpo, tecnología y sociedad en el contexto asiático contemporáneo.",
       "nacionalidad": "Hong Kong"
     },
@@ -167,7 +167,7 @@
       "nombre": "Yayoi",
       "apellido": "Kusama",
       "fecha_nacimiento": "1929-03-22",
-      "fotografia": "/images/authors/YayoiKusama.webp",
+      "fotografia": "/images/artists/YayoiKusama.webp",
       "biografia": "Artista japonesa conocida por sus obras con lunares infinitos, calabazas y espejos. Vive voluntariamente en un hospital psiquiátrico desde 1977. Su serie 'Infinity Mirror Rooms' es mundialmente famosa.",
       "nacionalidad": "Japón"
     },
@@ -176,7 +176,7 @@
       "nombre": "Zeng",
       "apellido": "Fanzhi",
       "fecha_nacimiento": "1964-01-01",
-      "fotografia": "/images/authors/ZengFanzhi.webp",
+      "fotografia": "/images/artists/ZengFanzhi.webp",
       "biografia": "Pintor chino contemporáneo famoso por sus retratos expresionistas con máscaras y sus series abstractas 'Hospital' y 'Máscara'. Refleja la ansiedad y alienación en la China moderna.",
       "nacionalidad": "China"
     }
@@ -187,11 +187,7 @@
       "nombre": "First Humanoid Sculpture",
       "fecha_creacion": "2021-01-01",
       "precio": 150000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/AiDaRobot-FirstHumanoidSculpture.webp",
-      "autores": [
-        1
-      ],
+      "fotografia": "/images/artworks/AiDaRobot-FirstHumanoidSculpture.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -199,18 +195,16 @@
           "requiere_pedestal": true,
           "clasificacion_espacio": "Interior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 50
     },
     {
       "_id": 2,
       "nombre": "Self Portrait",
       "fecha_creacion": "2019-01-01",
       "precio": 95000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/AiDaRobot-SelfPortrait.webp",
-      "autores": [
-        1
-      ],
+      "fotografia": "/images/artworks/AiDaRobot-SelfPortrait.webp",
       "genero": {
         "nombre": "Pintura",
         "detalles": {
@@ -218,18 +212,16 @@
           "soporte_base": "Lienzo",
           "requiere_enmarcado": true
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 1
     },
     {
       "_id": 3,
       "nombre": "Dropping a Han Dynasty Urn",
       "fecha_creacion": "1995-01-01",
       "precio": 1200000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/AiWeiwei-DroppingAHanDynastyUrn.webp",
-      "autores": [
-        2
-      ],
+      "fotografia": "/images/artworks/AiWeiwei-DroppingAHanDynastyUrn.webp",
       "genero": {
         "nombre": "Fotografía",
         "detalles": {
@@ -237,18 +229,16 @@
           "tipo_impresion_estandar": "Gelatina de plata",
           "requiere_revelado_quimico": true
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 2
     },
     {
       "_id": 4,
       "nombre": "Forever Bicycles",
       "fecha_creacion": "2011-01-01",
       "precio": 2500000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/AiWeiwei-ForeverBicycles.webp",
-      "autores": [
-        2
-      ],
+      "fotografia": "/images/artworks/AiWeiwei-ForeverBicycles.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -256,18 +246,16 @@
           "requiere_pedestal": false,
           "clasificacion_espacio": "Ambivalente"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 2
     },
     {
       "_id": 5,
       "nombre": "He Xie",
       "fecha_creacion": "2010-01-01",
       "precio": 850000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/AiWeiwei-HeXie.webp",
-      "autores": [
-        2
-      ],
+      "fotografia": "/images/artworks/AiWeiwei-HeXie.webp",
       "genero": {
         "nombre": "Ceramica",
         "detalles": {
@@ -275,18 +263,16 @@
           "tipo_arcilla_base": "Barro común",
           "temperatura_coccion_promedio_celsius": 900
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 2
     },
     {
       "_id": 6,
       "nombre": "Straight",
       "fecha_creacion": "2012-01-01",
       "precio": 3200000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/AiWeiwei-Straight.webp",
-      "autores": [
-        2
-      ],
+      "fotografia": "/images/artworks/AiWeiwei-Straight.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -294,18 +280,16 @@
           "requiere_pedestal": false,
           "clasificacion_espacio": "Interior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 2
     },
     {
       "_id": 7,
       "nombre": "Sunflowers Seeds",
       "fecha_creacion": "2010-01-01",
       "precio": 4500000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/AiWeiwei-SunflowersSeeds.webp",
-      "autores": [
-        2
-      ],
+      "fotografia": "/images/artworks/AiWeiwei-SunflowersSeeds.webp",
       "genero": {
         "nombre": "Ceramica",
         "detalles": {
@@ -313,18 +297,16 @@
           "tipo_arcilla_base": "Porcelana",
           "temperatura_coccion_promedio_celsius": 1300
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 2
     },
     {
       "_id": 8,
       "nombre": "Cloud Gate",
       "fecha_creacion": "2006-01-01",
       "precio": 6000000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/AnishKapoor-CloudGate.webp",
-      "autores": [
-        3
-      ],
+      "fotografia": "/images/artworks/AnishKapoor-CloudGate.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -332,18 +314,16 @@
           "requiere_pedestal": false,
           "clasificacion_espacio": "Exterior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 160
     },
     {
       "_id": 9,
       "nombre": "Jewel Ring",
       "fecha_creacion": "2014-01-01",
       "precio": 750000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/AnishKapoor-JewelRing.webp",
-      "autores": [
-        3
-      ],
+      "fotografia": "/images/artworks/AnishKapoor-JewelRing.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -351,18 +331,16 @@
           "requiere_pedestal": true,
           "clasificacion_espacio": "Interior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 3
     },
     {
       "_id": 10,
       "nombre": "Leviathan",
       "fecha_creacion": "2011-01-01",
       "precio": 1800000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/AnishKapoor-Leviathan.webp",
-      "autores": [
-        3
-      ],
+      "fotografia": "/images/artworks/AnishKapoor-Leviathan.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -370,18 +348,16 @@
           "requiere_pedestal": false,
           "clasificacion_espacio": "Interior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 3
     },
     {
       "_id": 11,
       "nombre": "Sky Mirror",
       "fecha_creacion": "2001-01-01",
       "precio": 2200000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/AnishKapoor-SkyMirror.webp",
-      "autores": [
-        3
-      ],
+      "fotografia": "/images/artworks/AnishKapoor-SkyMirror.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -389,18 +365,16 @@
           "requiere_pedestal": false,
           "clasificacion_espacio": "Exterior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 3
     },
     {
       "_id": 12,
       "nombre": "VantaBlack Art Piece",
       "fecha_creacion": "2016-01-01",
       "precio": 990000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/AnishKapoor-VantaBlack.webp",
-      "autores": [
-        3
-      ],
+      "fotografia": "/images/artworks/AnishKapoor-VantaBlack.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -408,18 +382,16 @@
           "requiere_pedestal": true,
           "clasificacion_espacio": "Interior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 3
     },
     {
       "_id": 13,
       "nombre": "Chromosaturation",
       "fecha_creacion": "1965-01-01",
       "precio": 1400000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/CarlosCruzDiez-Chromosaturation.webp",
-      "autores": [
-        4
-      ],
+      "fotografia": "/images/artworks/CarlosCruzDiez-Chromosaturation.webp",
       "genero": {
         "nombre": "Pintura",
         "detalles": {
@@ -427,18 +399,16 @@
           "soporte_base": "Otro",
           "requiere_enmarcado": false
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 176
     },
     {
       "_id": 14,
       "nombre": "Fisicromía",
       "fecha_creacion": "1980-01-01",
       "precio": 350000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/CarlosCruzDiez-Fisicromía.webp",
-      "autores": [
-        4
-      ],
+      "fotografia": "/images/artworks/CarlosCruzDiez-Fisicromía.webp",
       "genero": {
         "nombre": "Pintura",
         "detalles": {
@@ -446,18 +416,16 @@
           "soporte_base": "Metal",
           "requiere_enmarcado": true
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 4
     },
     {
       "_id": 15,
       "nombre": "Induction Cromática",
       "fecha_creacion": "2010-01-01",
       "precio": 280000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/CarlosCruzDiez-InductionCromatica.webp",
-      "autores": [
-        4
-      ],
+      "fotografia": "/images/artworks/CarlosCruzDiez-InductionCromatica.webp",
       "genero": {
         "nombre": "Pintura",
         "detalles": {
@@ -465,18 +433,16 @@
           "soporte_base": "Lienzo",
           "requiere_enmarcado": true
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 4
     },
     {
       "_id": 16,
       "nombre": "Transcromía",
       "fecha_creacion": "1970-01-01",
       "precio": 420000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/CarlosCruzDiez-Transcromía.webp",
-      "autores": [
-        4
-      ],
+      "fotografia": "/images/artworks/CarlosCruzDiez-Transcromía.webp",
       "genero": {
         "nombre": "Pintura",
         "detalles": {
@@ -484,18 +450,16 @@
           "soporte_base": "Otro",
           "requiere_enmarcado": false
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 4
     },
     {
       "_id": 17,
       "nombre": "Untitled #153",
       "fecha_creacion": "1985-01-01",
       "precio": 2100000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/CindySherman-Untitled153.webp",
-      "autores": [
-        5
-      ],
+      "fotografia": "/images/artworks/CindySherman-Untitled153.webp",
       "genero": {
         "nombre": "Fotografía",
         "detalles": {
@@ -503,18 +467,16 @@
           "tipo_impresion_estandar": "Gelatina de plata",
           "requiere_revelado_quimico": true
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 5
     },
     {
       "_id": 18,
       "nombre": "Untitled #96",
       "fecha_creacion": "1981-01-01",
       "precio": 3890000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/CindySherman-Untitled96.webp",
-      "autores": [
-        5
-      ],
+      "fotografia": "/images/artworks/CindySherman-Untitled96.webp",
       "genero": {
         "nombre": "Fotografía",
         "detalles": {
@@ -522,18 +484,16 @@
           "tipo_impresion_estandar": "Gelatina de plata",
           "requiere_revelado_quimico": true
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 5
     },
     {
       "_id": 19,
       "nombre": "Untitled Film Still #21",
       "fecha_creacion": "1978-01-01",
       "precio": 1500000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/CindySherman-UntitledFilmStill21.webp",
-      "autores": [
-        5
-      ],
+      "fotografia": "/images/artworks/CindySherman-UntitledFilmStill21.webp",
       "genero": {
         "nombre": "Fotografía",
         "detalles": {
@@ -541,18 +501,16 @@
           "tipo_impresion_estandar": "Gelatina de plata",
           "requiere_revelado_quimico": true
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 5
     },
     {
       "_id": 20,
       "nombre": "For The Love Of God",
       "fecha_creacion": "2007-01-01",
       "precio": 50000000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/DamienHirts-ForTheLoveOfGod.webp",
-      "autores": [
-        6
-      ],
+      "fotografia": "/images/artworks/DamienHirts-ForTheLoveOfGod.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -560,18 +518,16 @@
           "requiere_pedestal": true,
           "clasificacion_espacio": "Interior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 179
     },
     {
       "_id": 21,
       "nombre": "Lullaby Spring",
       "fecha_creacion": "2002-01-01",
       "precio": 19000000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/DamienHirts-LullabySpring.webp",
-      "autores": [
-        6
-      ],
+      "fotografia": "/images/artworks/DamienHirts-LullabySpring.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -579,18 +535,16 @@
           "requiere_pedestal": false,
           "clasificacion_espacio": "Interior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 6
     },
     {
       "_id": 22,
       "nombre": "Spin Painting",
       "fecha_creacion": "1995-01-01",
       "precio": 250000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/DamienHirts-SpinPainting.webp",
-      "autores": [
-        6
-      ],
+      "fotografia": "/images/artworks/DamienHirts-SpinPainting.webp",
       "genero": {
         "nombre": "Pintura",
         "detalles": {
@@ -598,18 +552,16 @@
           "soporte_base": "Lienzo",
           "requiere_enmarcado": true
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 6
     },
     {
       "_id": 23,
       "nombre": "Spot Painting",
       "fecha_creacion": "2000-01-01",
       "precio": 400000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/DamienHirts-SpotPainting.webp",
-      "autores": [
-        6
-      ],
+      "fotografia": "/images/artworks/DamienHirts-SpotPainting.webp",
       "genero": {
         "nombre": "Pintura",
         "detalles": {
@@ -617,18 +569,16 @@
           "soporte_base": "Lienzo",
           "requiere_enmarcado": true
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 6
     },
     {
       "_id": 24,
       "nombre": "The Physical Impossibility of Death",
       "fecha_creacion": "1991-01-01",
       "precio": 12000000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/DamienHirts-ThePhysicalImpossibility.webp",
-      "autores": [
-        6
-      ],
+      "fotografia": "/images/artworks/DamienHirts-ThePhysicalImpossibility.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -636,18 +586,16 @@
           "requiere_pedestal": false,
           "clasificacion_espacio": "Interior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 6
     },
     {
       "_id": 25,
       "nombre": "Noviembre 6 y 7",
       "fecha_creacion": "2002-01-01",
       "precio": 800000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/DorisSalcedo-Noviembre67.webp",
-      "autores": [
-        7
-      ],
+      "fotografia": "/images/artworks/DorisSalcedo-Noviembre67.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -655,18 +603,16 @@
           "requiere_pedestal": false,
           "clasificacion_espacio": "Interior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 7
     },
     {
       "_id": 26,
       "nombre": "Plegaria Muda",
       "fecha_creacion": "2010-01-01",
       "precio": 950000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/DorisSalcedo-PlegariaMuda.webp",
-      "autores": [
-        7
-      ],
+      "fotografia": "/images/artworks/DorisSalcedo-PlegariaMuda.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -674,18 +620,16 @@
           "requiere_pedestal": false,
           "clasificacion_espacio": "Interior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 7
     },
     {
       "_id": 27,
       "nombre": "Atmosphere",
       "fecha_creacion": "2014-01-01",
       "precio": 180000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/EdmunddeWaal-Atmosphere.webp",
-      "autores": [
-        8
-      ],
+      "fotografia": "/images/artworks/EdmunddeWaal-Atmosphere.webp",
       "genero": {
         "nombre": "Ceramica",
         "detalles": {
@@ -693,18 +637,16 @@
           "tipo_arcilla_base": "Porcelana",
           "temperatura_coccion_promedio_celsius": 1250
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 186
     },
     {
       "_id": 28,
       "nombre": "Irrereglere",
       "fecha_creacion": "2012-01-01",
       "precio": 140000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/EdmunddeWaal-Irrereglere.webp",
-      "autores": [
-        8
-      ],
+      "fotografia": "/images/artworks/EdmunddeWaal-Irrereglere.webp",
       "genero": {
         "nombre": "Ceramica",
         "detalles": {
@@ -712,18 +654,16 @@
           "tipo_arcilla_base": "Porcelana",
           "temperatura_coccion_promedio_celsius": 1200
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 8
     },
     {
       "_id": 29,
       "nombre": "Library Of Exile",
       "fecha_creacion": "2019-01-01",
       "precio": 300000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/EdmunddeWaal-LibraryOfExile.webp",
-      "autores": [
-        8
-      ],
+      "fotografia": "/images/artworks/EdmunddeWaal-LibraryOfExile.webp",
       "genero": {
         "nombre": "Ceramica",
         "detalles": {
@@ -731,18 +671,16 @@
           "tipo_arcilla_base": "Porcelana",
           "temperatura_coccion_promedio_celsius": 1300
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 8
     },
     {
       "_id": 30,
       "nombre": "The Hare With Amber Eyes",
       "fecha_creacion": "2010-01-01",
       "precio": 220000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/EdmunddeWaalTheHareWithAmberEyes.webp",
-      "autores": [
-        8
-      ],
+      "fotografia": "/images/artworks/EdmunddeWaalTheHareWithAmberEyes.webp",
       "genero": {
         "nombre": "Ceramica",
         "detalles": {
@@ -750,18 +688,16 @@
           "tipo_arcilla_base": "Porcelana",
           "temperatura_coccion_promedio_celsius": 1200
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 8
     },
     {
       "_id": 31,
       "nombre": "Black Kites",
       "fecha_creacion": "1997-01-01",
       "precio": 550000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/Gabriel Orozco-BlackKites.webp",
-      "autores": [
-        9
-      ],
+      "fotografia": "/images/artworks/Gabriel Orozco-BlackKites.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -769,18 +705,16 @@
           "requiere_pedestal": true,
           "clasificacion_espacio": "Interior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 9
     },
     {
       "_id": 32,
       "nombre": "La DS",
       "fecha_creacion": "1993-01-01",
       "precio": 900000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/Gabriel Orozco-LaDS.webp",
-      "autores": [
-        9
-      ],
+      "fotografia": "/images/artworks/Gabriel Orozco-LaDS.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -788,18 +722,16 @@
           "requiere_pedestal": false,
           "clasificacion_espacio": "Interior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 9
     },
     {
       "_id": 33,
       "nombre": "Samurai Tree Invariant",
       "fecha_creacion": "2005-01-01",
       "precio": 120000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/Gabriel Orozco-SamuraiTreeInvariant.webp",
-      "autores": [
-        9
-      ],
+      "fotografia": "/images/artworks/Gabriel Orozco-SamuraiTreeInvariant.webp",
       "genero": {
         "nombre": "Pintura",
         "detalles": {
@@ -807,18 +739,16 @@
           "soporte_base": "Lienzo",
           "requiere_enmarcado": true
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 9
     },
     {
       "_id": 34,
       "nombre": "Difficult Background",
       "fecha_creacion": "2011-01-01",
       "precio": 190000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/GraysonPerry-DifficultBackground.webp",
-      "autores": [
-        10
-      ],
+      "fotografia": "/images/artworks/GraysonPerry-DifficultBackground.webp",
       "genero": {
         "nombre": "Ceramica",
         "detalles": {
@@ -826,18 +756,16 @@
           "tipo_arcilla_base": "Gres",
           "temperatura_coccion_promedio_celsius": 1100
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 10
     },
     {
       "_id": 35,
       "nombre": "The Injustice Line",
       "fecha_creacion": "2014-01-01",
       "precio": 160000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/GraysonPerry-TheInjusticeLine.webp",
-      "autores": [
-        10
-      ],
+      "fotografia": "/images/artworks/GraysonPerry-TheInjusticeLine.webp",
       "genero": {
         "nombre": "Ceramica",
         "detalles": {
@@ -845,18 +773,16 @@
           "tipo_arcilla_base": "Gres",
           "temperatura_coccion_promedio_celsius": 1150
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 10
     },
     {
       "_id": 36,
       "nombre": "The Walthamstow Tapestry",
       "fecha_creacion": "2009-01-01",
       "precio": 450000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/GraysonPerry-TheWalthamstowTapestry.webp",
-      "autores": [
-        10
-      ],
+      "fotografia": "/images/artworks/GraysonPerry-TheWalthamstowTapestry.webp",
       "genero": {
         "nombre": "Pintura",
         "detalles": {
@@ -864,18 +790,16 @@
           "soporte_base": "Lienzo",
           "requiere_enmarcado": false
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 10
     },
     {
       "_id": 37,
       "nombre": "Antiquity 1",
       "fecha_creacion": "2012-01-01",
       "precio": 2000000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/JeffKoons-Antiquity1.webp",
-      "autores": [
-        11
-      ],
+      "fotografia": "/images/artworks/JeffKoons-Antiquity1.webp",
       "genero": {
         "nombre": "Pintura",
         "detalles": {
@@ -883,18 +807,16 @@
           "soporte_base": "Lienzo",
           "requiere_enmarcado": true
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 11
     },
     {
       "_id": 38,
       "nombre": "Balloon Dog Orange",
       "fecha_creacion": "1994-01-01",
       "precio": 58400000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/JeffKoons-BallonDogOrange.webp",
-      "autores": [
-        11
-      ],
+      "fotografia": "/images/artworks/JeffKoons-BallonDogOrange.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -902,18 +824,16 @@
           "requiere_pedestal": false,
           "clasificacion_espacio": "Ambivalente"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 11
     },
     {
       "_id": 39,
       "nombre": "Puppy",
       "fecha_creacion": "1992-01-01",
       "precio": 5000000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/JeffKoons-Puppy.webp",
-      "autores": [
-        11
-      ],
+      "fotografia": "/images/artworks/JeffKoons-Puppy.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -921,18 +841,16 @@
           "requiere_pedestal": false,
           "clasificacion_espacio": "Exterior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 11
     },
     {
       "_id": 40,
       "nombre": "Rabbit",
       "fecha_creacion": "1986-01-01",
       "precio": 91000000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/JeffKoons-Rabbit.webp",
-      "autores": [
-        11
-      ],
+      "fotografia": "/images/artworks/JeffKoons-Rabbit.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -940,18 +858,16 @@
           "requiere_pedestal": true,
           "clasificacion_espacio": "Interior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 11
     },
     {
       "_id": 41,
       "nombre": "Triple Elvis",
       "fecha_creacion": "2007-01-01",
       "precio": 8000000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/JeffKoons-TripleElvis.webp",
-      "autores": [
-        11
-      ],
+      "fotografia": "/images/artworks/JeffKoons-TripleElvis.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -959,18 +875,16 @@
           "requiere_pedestal": false,
           "clasificacion_espacio": "Interior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 11
     },
     {
       "_id": 42,
       "nombre": "Annunciation",
       "fecha_creacion": "2010-01-01",
       "precio": 210000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/KikiSmith-Annunciation.webp",
-      "autores": [
-        12
-      ],
+      "fotografia": "/images/artworks/KikiSmith-Annunciation.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -978,18 +892,16 @@
           "requiere_pedestal": false,
           "clasificacion_espacio": "Interior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 12
     },
     {
       "_id": 43,
       "nombre": "Blue Girl",
       "fecha_creacion": "1998-01-01",
       "precio": 185000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/KikiSmith-BlueGirl.webp",
-      "autores": [
-        12
-      ],
+      "fotografia": "/images/artworks/KikiSmith-BlueGirl.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -997,18 +909,16 @@
           "requiere_pedestal": true,
           "clasificacion_espacio": "Interior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 12
     },
     {
       "_id": 44,
       "nombre": "Lying with the Wolf",
       "fecha_creacion": "2001-01-01",
       "precio": 320000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/KikiSmith-LyingwiththeWorf.webp",
-      "autores": [
-        12
-      ],
+      "fotografia": "/images/artworks/KikiSmith-LyingwiththeWorf.webp",
       "genero": {
         "nombre": "Pintura",
         "detalles": {
@@ -1016,18 +926,16 @@
           "soporte_base": "Papel",
           "requiere_enmarcado": true
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 12
     },
     {
       "_id": 45,
       "nombre": "Sleeping Witch",
       "fecha_creacion": "2000-01-01",
       "precio": 240000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/KikiSmith-SleepingWitch.webp",
-      "autores": [
-        12
-      ],
+      "fotografia": "/images/artworks/KikiSmith-SleepingWitch.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -1035,18 +943,16 @@
           "requiere_pedestal": false,
           "clasificacion_espacio": "Interior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 12
     },
     {
       "_id": 46,
       "nombre": "Balkan Baroque",
       "fecha_creacion": "1997-01-01",
       "precio": 450000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/MarinaAbramovic-BalkanBaroque.webp",
-      "autores": [
-        13
-      ],
+      "fotografia": "/images/artworks/MarinaAbramovic-BalkanBaroque.webp",
       "genero": {
         "nombre": "Fotografía",
         "detalles": {
@@ -1054,18 +960,16 @@
           "tipo_impresion_estandar": "Digital",
           "requiere_revelado_quimico": false
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 13
     },
     {
       "_id": 47,
       "nombre": "Rest Energy",
       "fecha_creacion": "1980-01-01",
       "precio": 600000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/MarinaAbramovic-RestEnergy.webp",
-      "autores": [
-        13
-      ],
+      "fotografia": "/images/artworks/MarinaAbramovic-RestEnergy.webp",
       "genero": {
         "nombre": "Fotografía",
         "detalles": {
@@ -1073,18 +977,16 @@
           "tipo_impresion_estandar": "Gelatina de plata",
           "requiere_revelado_quimico": true
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 13
     },
     {
       "_id": 48,
       "nombre": "The Artist Is Present",
       "fecha_creacion": "2010-01-01",
       "precio": 1200000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/MarinaAbramovic-TheArtistIsPresent.webp",
-      "autores": [
-        13
-      ],
+      "fotografia": "/images/artworks/MarinaAbramovic-TheArtistIsPresent.webp",
       "genero": {
         "nombre": "Fotografía",
         "detalles": {
@@ -1092,18 +994,16 @@
           "tipo_impresion_estandar": "Inyección de tinta",
           "requiere_revelado_quimico": false
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 13
     },
     {
       "_id": 49,
       "nombre": "Contact Portfolio",
       "fecha_creacion": "2014-01-01",
       "precio": 130000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/OlafurEliasson-ContactPortfolio.webp",
-      "autores": [
-        14
-      ],
+      "fotografia": "/images/artworks/OlafurEliasson-ContactPortfolio.webp",
       "genero": {
         "nombre": "Fotografía",
         "detalles": {
@@ -1111,18 +1011,16 @@
           "tipo_impresion_estandar": "Inyección de tinta",
           "requiere_revelado_quimico": false
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 14
     },
     {
       "_id": 50,
       "nombre": "The Weather Project",
       "fecha_creacion": "2003-01-01",
       "precio": 3500000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/OlafurEliasson-TheWeatherProject.webp",
-      "autores": [
-        14
-      ],
+      "fotografia": "/images/artworks/OlafurEliasson-TheWeatherProject.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -1130,18 +1028,16 @@
           "requiere_pedestal": false,
           "clasificacion_espacio": "Interior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 14
     },
     {
       "_id": 51,
       "nombre": "Your Rainbow Panorama",
       "fecha_creacion": "2011-01-01",
       "precio": 4000000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/OlafurEliasson-YourRainbowParonama.webp",
-      "autores": [
-        14
-      ],
+      "fotografia": "/images/artworks/OlafurEliasson-YourRainbowParonama.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -1149,18 +1045,16 @@
           "requiere_pedestal": false,
           "clasificacion_espacio": "Exterior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 14
     },
     {
       "_id": 52,
       "nombre": "727",
       "fecha_creacion": "1996-01-01",
       "precio": 3800000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/TakashiMurakami-727.webp",
-      "autores": [
-        15
-      ],
+      "fotografia": "/images/artworks/TakashiMurakami-727.webp",
       "genero": {
         "nombre": "Pintura",
         "detalles": {
@@ -1168,18 +1062,16 @@
           "soporte_base": "Tabla/Madera",
           "requiere_enmarcado": true
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 15
     },
     {
       "_id": 53,
       "nombre": "Flower Matango",
       "fecha_creacion": "2001-01-01",
       "precio": 2200000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/TakashiMurakami-FlowerMatango.webp",
-      "autores": [
-        15
-      ],
+      "fotografia": "/images/artworks/TakashiMurakami-FlowerMatango.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -1187,18 +1079,16 @@
           "requiere_pedestal": true,
           "clasificacion_espacio": "Interior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 15
     },
     {
       "_id": 54,
       "nombre": "Black Vessel",
       "fecha_creacion": "2020-01-01",
       "precio": 280000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/TheasterGates-BlackVessel.webp",
-      "autores": [
-        16
-      ],
+      "fotografia": "/images/artworks/TheasterGates-BlackVessel.webp",
       "genero": {
         "nombre": "Ceramica",
         "detalles": {
@@ -1206,18 +1096,16 @@
           "tipo_arcilla_base": "Refractario",
           "temperatura_coccion_promedio_celsius": 1000
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 16
     },
     {
       "_id": 55,
       "nombre": "Civil Tapestry 4",
       "fecha_creacion": "2011-01-01",
       "precio": 450000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/TheasterGates-CivilTapestry4.webp",
-      "autores": [
-        16
-      ],
+      "fotografia": "/images/artworks/TheasterGates-CivilTapestry4.webp",
       "genero": {
         "nombre": "Pintura",
         "detalles": {
@@ -1225,18 +1113,16 @@
           "soporte_base": "Otro",
           "requiere_enmarcado": false
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 16
     },
     {
       "_id": 56,
       "nombre": "Marat (Pictures of Garbage)",
       "fecha_creacion": "2008-01-01",
       "precio": 350000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/VikMuniz-Marat.webp",
-      "autores": [
-        17
-      ],
+      "fotografia": "/images/artworks/VikMuniz-Marat.webp",
       "genero": {
         "nombre": "Fotografía",
         "detalles": {
@@ -1244,18 +1130,16 @@
           "tipo_impresion_estandar": "Inyección de tinta",
           "requiere_revelado_quimico": false
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 17
     },
     {
       "_id": 57,
       "nombre": "Sugar Children",
       "fecha_creacion": "1996-01-01",
       "precio": 280000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/VikMuniz-SugarChildren.webp",
-      "autores": [
-        17
-      ],
+      "fotografia": "/images/artworks/VikMuniz-SugarChildren.webp",
       "genero": {
         "nombre": "Fotografía",
         "detalles": {
@@ -1263,18 +1147,16 @@
           "tipo_impresion_estandar": "Gelatina de plata",
           "requiere_revelado_quimico": true
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 17
     },
     {
       "_id": 58,
       "nombre": "A Tale Of Two Dragons",
       "fecha_creacion": "2015-01-01",
       "precio": 1500000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/WallaceChan-ATaleOfTwoDragons.webp",
-      "autores": [
-        18
-      ],
+      "fotografia": "/images/artworks/WallaceChan-ATaleOfTwoDragons.webp",
       "genero": {
         "nombre": "Orfebreria",
         "detalles": {
@@ -1282,18 +1164,16 @@
           "kilataje_estandar": "No Aplica",
           "requiere_certificado_autenticidad": true
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 18
     },
     {
       "_id": 59,
       "nombre": "Fluttery",
       "fecha_creacion": "2018-01-01",
       "precio": 850000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/WallaceChan-Fluttery.webp",
-      "autores": [
-        18
-      ],
+      "fotografia": "/images/artworks/WallaceChan-Fluttery.webp",
       "genero": {
         "nombre": "Orfebreria",
         "detalles": {
@@ -1301,18 +1181,16 @@
           "kilataje_estandar": "18K",
           "requiere_certificado_autenticidad": true
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 18
     },
     {
       "_id": 60,
       "nombre": "Stardust",
       "fecha_creacion": "2017-01-01",
       "precio": 620000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/WallaceChan-Stardust.webp",
-      "autores": [
-        18
-      ],
+      "fotografia": "/images/artworks/WallaceChan-Stardust.webp",
       "genero": {
         "nombre": "Orfebreria",
         "detalles": {
@@ -1320,18 +1198,16 @@
           "kilataje_estandar": "No Aplica",
           "requiere_certificado_autenticidad": true
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 18
     },
     {
       "_id": 61,
       "nombre": "The Wallace Cut",
       "fecha_creacion": "1987-01-01",
       "precio": 3000000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/WallaceChan-TheWallaceCut.webp",
-      "autores": [
-        18
-      ],
+      "fotografia": "/images/artworks/WallaceChan-TheWallaceCut.webp",
       "genero": {
         "nombre": "Orfebreria",
         "detalles": {
@@ -1339,18 +1215,16 @@
           "kilataje_estandar": "22K",
           "requiere_certificado_autenticidad": true
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 18
     },
     {
       "_id": 62,
       "nombre": "Dots Obsession",
       "fecha_creacion": "1997-01-01",
       "precio": 2800000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/YayoiKusama-DotsObsession.webp",
-      "autores": [
-        19
-      ],
+      "fotografia": "/images/artworks/YayoiKusama-DotsObsession.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -1358,18 +1232,16 @@
           "requiere_pedestal": false,
           "clasificacion_espacio": "Interior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 19
     },
     {
       "_id": 63,
       "nombre": "Infinity Nets",
       "fecha_creacion": "1959-01-01",
       "precio": 7100000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/YayoiKusama-InfinityNets.webp",
-      "autores": [
-        19
-      ],
+      "fotografia": "/images/artworks/YayoiKusama-InfinityNets.webp",
       "genero": {
         "nombre": "Pintura",
         "detalles": {
@@ -1377,18 +1249,16 @@
           "soporte_base": "Lienzo",
           "requiere_enmarcado": true
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 19
     },
     {
       "_id": 64,
       "nombre": "Pumpkin",
       "fecha_creacion": "1994-01-01",
       "precio": 4000000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/YayoiKusama-Pumpkin.webp",
-      "autores": [
-        19
-      ],
+      "fotografia": "/images/artworks/YayoiKusama-Pumpkin.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -1396,18 +1266,16 @@
           "requiere_pedestal": false,
           "clasificacion_espacio": "Exterior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 19
     },
     {
       "_id": 65,
       "nombre": "Self Obliteration",
       "fecha_creacion": "1967-01-01",
       "precio": 1500000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/YayoiKusama-SelfObliteration.webp",
-      "autores": [
-        19
-      ],
+      "fotografia": "/images/artworks/YayoiKusama-SelfObliteration.webp",
       "genero": {
         "nombre": "Fotografía",
         "detalles": {
@@ -1415,18 +1283,16 @@
           "tipo_impresion_estandar": "Digital",
           "requiere_revelado_quimico": false
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 19
     },
     {
       "_id": 66,
       "nombre": "The Obliteration Room",
       "fecha_creacion": "2002-01-01",
       "precio": 3200000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/YayoiKusama-TheObliterationRoom.webp",
-      "autores": [
-        19
-      ],
+      "fotografia": "/images/artworks/YayoiKusama-TheObliterationRoom.webp",
       "genero": {
         "nombre": "Escultura",
         "detalles": {
@@ -1434,18 +1300,16 @@
           "requiere_pedestal": false,
           "clasificacion_espacio": "Interior"
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 19
     },
     {
       "_id": 67,
       "nombre": "Mask Series",
       "fecha_creacion": "1996-01-01",
       "precio": 9600000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/ZengFanzhi-MaskSeries.webp",
-      "autores": [
-        20
-      ],
+      "fotografia": "/images/artworks/ZengFanzhi-MaskSeries.webp",
       "genero": {
         "nombre": "Pintura",
         "detalles": {
@@ -1453,18 +1317,16 @@
           "soporte_base": "Lienzo",
           "requiere_enmarcado": true
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 20
     },
     {
       "_id": 68,
       "nombre": "The Last Supper",
       "fecha_creacion": "2001-01-01",
       "precio": 23300000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/ZengFanzhi-TheLastSupper.webp",
-      "autores": [
-        20
-      ],
+      "fotografia": "/images/artworks/ZengFanzhi-TheLastSupper.webp",
       "genero": {
         "nombre": "Pintura",
         "detalles": {
@@ -1472,18 +1334,16 @@
           "soporte_base": "Lienzo",
           "requiere_enmarcado": true
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 20
     },
     {
       "_id": 69,
       "nombre": "Tiananmen",
       "fecha_creacion": "2004-01-01",
       "precio": 4100000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/ZengFanzhi-Tiananmen.webp",
-      "autores": [
-        20
-      ],
+      "fotografia": "/images/artworks/ZengFanzhi-Tiananmen.webp",
       "genero": {
         "nombre": "Pintura",
         "detalles": {
@@ -1491,18 +1351,16 @@
           "soporte_base": "Lienzo",
           "requiere_enmarcado": true
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 20
     },
     {
       "_id": 70,
       "nombre": "Untitled (Bacon)",
       "fecha_creacion": "2010-01-01",
       "precio": 3500000,
-      "estado_obra": "Disponible",
-      "fotografia": "/images/art_previews/ZengFanzhi-Untitled(Bacon).webp",
-      "autores": [
-        20
-      ],
+      "fotografia": "/images/artworks/ZengFanzhi-Untitled(Bacon).webp",
       "genero": {
         "nombre": "Pintura",
         "detalles": {
@@ -1510,7 +1368,9 @@
           "soporte_base": "Lienzo",
           "requiere_enmarcado": true
         }
-      }
+      },
+      "estatus": "Disponible",
+      "artista": 20
     }
   ],
   "nacionalidades": [
@@ -2375,27 +2235,52 @@
     {
       "_id": 1,
       "nombre": "Pintura",
-      "descripcion": ""
+      "descripcion": "",
+      "detalles": {
+        "tecnica_principal": "",
+        "soporte_base": "",
+        "requiere_enmarcado": ""
+      }
     },
     {
       "_id": 2,
       "nombre": "Escultura",
-      "descripcion": ""
+      "descripcion": "",
+      "detalles": {
+        "material_predominante": "",
+        "requiere_pedestal": "",
+        "clasificacion_espacio": ""
+      }
     },
     {
       "_id": 3,
       "nombre": "Fotografía",
-      "descripcion": ""
+      "descripcion": "",
+      "detalles": {
+        "formato_origen": "",
+        "tipo_impresion_estandar": "",
+        "requiere_revelado_quimico": ""
+      }
     },
     {
       "_id": 4,
       "nombre": "Orfebreria",
-      "descripcion": ""
+      "descripcion": "",
+      "detalles": {
+        "metal_base_dominante": "",
+        "kilataje_estandar": "",
+        "requiere_certificado_autenticidad": ""
+      }
     },
     {
       "_id": 5,
       "nombre": "Ceramica",
-      "descripcion": ""
+      "descripcion": "",
+      "detalles": {
+        "tecnica_acabado": "",
+        "tipo_arcilla_base": "",
+        "temperatura_coccion_promedio_celsius": ""
+      }
     }
   ],
   "especializaciones": [

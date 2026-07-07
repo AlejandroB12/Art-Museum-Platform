@@ -139,44 +139,44 @@
     </div>
 </div>
 
-<!-- Autores -->
-<div id="tab-autores" class="tab-content d-none">
+<!-- Artistas -->
+<div id="tab-artistas" class="tab-content d-none">
     <div class="card">
-        <h3 class="card-title">✍️ Agregar Nuevo Autor</h3>
+        <h3 class="card-title">✍️ Agregar Nuevo Artista</h3>
         <div class="form-grid-2col">
             <div>
                 <label class="form-label">Nombre *</label>
-                <input type="text" id="input-autor-nombre" class="edit-input" placeholder="Nombre" class="w-100">
+                <input type="text" id="input-artista-nombre" class="edit-input" placeholder="Nombre" class="w-100">
             </div>
             <div>
                 <label class="form-label">Apellido *</label>
-                <input type="text" id="input-autor-apellido" class="edit-input" placeholder="Apellido" class="w-100">
+                <input type="text" id="input-artista-apellido" class="edit-input" placeholder="Apellido" class="w-100">
             </div>
             <div>
                 <label class="form-label">Nacionalidad</label>
-                <select id="input-autor-nacionalidad" class="edit-input w-100">
+                <select id="input-artista-nacionalidad" class="edit-input w-100">
                     <option value="">— Seleccione —</option>
                 </select>
             </div>
             <div>
                 <label class="form-label">Foto</label>
-                <input type="file" id="input-autor-foto" accept="image/*" class="file-input">
+                <input type="file" id="input-artista-foto" accept="image/*" class="file-input">
             </div>
             <div class="grid-span-all">
                 <label class="form-label">Biografía</label>
-                <textarea id="input-autor-biografia" class="edit-input w-100" placeholder="Breve biografía del autor..." style="height:80px;resize:vertical;"></textarea>
+                <textarea id="input-artista-biografia" class="edit-input w-100" placeholder="Breve biografía del artista..." style="height:80px;resize:vertical;"></textarea>
             </div>
             <div class="form-actions">
-                <button class="btn btn-green btn-lg" onclick="agregarAutor()">➕ Agregar Autor</button>
-                <button class="btn btn-secondary" onclick="limpiarFormAutor()">🔄 Limpiar</button>
+                <button class="btn btn-green btn-lg" onclick="agregarArtista()">➕ Agregar Artista</button>
+                <button class="btn btn-secondary" onclick="limpiarFormArtista()">🔄 Limpiar</button>
             </div>
         </div>
     </div>
     <div class="card">
-        <h3 class="card-title">📋 Autores Existentes</h3>
+        <h3 class="card-title">📋 Artistas Existentes</h3>
         <div class="filter-bar">
-            <input type="text" id="buscador-autores" placeholder="🔍 Buscar autor por nombre, apellido o nacionalidad..." oninput="filtrarAutores()" class="filter-input">
-            <span id="autores-count" class="counter-text"></span>
+            <input type="text" id="buscador-artistas" placeholder="🔍 Buscar artista por nombre, apellido o nacionalidad..." oninput="filtrarArtistas()" class="filter-input">
+            <span id="artistas-count" class="counter-text"></span>
         </div>
         <div class="table-wrapper">
             <table>
@@ -191,7 +191,7 @@
                         <th>Acción</th>
                     </tr>
                 </thead>
-                <tbody id="body-autores"></tbody>
+                <tbody id="body-artistas"></tbody>
             </table>
         </div>
     </div>
@@ -233,12 +233,12 @@
                 <input type="file" id="input-obra-foto" accept="image/*" class="file-input">
             </div>
             <div class="grid-span-all">
-                <label class="form-label">Autor(es)</label>
-                <div id="autor-selector-container" class="autocomplete-container">
-                    <input type="text" id="input-buscar-autor" placeholder="Escriba para buscar autor..." autocomplete="off" class="autocomplete-input" onfocus="abrirDropdownAutores()" oninput="filtrarDropdownAutores()" onkeydown="if(event.key==='Escape')cerrarDropdownAutores()">
-                    <div id="autor-dropdown" class="autocomplete-dropdown"></div>
+                <label class="form-label">Artista(s)</label>
+                <div id="artista-selector-container" class="autocomplete-container">
+                    <input type="text" id="input-buscar-artista" placeholder="Escriba para buscar artista..." autocomplete="off" class="autocomplete-input" onfocus="abrirDropdownArtistas()" oninput="filtrarDropdownArtistas()" onkeydown="if(event.key==='Escape')cerrarDropdownArtistas()">
+                    <div id="artista-dropdown" class="autocomplete-dropdown"></div>
                 </div>
-                <div id="autores-seleccionados" class="selected-tags-container"></div>
+                <div id="artistas-seleccionados" class="selected-tags-container"></div>
             </div>
             <div class="form-actions">
                 <button class="btn btn-green btn-lg" onclick="agregarObra()">➕ Agregar Obra</button>
@@ -399,8 +399,7 @@ function renderizarInventario(data) {
 
 async function cargarObrasGestion() {
     try {
-        const res = await fetch('/api/obras-admin');
-        inventarioData = await res.json();
+        inventarioData = await AdminController.getArtworks();
         renderizarInventario(inventarioData);
         document.getElementById('buscador-inventario').value = '';
     } catch (error) {
@@ -417,12 +416,7 @@ async function actualizarObra(id, btn) {
     };
 
     try {
-        const res = await fetch(`/api/obras-admin/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-        const result = await res.json();
+        const result = await AdminController.updateArtwork(id, body);
         if (result.success) {
             alert("✅ Obra actualizada correctamente");
             cargarObrasGestion();
@@ -480,13 +474,7 @@ function renderizarFacturacion(data) {
 async function cargarReservadas() {
     try {
         console.log('Cargando obras reservadas...');
-        const res = await fetch('/api/obras-reservadas');
-
-        if (!res.ok) {
-            throw new Error(`Error HTTP: ${res.status}`);
-        }
-
-        facturacionData = await res.json();
+        facturacionData = await AdminController.getReservedArtworks();
         console.log('Obras reservadas obtenidas:', facturacionData);
 
         document.getElementById('buscador-facturacion').value = '';
@@ -640,18 +628,9 @@ async function prepararFactura(id_obra, precio, nombreObra, btn) {
                 ...datosExtra
             };
 
-            const response = await fetch('/generar-factura', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
+            const result = await AdminController.generateInvoice(body);
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || `Error HTTP: ${response.status}`);
-            }
-
-            return await response.json();
+            return result;
         };
 
         let result = await enviarFactura({});
@@ -672,7 +651,7 @@ async function prepararFactura(id_obra, precio, nombreObra, btn) {
                 );
 
                 if (registrarEnvio) {
-                    window.open(`/private/shipping-address.html?id_factura=${result.id_factura}`, '_blank');
+                    window.open(`/shipping?id_factura=${result.id_factura}`, '_blank');
                 }
             } else {
                 alert(`✅ Factura #${result.id_factura} generada con éxito`);
@@ -721,12 +700,7 @@ async function buscarCompradorModal() {
     const body = isEmail ? { email: q } : { cedula: q };
 
     try {
-        const res = await fetch('/api/buscar-comprador', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-        const data = await res.json();
+        const data = await AdminController.searchBuyer(body);
         if (data.success && data.found) {
             const u = data.usuario;
             document.getElementById('modal-nombre').value = u.Nombre || '';
@@ -774,7 +748,7 @@ async function confirmarCompradorModal() {
             generarPDFFactura(result.datos);
             if (result.mostrarEnvio) {
                 if (confirm(`✅ Factura #${result.id_factura} generada con éxito.\n\n¿Desea registrar el envío de esta obra ahora?`)) {
-                    window.open(`/private/shipping-address.html?id_factura=${result.id_factura}`, '_blank');
+                    window.open(`/shipping?id_factura=${result.id_factura}`, '_blank');
                 }
             } else {
                 alert(`✅ Factura #${result.id_factura} generada con éxito`);
@@ -813,9 +787,7 @@ async function consultarObras() {
     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Consultando...</td></tr>';
 
     try {
-        const res = await fetch(`/consultas/obras-vendidas?fecha_inicio=${inicio}&fecha_fin=${fin}`);
-        if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
-        const data = await res.json();
+        const data = await AdminController.getSoldArtworks(inicio, fin);
         renderizarReporte('tabla-obras-vendidas', data.map(d =>
             `<tr><td>${d.id_factura}</td><td>${d.Obra || ''}</td><td>$${(d.Total_Pagado || 0).toLocaleString()}</td><td>${d.Fecha || ''}</td></tr>`
         ).join(''), 4);
@@ -836,9 +808,7 @@ async function consultarFacturacion() {
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Consultando...</td></tr>';
 
     try {
-        const res = await fetch(`/consultas/resumen-facturacion?fecha_inicio=${inicio}&fecha_fin=${fin}`);
-        if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
-        const data = await res.json();
+        const data = await AdminController.getBillingSummary(inicio, fin);
         renderizarReporte('tabla-facturacion', data.map(d =>
             `<tr><td>${d.id_factura}</td><td>${d.Obra || ''}</td><td>$${(d.Precio_Obra || 0).toLocaleString()}</td><td>${d.Porcentaje_Museo || 0}%</td><td>$${(d.Ganancia_Museo || 0).toLocaleString()}</td><td>$${(d.Total_Recaudado || 0).toLocaleString()}</td><td>${d.Fecha || ''}</td></tr>`
         ).join(''), 7);
@@ -859,13 +829,7 @@ async function consultarMembresias() {
 
     try {
         console.log('Consultando membresías desde:', inicio, 'hasta:', fin);
-        const res = await fetch(`/consultas/resumen-membresias?fecha_inicio=${inicio}&fecha_fin=${fin}`);
-
-        if (!res.ok) {
-            throw new Error(`Error HTTP: ${res.status}`);
-        }
-
-        const data = await res.json();
+        const data = await AdminController.getMembershipSummary(inicio, fin);
         console.log('Datos de membresías recibidos:', data);
 
         const tbody = document.querySelector('#tabla-membresias tbody');
@@ -916,8 +880,7 @@ function generarPDF(tablaId, titulo) {
 // === GÉNEROS ===
 async function cargarGeneros() {
     try {
-        const res = await fetch('/api/generos');
-        const generos = await res.json();
+        const generos = await AdminController.getGenres();
         const tbody = document.getElementById('body-generos');
         if (generos.length === 0) {
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:30px;">No hay géneros registrados</td></tr>';
@@ -960,12 +923,7 @@ async function agregarGenero() {
     });
 
     try {
-        const res = await fetch('/api/generos', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nombre, atributos: atributos.length ? atributos : undefined })
-        });
-        const result = await res.json();
+        const result = await AdminController.createGenre({ nombre, atributos: atributos.length ? atributos : undefined });
         if (result.success) {
             document.getElementById('input-genero-nombre').value = '';
             document.getElementById('body-atributos').innerHTML = '';
@@ -983,8 +941,7 @@ async function eliminarGenero(id, btn) {
     if (!confirm('¿Eliminar este género?')) return;
     btn.disabled = true;
     try {
-        const res = await fetch(`/api/generos/${id}`, { method: 'DELETE' });
-        const result = await res.json();
+        const result = await AdminController.deleteGenre(id);
         if (result.success) {
             const fila = document.getElementById(`genero-fila-${id}`);
             if (fila) {
@@ -1003,27 +960,26 @@ async function eliminarGenero(id, btn) {
 }
 
 // === AUTORES ===
-let todosLosAutores = [];
+let todosLosArtistas = [];
 
-async function cargarAutores() {
+async function cargarArtistas() {
     try {
-        const res = await fetch('/api/autores-admin');
-        const data = await res.json();
-        todosLosAutores = data;
-        const tbody = document.getElementById('body-autores');
+        const data = await AdminController.getAuthors();
+        todosLosArtistas = data;
+        const tbody = document.getElementById('body-artistas');
         if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;">No hay autores registrados</td></tr>';
-            document.getElementById('autores-count').textContent = '';
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;">No hay artistas registrados</td></tr>';
+            document.getElementById('artistas-count').textContent = '';
             return;
         }
-        renderizarAutores(data);
+        renderizarArtistas(data);
     } catch (error) {
-        console.error('Error cargando autores:', error);
+        console.error('Error cargando artistas:', error);
     }
 }
 
-function renderizarAutores(lista) {
-    const tbody = document.getElementById('body-autores');
+function renderizarArtistas(lista) {
+    const tbody = document.getElementById('body-artistas');
     tbody.innerHTML = lista.map(a => `
         <tr>
             <td>${a.id}</td>
@@ -1033,41 +989,41 @@ function renderizarAutores(lista) {
             <td>${a.nacionalidad || '—'}</td>
             <td>${a.biografia || '—'}</td>
             <td>
-                <button class="btn btn-red" onclick="eliminarAutor(${a.id}, this)">🗑️ Eliminar</button>
+                <button class="btn btn-red" onclick="eliminarArtista(${a.id}, this)">🗑️ Eliminar</button>
             </td>
         </tr>
     `).join('');
-    document.getElementById('autores-count').textContent = `${lista.length} de ${todosLosAutores.length} autor(es)`;
+    document.getElementById('artistas-count').textContent = `${lista.length} de ${todosLosArtistas.length} artista(s)`;
 }
 
-function filtrarAutores() {
-    const q = document.getElementById('buscador-autores').value.toLowerCase();
-    if (!q) return renderizarAutores(todosLosAutores);
-    const filtrados = todosLosAutores.filter(a =>
+function filtrarArtistas() {
+    const q = document.getElementById('buscador-artistas').value.toLowerCase();
+    if (!q) return renderizarArtistas(todosLosArtistas);
+    const filtrados = todosLosArtistas.filter(a =>
         (a.nombre + ' ' + a.apellido).toLowerCase().includes(q) ||
         (a.nacionalidad || '').toLowerCase().includes(q)
     );
-    renderizarAutores(filtrados);
+    renderizarArtistas(filtrados);
 }
 
-function limpiarFormAutor() {
-    document.getElementById('input-autor-nombre').value = '';
-    document.getElementById('input-autor-apellido').value = '';
-    document.getElementById('input-autor-nacionalidad').value = '';
-    document.getElementById('input-autor-biografia').value = '';
-    const fi = document.getElementById('input-autor-foto');
+function limpiarFormArtista() {
+    document.getElementById('input-artista-nombre').value = '';
+    document.getElementById('input-artista-apellido').value = '';
+    document.getElementById('input-artista-nacionalidad').value = '';
+    document.getElementById('input-artista-biografia').value = '';
+    const fi = document.getElementById('input-artista-foto');
     if (fi) fi.value = '';
 }
 
-async function agregarAutor() {
-    const nombre = document.getElementById('input-autor-nombre').value.trim();
-    const apellido = document.getElementById('input-autor-apellido').value.trim();
-    const nacionalidad = document.getElementById('input-autor-nacionalidad').value.trim();
-    const biografia = document.getElementById('input-autor-biografia').value.trim();
-    const fotoInput = document.getElementById('input-autor-foto');
+async function agregarArtista() {
+    const nombre = document.getElementById('input-artista-nombre').value.trim();
+    const apellido = document.getElementById('input-artista-apellido').value.trim();
+    const nacionalidad = document.getElementById('input-artista-nacionalidad').value.trim();
+    const biografia = document.getElementById('input-artista-biografia').value.trim();
+    const fotoInput = document.getElementById('input-artista-foto');
 
     if (!nombre || !apellido) {
-        alert('Por favor ingrese nombre y apellido del autor');
+        alert('Por favor ingrese nombre y apellido del artista');
         return;
     }
 
@@ -1079,48 +1035,42 @@ async function agregarAutor() {
         reader.onload = async function (e) {
             body.fotografia_base64 = e.target.result;
             body.fotografia_nombre = file.name;
-            await enviarAutor(body);
+            await enviarArtista(body);
         };
         reader.readAsDataURL(file);
     } else {
-        await enviarAutor(body);
+        await enviarArtista(body);
     }
 }
 
-async function enviarAutor(body) {
+async function enviarArtista(body) {
     try {
-        const res = await fetch('/api/autores-admin', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-        const result = await res.json();
+        const result = await AdminController.createAuthor(body);
         if (result.success) {
-            alert('✅ Autor agregado correctamente');
-            document.getElementById('input-autor-nombre').value = '';
-            document.getElementById('input-autor-apellido').value = '';
-            document.getElementById('input-autor-nacionalidad').value = '';
-            document.getElementById('input-autor-biografia').value = '';
-            document.getElementById('input-autor-foto').value = '';
-            cargarAutores();
+            alert('✅ Artista agregado correctamente');
+            document.getElementById('input-artista-nombre').value = '';
+            document.getElementById('input-artista-apellido').value = '';
+            document.getElementById('input-artista-nacionalidad').value = '';
+            document.getElementById('input-artista-biografia').value = '';
+            document.getElementById('input-artista-foto').value = '';
+            cargarArtistas();
         } else {
-            alert('❌ ' + (result.message || 'Error al agregar autor'));
+            alert('❌ ' + (result.message || 'Error al agregar artista'));
         }
     } catch (error) {
-        console.error('Error agregando autor:', error);
-        alert('❌ Error al agregar autor');
+        console.error('Error agregando artista:', error);
+        alert('❌ Error al agregar artista');
     }
 }
 
-async function eliminarAutor(id, btn) {
-    if (!confirm('¿Eliminar este autor? Las obras vinculadas podrían verse afectadas.')) return;
+async function eliminarArtista(id, btn) {
+    if (!confirm('¿Eliminar este artista? Las obras vinculadas podrían verse afectadas.')) return;
     btn.disabled = true;
 
     try {
-        const res = await fetch(`/api/autores-admin/${id}`, { method: 'DELETE' });
-        const result = await res.json();
+        const result = await AdminController.deleteAuthor(id);
         if (result.success) {
-            const fila = document.getElementById(`autor-fila-${id}`);
+            const fila = document.getElementById(`artista-fila-${id}`);
             if (fila) {
                 fila.style.transition = 'all 0.4s ease';
                 fila.style.opacity = '0';
@@ -1131,8 +1081,8 @@ async function eliminarAutor(id, btn) {
             alert('❌ ' + (result.message || 'Error al eliminar'));
         }
     } catch (error) {
-        console.error('Error eliminando autor:', error);
-        alert('❌ Error al eliminar autor');
+        console.error('Error eliminando artista:', error);
+        alert('❌ Error al eliminar artista');
     } finally {
         btn.disabled = false;
     }
@@ -1140,9 +1090,8 @@ async function eliminarAutor(id, btn) {
 
 async function cargarNacionalidades() {
     try {
-        const res = await fetch('/api/nacionalidades');
-        const data = await res.json();
-        const sel = document.getElementById('input-autor-nacionalidad');
+        const data = await AdminController.getNationalities();
+        const sel = document.getElementById('input-artista-nacionalidad');
         sel.innerHTML = '<option value="">— Seleccione —</option>' +
             data.map(n => `<option value="${n.descripcion}">${n.descripcion}</option>`).join('');
     } catch (error) {
@@ -1153,8 +1102,7 @@ async function cargarNacionalidades() {
 // === OBRAS ===
 async function cargarGenerosSelect() {
     try {
-        const res = await fetch('/api/generos');
-        const data = await res.json();
+        const data = await AdminController.getGenres();
         const sel = document.getElementById('input-obra-genero');
         sel.innerHTML = '<option value="">— Seleccione —</option>' +
             data.map(g => `<option value="${g.nombre}">${g.nombre}</option>`).join('');
@@ -1163,35 +1111,34 @@ async function cargarGenerosSelect() {
     }
 }
 
-let autoresDropdownData = [];
-let autoresSeleccionados = [];
+let artistasDropdownData = [];
+let artistasSeleccionados = [];
 
-async function cargarAutoresSelect() {
+async function cargarArtistasSelect() {
     try {
-        const res = await fetch('/api/autores-admin');
-        const data = await res.json();
-        autoresDropdownData = data;
+        const data = await AdminController.getAuthors();
+        artistasDropdownData = data;
     } catch (error) {
-        console.error('Error cargando autores:', error);
+        console.error('Error cargando artistas:', error);
     }
 }
 
-function abrirDropdownAutores() {
-    const dd = document.getElementById('autor-dropdown');
-    if (autoresDropdownData.length === 0) return;
-    filtrarDropdownAutores();
+function abrirDropdownArtistas() {
+    const dd = document.getElementById('artista-dropdown');
+    if (artistasDropdownData.length === 0) return;
+    filtrarDropdownArtistas();
     dd.style.display = 'block';
 }
 
-function cerrarDropdownAutores() {
-    document.getElementById('autor-dropdown').style.display = 'none';
+function cerrarDropdownArtistas() {
+    document.getElementById('artista-dropdown').style.display = 'none';
 }
 
-function filtrarDropdownAutores() {
-    const q = document.getElementById('input-buscar-autor').value.toLowerCase();
-    const dd = document.getElementById('autor-dropdown');
-    const idsSel = new Set(autoresSeleccionados.map(a => a.id));
-    const filtrados = autoresDropdownData.filter(a =>
+function filtrarDropdownArtistas() {
+    const q = document.getElementById('input-buscar-artista').value.toLowerCase();
+    const dd = document.getElementById('artista-dropdown');
+    const idsSel = new Set(artistasSeleccionados.map(a => a.id));
+    const filtrados = artistasDropdownData.filter(a =>
         !idsSel.has(a.id) &&
         (!q || (a.nombre + ' ' + a.apellido).toLowerCase().includes(q))
     );
@@ -1199,45 +1146,44 @@ function filtrarDropdownAutores() {
         dd.innerHTML = '<div style="padding:10px;color:#718096;">Sin resultados</div>';
     } else {
         dd.innerHTML = filtrados.map(a =>
-            `<div onclick="seleccionarAutor(${a.id},'${a.nombre.replace(/'/g,"\\'")}','${a.apellido.replace(/'/g,"\\'")}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid #2d3748;transition:background 0.15s;" onmouseover="this.style.background='#1f2937'" onmouseout="this.style.background='transparent'">${a.nombre} ${a.apellido}</div>`
+            `<div onclick="seleccionarArtista(${a.id},'${a.nombre.replace(/'/g,"\\'")}','${a.apellido.replace(/'/g,"\\'")}')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid #2d3748;transition:background 0.15s;" onmouseover="this.style.background='#1f2937'" onmouseout="this.style.background='transparent'">${a.nombre} ${a.apellido}</div>`
         ).join('');
     }
     dd.style.display = 'block';
 }
 
-function seleccionarAutor(id, nombre, apellido) {
-    const a = autoresDropdownData.find(x => x.id === id);
+function seleccionarArtista(id, nombre, apellido) {
+    const a = artistasDropdownData.find(x => x.id === id);
     if (!a) return;
-    if (autoresSeleccionados.some(x => x.id === id)) return;
-    autoresSeleccionados.push(a);
-    document.getElementById('input-buscar-autor').value = '';
-    renderizarTagsAutores();
-    cerrarDropdownAutores();
-    document.getElementById('input-buscar-autor').focus();
+    if (artistasSeleccionados.some(x => x.id === id)) return;
+    artistasSeleccionados.push(a);
+    document.getElementById('input-buscar-artista').value = '';
+    renderizarTagsArtistas();
+    cerrarDropdownArtistas();
+    document.getElementById('input-buscar-artista').focus();
 }
 
-function removerAutorSeleccionado(id) {
-    autoresSeleccionados = autoresSeleccionados.filter(a => a.id !== id);
-    renderizarTagsAutores();
+function removerArtistaSeleccionado(id) {
+    artistasSeleccionados = artistasSeleccionados.filter(a => a.id !== id);
+    renderizarTagsArtistas();
 }
 
-function renderizarTagsAutores() {
-    const container = document.getElementById('autores-seleccionados');
-    container.innerHTML = autoresSeleccionados.map(a =>
-        `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#1f2937;border:1px solid #374151;border-radius:20px;font-size:0.85rem;color:#e2e8f0;">${a.nombre} ${a.apellido} <span onclick="removerAutorSeleccionado(${a.id})" style="cursor:pointer;color:#ef4444;font-weight:bold;margin-left:2px;">&times;</span></span>`
+function renderizarTagsArtistas() {
+    const container = document.getElementById('artistas-seleccionados');
+    container.innerHTML = artistasSeleccionados.map(a =>
+        `<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#1f2937;border:1px solid #374151;border-radius:20px;font-size:0.85rem;color:#e2e8f0;">${a.nombre} ${a.apellido} <span onclick="removerArtistaSeleccionado(${a.id})" style="cursor:pointer;color:#ef4444;font-weight:bold;margin-left:2px;">&times;</span></span>`
     ).join('');
 }
 
-function obtenerIdsAutoresSeleccionados() {
-    return autoresSeleccionados.map(a => a.id);
+function obtenerIdsArtistasSeleccionados() {
+    return artistasSeleccionados.map(a => a.id);
 }
 
 let todasLasObras = [];
 
 async function cargarObrasAdmin() {
     try {
-        const res = await fetch('/api/obras-admin');
-        const data = await res.json();
+        const data = await AdminController.getArtworks();
         todasLasObras = data;
         const tbody = document.getElementById('body-obras');
         if (data.length === 0) {
@@ -1285,9 +1231,9 @@ function limpiarFormObra() {
     document.getElementById('input-obra-precio').value = '';
     document.getElementById('input-obra-estado').value = 'Disponible';
     document.getElementById('input-obra-genero').value = '';
-    document.getElementById('input-buscar-autor').value = '';
-    autoresSeleccionados = [];
-    renderizarTagsAutores();
+    document.getElementById('input-buscar-artista').value = '';
+    artistasSeleccionados = [];
+    renderizarTagsArtistas();
     const fi = document.getElementById('input-obra-foto');
     if (fi) fi.value = '';
 }
@@ -1299,7 +1245,7 @@ async function agregarObra() {
     const estado_obra = document.getElementById('input-obra-estado').value;
     const genero_nombre = document.getElementById('input-obra-genero').value;
     const fotoInput = document.getElementById('input-obra-foto');
-    const autores_ids = obtenerIdsAutoresSeleccionados();
+    const autores_ids = obtenerIdsArtistasSeleccionados();
 
     if (!nombre) {
         alert('Por favor ingrese el nombre de la obra');
@@ -1328,12 +1274,7 @@ async function agregarObra() {
 
 async function enviarObra(body) {
     try {
-        const res = await fetch('/api/obras-admin', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-        const result = await res.json();
+        const result = await AdminController.createArtwork(body);
         if (result.success) {
             alert('✅ Obra agregada correctamente');
             document.getElementById('input-obra-nombre').value = '';
@@ -1357,8 +1298,7 @@ async function eliminarObra(id, btn) {
     btn.disabled = true;
 
     try {
-        const res = await fetch(`/api/obras-admin/${id}`, { method: 'DELETE' });
-        const result = await res.json();
+        const result = await AdminController.deleteArtwork(id);
         if (result.success) {
             const fila = document.getElementById(`obra-fila-${id}`);
             if (fila) {
@@ -1382,8 +1322,7 @@ async function eliminarObra(id, btn) {
 let contadorAtributos = 0;
 let PRECARGAS_ATRIBUTOS = {};
 
-fetch('/api/precargas-atributos')
-    .then(r => r.json())
+AdminController.getPreloadedAttributes()
     .then(d => { PRECARGAS_ATRIBUTOS = d; })
     .catch(() => {});
 
@@ -1433,9 +1372,8 @@ function escHtml(str) {
 async function cargarTendencias() {
     try {
         // Artistas populares
-        const resArtistas = await fetch('/api/recomendaciones/artistas-populares');
-        if (resArtistas.ok) {
-            const artistas = await resArtistas.json();
+        const artistas = await RecommendationsController.getPopularArtists();
+        if (artistas) {
             const container = document.getElementById('pop-artistas');
             if (artistas.length === 0) {
                 container.innerHTML = '<p style="color:#a0aec0;">Sin datos aún</p>';
@@ -1450,9 +1388,8 @@ async function cargarTendencias() {
         }
 
         // Géneros populares
-        const resGeneros = await fetch('/api/recomendaciones/generos-populares');
-        if (resGeneros.ok) {
-            const generos = await resGeneros.json();
+        const generos = await RecommendationsController.getPopularGenres();
+        if (generos) {
             const container = document.getElementById('pop-generos');
             if (generos.length === 0) {
                 container.innerHTML = '<p style="color:#a0aec0;">Sin datos aún</p>';
@@ -1467,9 +1404,8 @@ async function cargarTendencias() {
         }
 
         // Estadísticas del grafo
-        const resStats = await fetch('/api/grafo/estadisticas');
-        if (resStats.ok) {
-            const stats = await resStats.json();
+        const stats = await RecommendationsController.getGraphStats();
+        if (stats) {
             const container = document.getElementById('grafo-stats');
             let html = '';
             if (stats.nodos) {
@@ -1499,7 +1435,7 @@ async function cargarTendencias() {
 let datosFacturaPendiente = null;
 
 document.addEventListener('click', function(e) {
-    const c = document.getElementById('autor-selector-container');
-    if (c && !c.contains(e.target)) cerrarDropdownAutores();
+    const c = document.getElementById('artista-selector-container');
+    if (c && !c.contains(e.target)) cerrarDropdownArtistas();
 });
 </script>

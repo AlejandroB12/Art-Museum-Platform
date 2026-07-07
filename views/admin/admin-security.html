@@ -82,8 +82,7 @@
 function cargarObrasConHistorial() {
     const sel = document.getElementById('he-obra-select');
     sel.innerHTML = '<option value="">Cargando...</option>';
-    fetch('/cassandra/obras-con-historial')
-        .then(r => r.json())
+    AdminController.getArtworksWithHistory()
         .then(res => {
             sel.innerHTML = '<option value="">-- Seleccione una obra --</option>';
             if (res.success && res.data.length > 0) {
@@ -105,8 +104,7 @@ function cargarHistorialEstatus() {
     if (!idObra) { alert('Seleccione una obra'); return; }
     const tbody = document.querySelector('#tabla-historial-estatus tbody');
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Cargando...</td></tr>';
-    fetch(`/cassandra/historial-estatus-obra?id_obra=${idObra}`)
-        .then(r => r.json())
+    AdminController.getArtworkStatusHistory(idObra)
         .then(res => {
             if (!res.success || !res.data || res.data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#718096;">Sin registros de cambios de estatus</td></tr>';
@@ -143,8 +141,7 @@ function cargarLogsSeguridad() {
     const filtro = document.getElementById('log-filtro-tipo').value;
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Cargando registros...</td></tr>';
 
-    fetch('/api/logs-seguridad')
-        .then(r => r.json())
+    AdminController.getSecurityLogs()
         .then(res => {
             if (!res.success || !res.data || res.data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#718096;">No hay registros de seguridad en Cassandra</td></tr>';

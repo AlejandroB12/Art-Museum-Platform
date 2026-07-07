@@ -20,10 +20,33 @@ app.use('/api/', limiter);
 app.use(express.static(path.join(__dirname, '..', '..', 'views')));
 app.use(express.static(path.join(__dirname, '..', '..', 'assets')));
 app.use('/images', express.static(path.join(__dirname, '..', '..', 'assets', 'images')));
+app.use('/controllers', express.static(path.join(__dirname, '..', '..', 'controllers')));
 
-app.get('/', (req, res) => {
-    res.redirect('/public/home.html');
-});
+const viewsPath = path.join(__dirname, '..', '..', 'views');
+
+// Clean URL routes
+// Public
+app.get('/', (req, res) => res.sendFile(path.join(viewsPath, 'public', 'home.html')));
+app.get('/home', (req, res) => res.sendFile(path.join(viewsPath, 'public', 'home.html')));
+app.get('/login', (req, res) => res.sendFile(path.join(viewsPath, 'public', 'login.html')));
+app.get('/register', (req, res) => res.sendFile(path.join(viewsPath, 'public', 'register.html')));
+app.get('/catalog/artwork', (req, res) => res.sendFile(path.join(viewsPath, 'public', 'art-catalog.html')));
+app.get('/catalog/artist', (req, res) => res.sendFile(path.join(viewsPath, 'public', 'artist-catalog.html')));
+app.get('/artist/profile/:name', (req, res) => res.sendFile(path.join(viewsPath, 'public', 'artist-profile.html')));
+
+// Private
+app.get('/dashboard', (req, res) => res.sendFile(path.join(viewsPath, 'private', 'user-dashboard.html')));
+app.get('/checkout', (req, res) => res.sendFile(path.join(viewsPath, 'private', 'checkout.html')));
+app.get('/shipping', (req, res) => res.sendFile(path.join(viewsPath, 'private', 'shipping-address.html')));
+app.get('/recovery', (req, res) => res.sendFile(path.join(viewsPath, 'private', 'password-recovery.html')));
+app.get('/security-questions', (req, res) => res.sendFile(path.join(viewsPath, 'private', 'security-questions.html')));
+app.get('/pending-activation', (req, res) => res.sendFile(path.join(viewsPath, 'private', 'pending-activation.html')));
+
+// Admin
+app.get('/admin', (req, res) => res.sendFile(path.join(viewsPath, 'admin', 'admin-dashboard.html')));
+app.get('/admin/users', (req, res) => res.sendFile(path.join(viewsPath, 'admin', 'admin-users.html')));
+app.get('/admin/catalog', (req, res) => res.sendFile(path.join(viewsPath, 'admin', 'admin-catalog.html')));
+app.get('/admin/security', (req, res) => res.sendFile(path.join(viewsPath, 'admin', 'admin-security.html')));
 
 app.get('/health', (req, res) => {
     res.json({ success: true, service: 'gateway', timestamp: new Date().toISOString() });
