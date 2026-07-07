@@ -3,7 +3,7 @@ const router = express.Router();
 const { validateQuery, validateParams } = require('../../../../shared/middlewares/validate_middleware');
 const idSchema = require('../schemas/id_schema');
 const artistDetailSchema = require('../schemas/artist_detail_schema');
-const { listArtistas, getArtistaDetalle, listArtistasCatalogo } = require('../services/artist_service');
+const { listArtistas, getArtistaDetalle, listArtistasCatalogo, getArtistaByName } = require('../services/artist_service');
 
 /**
  * @swagger
@@ -95,6 +95,18 @@ router.get('/artists/catalog', async (req, res, next) => {
     try {
         const artistas = await listArtistasCatalogo();
         res.json(artistas);
+    } catch (err) {
+        next(err);
+    }
+});
+
+router.get('/artists/by-name/:name', async (req, res, next) => {
+    try {
+        const result = await getArtistaByName(req.params.name);
+        if (!result) {
+            return res.status(404).json({ success: false, message: 'Artista no encontrado' });
+        }
+        res.json(result);
     } catch (err) {
         next(err);
     }

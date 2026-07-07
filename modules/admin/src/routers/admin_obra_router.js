@@ -216,49 +216,49 @@ router.get('/api/precargas-atributos', (req, res) => {
     res.json(adminService.getPrecargasAtributos());
 });
 
-router.get('/api/autores-admin', async (req, res) => {
+router.get('/api/artistas-admin', async (req, res) => {
 
     try 
     {
-        const autores = await adminService.listAutoresAdmin();
-        res.json(autores);
+        const artistas = await adminService.listArtistasAdmin();
+        res.json(artistas);
     } 
     
     catch (err) 
     {
-        res.status(500).json({ success: false, message: 'Error al obtener autores' });
+        res.status(500).json({ success: false, message: 'Error al obtener artistas' });
     }
 });
 
-router.post('/api/autores-admin', async (req, res) => {
+router.post('/api/artistas-admin', async (req, res) => {
 
     try 
     {
-        const result = await adminService.createAutorAdmin(req.body);
-        res.json({ success: true, message: 'Autor agregado correctamente', id: result.id });
+        const result = await adminService.createArtistaAdmin(req.body);
+        res.json({ success: true, message: 'Artista agregado correctamente', id: result.id });
     } 
 
     catch (err) 
     {
         const statusCode = err.statusCode || 500;
-        res.status(statusCode).json({ success: false, message: err.message || 'Error al crear autor' });
+        res.status(statusCode).json({ success: false, message: err.message || 'Error al crear artista' });
     }
 });
 
-router.delete('/api/autores-admin/:id', async (req, res) => {
+router.delete('/api/artistas-admin/:id', async (req, res) => {
 
     try 
     {
-        await adminService.deleteAutorAdmin(parseInt(req.params.id));
-        res.json({ success: true, message: 'Autor eliminado correctamente' });
+        await adminService.deleteArtistaAdmin(parseInt(req.params.id));
+        res.json({ success: true, message: 'Artista eliminado correctamente' });
     } 
     
     catch (err) 
     {
-        if (err.message === "Autor no encontrado") 
+        if (err.message === "Artista no encontrado") 
             return res.status(404).json({ success: false, message: err.message });
         
-        res.status(500).json({ success: false, message: 'Error al eliminar autor' });
+        res.status(500).json({ success: false, message: 'Error al eliminar artista' });
     }
 });
 

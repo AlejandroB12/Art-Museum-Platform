@@ -4,10 +4,7 @@ const session = require('express-session');
 const mongoose = require('mongoose');
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '..', '..', '.env') });
 
-const PORT = parseInt(process.env.CATALOG_SERVICE_PORT, 10);
-if (!PORT) {
-    throw new Error('CATALOG_SERVICE_PORT no está definido en .env');
-}
+const PORT = parseInt(process.env.CATALOG_SERVICE_PORT, 10) || 3002;
 
 const { connectMongoDB } = require('./config/database');
 const getSessionConfig = require('../../../shared/middlewares/session_config');

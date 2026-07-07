@@ -45,4 +45,21 @@ async function findBySearch(query, select = '_id')
     return Artist.find({ $or: [{ nombre: regex }, { apellido: regex }] }).select(select).lean();
 }
 
-module.exports = {findAll, findById, findMaxId, create, findByIdAndDelete, aggregate, findByIdAndUpdate, findBySearch};
+async function findByFullName(name) {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`^${escaped}$`, 'i');
+    const pipeline = [
+        {
+            $addFields: {
+                fullName: {
+                    $toLower: { $concat: ['$nombre', '$apellido'] }
+                }
+            }
+        },
+        { $match: { fullName: regex } }
+    ];
+    const [result] = await Artist.aggregate(pipeline);
+    return result || null;
+}
+
+module.exports = {findAll, findById, findMaxId, create, findByIdAndDelete, aggregate, findByIdAndUpdate, findBySearch, findByFullName};

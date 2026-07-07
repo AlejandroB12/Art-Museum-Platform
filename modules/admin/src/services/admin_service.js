@@ -5,7 +5,7 @@ const invoiceRepo = require('../repositories/invoice_repository');
 const membershipRepo = require('../repositories/membership_repository');
 const geographyRepo = require('../repositories/geography_repository');
 const obraRepo = require('../repositories/obra_repository');
-const autorRepo = require('../repositories/autor_repository');
+const autorRepo = require('../repositories/artista_repository');
 const generoRepo = require('../repositories/genero_repository');
 const nacionalidadRepo = require('../repositories/nacionalidad_repository');
 const auditRepo = require('../repositories/audit_repository');
@@ -449,15 +449,15 @@ async function deleteGenero(id) {
     if (!result) throw Object.assign(new Error("Género no encontrado"), { statusCode: 404 });
 }
 
-async function listAutoresAdmin() {
-    const autores = await autorRepo.findAll('', { _id: 1 });
-    return autores.map(a => ({
+async function listArtistasAdmin() {
+    const artistas = await autorRepo.findAll('', { _id: 1 });
+    return artistas.map(a => ({
         id: a._id, nombre: a.nombre, apellido: a.apellido,
         nacionalidad: a.nacionalidad || '', biografia: a.biografia || '', fotografia: a.fotografia || ''
     }));
 }
 
-async function createAutorAdmin(data) {
+async function createArtistaAdmin(data) {
     const { nombre, apellido, nacionalidad, biografia, fotografia_base64, fotografia_nombre } = data;
     if (!nombre || !nombre.trim() || !apellido || !apellido.trim()) {
         throw Object.assign(new Error("Nombre y apellido son requeridos"), { statusCode: 400 });
@@ -484,9 +484,9 @@ async function createAutorAdmin(data) {
     return { id: newId };
 }
 
-async function deleteAutorAdmin(id) {
+async function deleteArtistaAdmin(id) {
     const result = await autorRepo.findByIdAndDelete(id);
-    if (!result) throw Object.assign(new Error("Autor no encontrado"), { statusCode: 404 });
+    if (!result) throw Object.assign(new Error("Artista no encontrado"), { statusCode: 404 });
 }
 
 async function consultarCassandraObrasVendidas(anio_mes) {
@@ -622,7 +622,7 @@ module.exports = {
     getFactura, registerShipping, listDireccionesEnvio,
     listObrasAdmin, createObraAdmin, updateObraAdmin, deleteObraAdmin, updateObraDetalles,
     listNacionalidades, listGeneros, createGenero, updateGenero, deleteGenero,
-    listAutoresAdmin, createAutorAdmin, deleteAutorAdmin,
+    listArtistasAdmin, createArtistaAdmin, deleteArtistaAdmin,
     consultarCassandraObrasVendidas, consultarCassandraObrasVendidasRango,
     consultarCassandraResumenFacturacion, consultarCassandraBitacora,
     consultarLogsSeguridad, consultarObrasConHistorial, consultarHistorialEstatusObra,

@@ -16,13 +16,13 @@
 
         <div class="nav-container">
             <ul class="nav-links">
-                <li><a href="art-catalog.html">Catálogo</a></li>
-                <li><a href="artist-catalog.html">Artistas</a></li>
+                <li><a href="/catalog/artwork">Catálogo</a></li>
+                <li><a href="/catalog/artist">Artistas</a></li>
             </ul>
 
             <div class="auth-buttons" id="auth-buttons">
-                <a href="/public/login.html" class="btn-login">INICIAR SESION</a>
-                <a href="/public/register.html" class="btn-register">REGISTRARTE</a>
+                <a href="/login" class="btn-login">INICIAR SESION</a>
+                <a href="/register" class="btn-register">REGISTRARTE</a>
             </div>
         </div>
     </nav>
@@ -34,7 +34,7 @@
         </h1>
         <p>Desde piezas físicas de vanguardia hasta activos digitales exclusivos. Ofrecemos obras contemporáneas que
             conectan con tu visión personal del arte.</p>
-        <a href="art-catalog.html" class="btn-main">Ver Obras Disponibles</a>
+        <a href="/catalog/artwork" class="btn-main">Ver Obras Disponibles</a>
     </header>
 
     <section class="market-section" id="galeria">
@@ -57,22 +57,23 @@
         &copy; 2026 DOART MAGIC TEAM. ALL RESERVED RIGHT.
     </footer>
 
+    <script src="/controllers/authController.js"></script>
+    <script src="/controllers/catalogController.js"></script>
+    <script src="/controllers/recommendationsController.js"></script>
     <script>
         // Verificar sesión
         async function checkSession() {
             try {
-                const response = await fetch('/api/estado-usuario');
-                const data = await response.json();
+                const data = await AuthController.checkSession();
                 if (data.autenticado) {
                     const authButtons = document.getElementById('auth-buttons');
                     const navContainer = document.querySelector('.nav-container');
                     if (authButtons) authButtons.style.display = 'none';
-                    const resUser = await fetch('/api/usuario-actual');
-                    const user = await resUser.json();
+                    const user = await AuthController.getCurrentUser();
                     if (!document.querySelector('.user-profile')) {
                         const userDiv = document.createElement('div');
                         userDiv.className = 'user-profile';
-                        const panelLink = user.Rol === 'administrador' ? '/admin/admin-dashboard.html' : '/private/user-dashboard.html';
+                        const panelLink = user.Rol === 'administrador' ? '/admin' : '/dashboard';
                         const panelLabel = user.Rol === 'administrador' ? 'Panel Admin' : 'Mi Feed';
                         userDiv.innerHTML = `
                         <span style="margin-right: 15px; color: #eee; font-size: 0.75rem;">HOLA, ${user.Nombre}</span>
@@ -89,7 +90,7 @@
 
         async function guardarYAbrirObra(idObra) {
             sessionStorage.setItem('abrirObra', idObra);
-            window.location.href = 'art-catalog.html';
+            window.location.href = '/catalog/artwork';
         }
 
         let todasLasObras = [];
@@ -102,13 +103,10 @@
 
             try {
                 // Cargar en paralelo
-                const [popResp, todasResp] = await Promise.all([
-                    fetch('/api/recomendaciones/obras-destacadas?_=' + Date.now()),
-                    fetch('/api/artworks/filtered?genero=all&artista=all&orden=desc&pagina=1&limite=12')
+                const [populares, data] = await Promise.all([
+                    RecommendationsController.getFeatured(),
+                    CatalogController.getFiltered({ genero: 'all', artista: 'all', orden: 'desc', pagina: 1, limite: 12 })
                 ]);
-
-                const populares = await popResp.json();
-                const data = await todasResp.json();
 
                 const visto = new Set(populares.map(o => Number(o.idObra || o.id_Obra)));
                 const resto = (data.obras || []).filter(o => !visto.has(Number(o.id_Obra || o.idObra)));
@@ -132,7 +130,7 @@
             lote.forEach(o => {
                 const img = o.fotografia || o.imagen_url || '';
                 const nombre = o.nombre || o.Nombre || '';
-                const autor = (o.artista_nombre && o.artista_apellido) ? o.artista_nombre + ' ' + o.artista_apellido : o.AutorNombre || o.autor || '';
+                const artista = (o.artista_nombre && o.artista_apellido) ? o.artista_nombre + ' ' + o.artista_apellido : o.AutorNombre || o.autor || '';
                 const precio = o.precio_formateado || o.PrecioFormateado || (o.precio ? '$' + Number(o.precio).toLocaleString() : '');
                 const id = Number(o.id_obra || o.id_Obra || o.idObra);
 
@@ -145,7 +143,7 @@
                 card.innerHTML = `
             <div class="art-img" style="background-image: url('${img}'); height:300px; background-size:cover; background-position:center;"></div>
             <div class="art-info">
-                <span class="art-author" style="color:#00ff00; font-size:0.65rem; text-transform:uppercase; font-weight:bold;">${autor || 'Anónimo'}</span>
+                <span class="art-author" style="color:#00ff00; font-size:0.65rem; text-transform:uppercase; font-weight:bold;">${artista || 'Anónimo'}</span>
                 <h3 class="art-title" style="margin:8px 0; color:white; font-size:1rem;">${nombre}</h3>
                 <span class="price" style="color:#00ff00; font-weight:bold;">${precio}</span>
             </div>
@@ -160,8 +158,7 @@
         window.addEventListener('scroll', () => {
             if (obrasMostradas >= todasLasObras.length && window._currentPageHome * 12 < window._totalObrasHome) {
                 window._currentPageHome++;
-                fetch(`/api/artworks/filtered?genero=all&artista=all&orden=desc&pagina=${window._currentPageHome}&limite=12`)
-                    .then(r => r.json())
+                CatalogController.getFiltered({ genero: 'all', artista: 'all', orden: 'desc', pagina: window._currentPageHome, limite: 12 })
                     .then(data => {
                         todasLasObras = [...todasLasObras, ...data.obras];
                         mostrarLote();

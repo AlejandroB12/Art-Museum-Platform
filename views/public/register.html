@@ -102,17 +102,19 @@
                         <div class="price-tag" id="precio-membresia">Cargando...</div>
                         <input type="hidden" name="monto" id="monto-membresia" value="">
                     </div>
+    <script src="/controllers/userController.js"></script>
+    <script src="/controllers/checkoutController.js"></script>
                     <script>
-                        fetch('/api/precio-membresia')
-                            .then(r => r.json())
-                            .then(d => {
+                        (async () => {
+                            try {
+                                const d = await UserController.getMembershipPrice();
                                 document.getElementById('precio-membresia').textContent = '$' + d.precio.toFixed(2);
                                 document.getElementById('monto-membresia').value = d.precio.toFixed(2);
-                            })
-                            .catch(() => {
+                            } catch () {
                                 document.getElementById('precio-membresia').textContent = '$10.00';
                                 document.getElementById('monto-membresia').value = '10.00';
-                            });
+                            }
+                        })();
                     </script>
 
                     <div class="input-group">
@@ -155,10 +157,10 @@
                 <button type="submit" class="login-btn">Finalizar Registro y Pagar</button>
                 
                 <div class="register-link">
-                    <p>¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a></p>
+                    <p>¿Ya tienes cuenta? <a href="/login">Inicia sesión</a></p>
                 </div>
             </form>
-            <a href="/public/home.html" class="back-link">← Inicio</a>
+            <a href="/home" class="back-link">← Inicio</a>
         </div>
 
         <!-- SUCCESS VIEW -->
@@ -172,7 +174,7 @@
                     <p id="successCorreo" class="email-display"></p>
                 </div>
                 <p class="success-note">(Revisa tu bandeja de entrada o spam)</p>
-                <a href="/public/login.html" class="login-btn inline-link">Ir al Login</a>
+                <a href="/login" class="login-btn inline-link">Ir al Login</a>
             </div>
         </div>
     </div>
@@ -371,8 +373,7 @@
         const selectParroquia = document.getElementById('select-parroquia');
 
         // 1. Cargar Estados
-        fetch('/api/estados')
-            .then(res => res.json())
+        CheckoutController.getEstados()
             .then(data => {
                 data.forEach(est => {
                     const nombre = est.Nombre || est.nombre;
@@ -390,8 +391,7 @@
             selectParroquia.innerHTML = '<option value="" disabled selected>Parroquia</option>';
             selectParroquia.disabled = true;
 
-            fetch(`/api/municipios/${idEstado}`)
-                .then(res => res.json())
+            CheckoutController.getMunicipios(idEstado)
                 .then(data => {
                     selectMunicipio.innerHTML = '<option value="" disabled selected>Seleccione Municipio</option>';
                     data.forEach(mun => {
@@ -408,8 +408,7 @@
             selectParroquia.disabled = false;
             selectParroquia.innerHTML = '<option value="" disabled selected>Cargando parroquias...</option>';
 
-            fetch(`/api/parroquias/${idMunicipio}`)
-                .then(res => res.json())
+            CheckoutController.getParroquias(idMunicipio)
                 .then(data => {
                     selectParroquia.innerHTML = '<option value="" disabled selected>Seleccione Parroquia</option>';
                     data.forEach(par => {

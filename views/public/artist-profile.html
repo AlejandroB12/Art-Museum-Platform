@@ -11,17 +11,17 @@
 <body>
     <div id="main-wrapper"> 
         <nav class="navbar">
-            <a href="/public/home.html" class="logo">ARTE CONTEMPORANEO</a>
+            <a href="/home" class="logo">ARTE CONTEMPORANEO</a>
             
             <div class="nav-container">
                 <ul class="nav-links">
-                    <li><a href="art-catalog.html">Catálogo</a></li>
-                    <li><a href="artist-catalog.html">Artistas</a></li>
+                    <li><a href="/catalog/artwork">Catálogo</a></li>
+                    <li><a href="/catalog/artist">Artistas</a></li>
                 </ul>
 
                 <div class="auth-buttons" id="auth-buttons">
-                    <a href="/public/login.html" class="btn-login">INICIAR SESION</a>
-                    <a href="/public/login.html" class="btn-register">REGISTRARTE</a>
+                    <a href="/login" class="btn-login">INICIAR SESION</a>
+                    <a href="/login" class="btn-register">REGISTRARTE</a>
                 </div>
             </div>
         </nav>
@@ -75,6 +75,8 @@
         </div>
     </div>
 
+    <script src="/controllers/authController.js"></script>
+<script src="/controllers/catalogController.js"></script>
     <script>
         const modal = document.getElementById('obra-modal');
 
@@ -97,26 +99,21 @@
             if (event.target == modal) cerrarModal(); 
         }
 
-        const params = new URLSearchParams(window.location.search);
-        const idAutor = params.get('id');
+        const pathParts = window.location.pathname.split('/');
+        const profileIdx = pathParts.indexOf('profile');
+        const artistaName = profileIdx !== -1 ? pathParts[profileIdx + 1] : '';
 
         async function cargarPerfil() {
-            if (!idAutor) {
-                console.error("No se encontró ID de autor en la URL");
-                document.getElementById('authorGallery').innerHTML = '<p style="text-align:center; color:red;">Error: No se especificó qué autor mostrar</p>';
+            if (!artistaName) {
+                console.error("No se encontró nombre de artista en la URL");
+                document.getElementById('authorGallery').innerHTML = '<p style="text-align:center; color:red;">Error: No se especificó qué artista mostrar</p>';
                 return;
             }
 
             const ordenDate = document.getElementById('sortDate').value;
             
             try {
-                const resp = await fetch(`/api/artists/${idAutor}/detail?orden_fecha=${ordenDate}`);
-                
-                if (!resp.ok) {
-                    throw new Error(`Error HTTP: ${resp.status}`);
-                }
-                
-                const data = await resp.json();
+                const data = await CatalogController.getArtistByName(artistaName);
 
                 let nombreAutor = "Artista Desconocido";
 
@@ -209,11 +206,11 @@
                         gallery.appendChild(card);
                     });
                 } else {
-                    document.getElementById('authorGallery').innerHTML = '<p style="text-align:center; width:100%; color:#444; padding: 50px;">Este autor no tiene obras disponibles.</p>';
+                    document.getElementById('authorGallery').innerHTML = '<p style="text-align:center; width:100%; color:#444; padding: 50px;">Este artista no tiene obras disponibles.</p>';
                 }
             } catch (error) {
                 console.error("Error cargando perfil:", error);
-                document.getElementById('authorGallery').innerHTML = '<p style="text-align:center; width:100%; color:red; padding: 50px;">Error al cargar las obras del autor. Por favor, intenta de nuevo más tarde.</p>';
+                document.getElementById('authorGallery').innerHTML = '<p style="text-align:center; width:100%; color:red; padding: 50px;">Error al cargar las obras del artista. Por favor, intenta de nuevo más tarde.</p>';
             }
         }
 
@@ -231,8 +228,7 @@
             cargarPerfil();
             
             // Verificar estado de usuario para mostrar/ocultar botones de autenticación
-            fetch('/api/estado-usuario')
-                .then(response => response.json())
+            AuthController.checkSession()
                 .then(data => {
                     const authContainer = document.querySelector('.auth-buttons');
                     const navContainer = document.querySelector('.nav-container');
@@ -240,12 +236,11 @@
                     if (data.autenticado) {
                         if (authContainer) authContainer.style.display = 'none';
                         
-                        fetch('/api/usuario-actual')
-                            .then(res => res.json())
+                        AuthController.getCurrentUser()
                             .then(user => {
                                 const userDiv = document.createElement('div');
                                 userDiv.className = 'user-profile';
-                                const panelLink = user.Rol === 'administrador' ? '/admin/admin-dashboard.html' : '/private/user-dashboard.html';
+                                const panelLink = user.Rol === 'administrador' ? '/admin' : '/dashboard';
                                 const panelLabel = user.Rol === 'administrador' ? 'PANEL ADMIN' : 'PANEL DE USUARIO';
                                 userDiv.innerHTML = `
                                     <span style="margin-right: 15px; color:white;">Hola, ${user.Nombre || user.email || 'Usuario'}</span>

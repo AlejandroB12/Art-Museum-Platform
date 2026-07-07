@@ -95,4 +95,11 @@ async function listArtistasCatalogo()
     }));
 }
 
-module.exports = { listArtistas, getArtistaDetalle, listArtistasCatalogo };
+async function getArtistaByName(name) {
+    const cleanName = name.replace(/\s+/g, '');
+    const artista = await artistRepo.findByFullName(cleanName);
+    if (!artista) return null;
+    return getArtistaDetalle(artista._id);
+}
+
+module.exports = { listArtistas, getArtistaDetalle, listArtistasCatalogo, getArtistaByName };

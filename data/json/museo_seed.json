@@ -197,7 +197,7 @@
         }
       },
       "estatus": "Disponible",
-      "artista": 1
+      "artista": 50
     },
     {
       "_id": 2,
@@ -316,7 +316,7 @@
         }
       },
       "estatus": "Disponible",
-      "artista": 3
+      "artista": 160
     },
     {
       "_id": 9,
@@ -401,7 +401,7 @@
         }
       },
       "estatus": "Disponible",
-      "artista": 4
+      "artista": 176
     },
     {
       "_id": 14,
@@ -520,7 +520,7 @@
         }
       },
       "estatus": "Disponible",
-      "artista": 6
+      "artista": 179
     },
     {
       "_id": 21,
@@ -639,7 +639,7 @@
         }
       },
       "estatus": "Disponible",
-      "artista": 8
+      "artista": 186
     },
     {
       "_id": 28,

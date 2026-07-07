@@ -1,30 +1,30 @@
-const Autor = require('../models/autor_model');
+const Artista = require('../models/artista_model');
 
 async function findAll(select = '', sort = { _id: 1 }) {
-    let query = Autor.find();
+    let query = Artista.find();
     if (select) query = query.select(select);
     return query.sort(sort).lean();
 }
 
 async function findById(id) {
-    return Autor.findById(id).lean();
+    return Artista.findById(id).lean();
 }
 
 async function findMaxId() {
-    return Autor.findOne().sort({ _id: -1 }).select('_id').lean();
+    return Artista.findOne().sort({ _id: -1 }).select('_id').lean();
 }
 
 async function create(data) {
-    const autor = new Autor(data);
-    return autor.save();
+    const artista = new Artista(data);
+    return artista.save();
 }
 
 async function findByIdAndDelete(id) {
-    return Autor.findByIdAndDelete(id);
+    return Artista.findByIdAndDelete(id);
 }
 
 async function aggregate(pipeline) {
-    return Autor.aggregate(pipeline);
+    return Artista.aggregate(pipeline);
 }
 
 module.exports = { findAll, findById, findMaxId, create, findByIdAndDelete, aggregate };

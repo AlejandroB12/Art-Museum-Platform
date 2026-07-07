@@ -49,11 +49,6 @@ const apiProxy = createProxyMiddleware({
         ) return USER_URL;
 
         if (
-            (path === '/api/autores' || path.startsWith('/api/autores/')) ||
-            path.startsWith('/api/obras-filtradas') ||
-            path.startsWith('/api/autor-detalle') ||
-            path.startsWith('/api/artistas-catalogo') ||
-            path.startsWith('/api/obras-destacadas') ||
             path.startsWith('/api/artworks') ||
             path.startsWith('/api/artists')
 
@@ -66,9 +61,6 @@ const apiProxy = createProxyMiddleware({
             path === '/api/auth/guest-login'
 
         ) return RECOMMENDATIONS_URL;
-
-        if (path.startsWith('/api/buscar') && !path.startsWith('/api/buscar-comprador'))
-            return CATALOG_URL;
 
         if (
             path === '/confirmar-reserva' ||

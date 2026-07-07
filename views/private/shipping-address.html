@@ -56,7 +56,7 @@
                 <div class="error-message" id="error"></div>
             </form>
 
-            <a href="/admin/admin-dashboard.html" class="back-link">← Volver al panel</a>
+            <a href="/admin" class="back-link">← Volver al panel</a>
         </div>
 
         <!-- SUCCESS VIEW -->
@@ -71,11 +71,13 @@
                 <p><strong>Dirección:</strong> <span id="successDireccion">Cargando...</span></p>
                 <p><strong>Número de guía:</strong> <span id="successGuia">N/A</span></p>
             </div>
-            <a href="/admin/admin-dashboard.html" class="login-btn">← Volver al panel</a>
+            <a href="/admin" class="login-btn">← Volver al panel</a>
             <div class="loading loading-top" id="successLoading">Redirigiendo al panel...</div>
         </div>
     </div>
 
+    <script src="/controllers/checkoutController.js"></script>
+    <script src="/controllers/adminController.js"></script>
     <script>
         function showError(message) {
             document.getElementById('loading').style.display = 'none';
@@ -89,7 +91,7 @@
 
         if (!idFactura) {
             alert('No se especificó ninguna factura');
-            window.location.href = '/admin/admin-dashboard.html';
+            window.location.href = '/admin';
         }
 
         document.addEventListener('DOMContentLoaded', async function() {
@@ -99,9 +101,7 @@
 
         async function cargarEstados() {
             try {
-                const response = await fetch('/api/estados');
-                if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-                const data = await response.json();
+                const data = await CheckoutController.getEstados();
                 const selectEstado = document.getElementById('estado');
                 if (Array.isArray(data)) {
                     selectEstado.innerHTML = '<option value="">Seleccione un estado</option>';
@@ -134,9 +134,7 @@
                 return;
             }
             try {
-                const response = await fetch(`/api/municipios/${idEstado}`);
-                if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-                const data = await response.json();
+                const data = await CheckoutController.getMunicipios(idEstado);
                 selectMunicipio.innerHTML = '<option value="">Seleccione un municipio</option>';
                 if (Array.isArray(data)) {
                     data.forEach(municipio => {
@@ -164,9 +162,7 @@
                 return;
             }
             try {
-                const response = await fetch(`/api/parroquias/${idMunicipio}`);
-                if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-                const data = await response.json();
+                const data = await CheckoutController.getParroquias(idMunicipio);
                 selectParroquia.innerHTML = '<option value="">Seleccione una parroquia</option>';
                 if (Array.isArray(data)) {
                     data.forEach(parroquia => {
@@ -187,9 +183,7 @@
 
         async function cargarFactura() {
             try {
-                const response = await fetch(`/api/factura/${idFactura}`);
-                if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-                const data = await response.json();
+                const data = await AdminController.getInvoice(idFactura);
                 if (data.success && data.factura) {
                     const f = data.factura;
                     const facturaFormateada = f.id_factura.toString().padStart(8, '0');
@@ -266,13 +260,7 @@
             };
 
             try {
-                const response = await fetch('/api/registrar-envio', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                });
-
-                const result = await response.json();
+                const result = await AdminController.registerShipping(formData);
 
                 if (result.success) {
                     mostrarExito(idFactura, result.numero_guia);
@@ -293,8 +281,7 @@
             }
 
             try {
-                const res = await fetch(`/api/factura/${idFactura}`);
-                const data = await res.json();
+                const data = await AdminController.getInvoice(idFactura);
                 if (data.success && data.factura) {
                     const f = data.factura;
                     document.getElementById('successFactura').textContent = f.id_factura.toString().padStart(8, '0');
@@ -313,7 +300,7 @@
 
             setTimeout(() => {
                 document.getElementById('successLoading').style.display = 'block';
-                window.location.href = '/admin/admin-dashboard.html';
+                window.location.href = '/admin';
             }, 5000);
         }
     </script>

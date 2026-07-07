@@ -10,7 +10,7 @@ const artistSchema = new mongoose.Schema({
     nacionalidad: { type: String, trim: true }
 }, {
     timestamps: true,
-    collection: 'autores'
+    collection: 'artistas'
 });
 
 artistSchema.index({ apellido: 1, nombre: 1 });
