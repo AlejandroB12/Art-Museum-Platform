@@ -1,4 +1,4 @@
-const Genero = require('../models/genero_model');
+const Genero = require('../models/mongoose/genero.model');
 const mongoose = require('mongoose');
 
 async function findAll(sort = { _id: 1 }) {

@@ -1,0 +1,291 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id_usuario  Int       @id @default(autoincrement())
+  Email       String    @unique @db.VarChar(45)
+  Contraseña  String    @db.VarChar(45)
+  Nombre      String?   @db.VarChar(45)
+  Apellido    String?   @db.VarChar(45)
+  Estatus     Int?      @default(0)
+  Rol         String    @default("comprador") @db.VarChar(50)
+
+  Comprador         Comprador?
+  Administrador     Administrador?
+  Membresia         Membresia[]
+  CodigoSeguridad   CodigoSeguridad[]
+  SolicitudPago     SolicitudPago[]
+  Facturas          Factura[]       @relation("FacturaComprador")
+  FacturasAdmin     Factura[]       @relation("FacturaAdmin")
+  Reservas          Reserva[]
+
+  @@map("Usuario")
+}
+
+model Comprador {
+  id_usuario          Int       @id
+  Cedula              Int       @unique
+  Telefono            String?   @db.VarChar(15)
+  CodigoVerificacion  Int?
+  id_parroquia        Int?
+  Calle               String?   @db.VarChar(100)
+  PuedeAdquirir       Boolean?  @default(true)
+
+  usuario   Usuario    @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+  parroquia Parroquia? @relation(fields: [id_parroquia], references: [id_parroquia])
+
+  @@map("Comprador")
+}
+
+model Administrador {
+  id_usuario Int    @id
+
+  usuario Usuario @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+
+  @@map("Administrador")
+}
+
+model Membresia {
+  idMembresia Int       @id @default(autoincrement())
+  FechaPago   DateTime? @db.Date
+  MontoPagado Decimal?  @db.Decimal(10, 2)
+  id_usuario  Int?
+
+  usuario Usuario? @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+
+  @@map("Membresia")
+}
+
+model SolicitudPago {
+  id_solicitud   Int       @id @default(autoincrement())
+  id_usuario     Int?
+  FechaSolicitud DateTime? @db.DateTime
+  Monto          Decimal?  @default(10.00) @db.Decimal(10, 2)
+  Estatus        String?   @default("Pendiente") @db.VarChar(20)
+
+  usuario Usuario? @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@map("SolicitudPago")
+}
+
+model CodigoSeguridad {
+  idCodigoSeguridad Int    @id @default(autoincrement())
+  Pregunta          String? @db.VarChar(45)
+  Respuesta         String? @db.VarChar(45)
+  id_usuario        Int?
+
+  usuario Usuario? @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+
+  @@map("CodigoSeguridad")
+}
+
+model Nacionalidad {
+  id_Nacionalidad Int     @id @default(autoincrement())
+  Descripcion     String  @db.VarChar(100)
+
+  autores Autor[]
+
+  @@map("Nacionalidad")
+}
+
+model Genero {
+  id_Genero Int    @id
+  Nombre    String @db.VarChar(50)
+
+  obras Obra[]
+
+  @@map("Genero")
+}
+
+model Autor {
+  id_Autor        Int      @id
+  Nombre          String   @db.VarChar(100)
+  Apellido        String   @db.VarChar(100)
+  Fecha_nacimiento DateTime? @db.Date
+  Fotografia      String?  @db.VarChar(255)
+  Biografia       String?  @db.Text
+  id_Nacionalidad Int?
+
+  nacionalidad Nacionalidad? @relation(fields: [id_Nacionalidad], references: [id_Nacionalidad])
+  obras        Obra_autor[]
+
+  @@map("Autor")
+}
+
+model Obra {
+  id_Obra       Int      @id
+  Nombre        String   @db.VarChar(150)
+  Fecha_creacion DateTime? @db.Date
+  Precio        Decimal? @db.Decimal(15, 2)
+  Estado_obra   String   @default("Disponible") @db.VarChar(20)
+  id_Genero     Int?
+  Fotografia    String?  @db.VarChar(255)
+
+  genero       Genero?       @relation(fields: [id_Genero], references: [id_Genero])
+  obra_autores Obra_autor[]
+  factura      Factura?
+  reservas     Reserva[]
+  pintura      Pintura?
+  escultura    Escultura?
+  fotografia   Fotografia?
+  orfebreria   Orfebreria?
+  ceramica     Ceramica?
+
+  @@map("Obra")
+}
+
+model Obra_autor {
+  id_Obra_autor Int  @id @default(autoincrement())
+  id_Obra       Int
+  id_Autor      Int
+
+  obra  Autor @relation(fields: [id_Autor], references: [id_Autor])
+  autor Obra  @relation(fields: [id_Obra], references: [id_Obra])
+
+  @@unique([id_Obra, id_Autor])
+  @@map("Obra_autor")
+}
+
+model Factura {
+  id_factura          Int       @id @default(autoincrement())
+  Fecha_Venta         DateTime? @db.DateTime
+  Monto_Neto          Decimal   @db.Decimal(15, 2)
+  IVA                 Decimal   @db.Decimal(15, 2)
+  Total_Pagado        Decimal   @db.Decimal(15, 2)
+  Ganancia_Museo_USD  Decimal   @db.Decimal(15, 2)
+  Porcentaje_Comision Decimal   @db.Decimal(5, 2)
+  id_obra             Int       @unique
+  id_comprador        Int
+  id_admin            Int
+  NombreComprador     String?   @db.VarChar(90)
+  EmailComprador      String?   @db.VarChar(90)
+  CedulaComprador     String?   @db.VarChar(45)
+
+  obra         Obra     @relation(fields: [id_obra], references: [id_Obra])
+  comprador    Usuario  @relation("FacturaComprador", fields: [id_comprador], references: [id_usuario])
+  admin        Usuario  @relation("FacturaAdmin", fields: [id_admin], references: [id_usuario])
+  envios       Envio[]
+
+  @@map("Factura")
+}
+
+model Reserva {
+  id_reserva    Int       @id @default(autoincrement())
+  id_obra       Int
+  id_usuario    Int
+  Fecha_Reserva DateTime? @db.DateTime
+
+  obra     Obra    @relation(fields: [id_obra], references: [id_Obra])
+  usuario  Usuario @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@map("Reserva")
+}
+
+model Envio {
+  id_Envio            Int      @id @default(autoincrement())
+  Monto_total         String?  @db.VarChar(45)
+  Estado_entrega      String?  @db.VarChar(20)
+  Municipio           String?  @db.VarChar(45)
+  Parroquia           String?  @db.VarChar(45)
+  Calle               String?  @db.VarChar(45)
+  numero_guia         String?  @db.VarChar(100)
+  fecha_envio         DateTime? @db.DateTime
+  Factura_id_Factura  Int?
+
+  factura Factura? @relation(fields: [Factura_id_Factura], references: [id_factura])
+
+  @@map("Envio")
+}
+
+model Estado {
+  id_estado  Int    @id @default(autoincrement())
+  nombre     String @db.VarChar(100)
+  iso_3166_2 String? @db.VarChar(10)
+
+  municipios Municipio[]
+
+  @@map("Estado")
+}
+
+model Municipio {
+  id_municipio Int    @id @default(autoincrement())
+  nombre       String @db.VarChar(100)
+  id_estado    Int
+
+  estado     Estado      @relation(fields: [id_estado], references: [id_estado])
+  parroquias Parroquia[]
+
+  @@map("Municipio")
+}
+
+model Parroquia {
+  id_parroquia Int    @id @default(autoincrement())
+  nombre       String @db.VarChar(100)
+  id_municipio Int
+
+  municipio   Municipio   @relation(fields: [id_municipio], references: [id_municipio])
+  compradores Comprador[]
+
+  @@map("Parroquia")
+}
+
+model Pintura {
+  id_Obra                Int     @id
+  Tecnica_Principal      String  @db.VarChar(50)
+  Soporte_Base           String  @db.VarChar(50)
+  Requiere_Enmarcado     Boolean @default(false)
+
+  obra Obra @relation(fields: [id_Obra], references: [id_Obra], onDelete: Cascade)
+
+  @@map("Pintura")
+}
+
+model Escultura {
+  id_Obra                Int     @id
+  Material_Predominante  String  @db.VarChar(50)
+  Requiere_Pedestal      Boolean @default(false)
+  Clasificacion_Espacio  String  @default("Interior") @db.VarChar(20)
+
+  obra Obra @relation(fields: [id_Obra], references: [id_Obra], onDelete: Cascade)
+
+  @@map("Escultura")
+}
+
+model Fotografia {
+  id_Obra                      Int     @id
+  Formato_Origen               String  @db.VarChar(20)
+  Tipo_Impresion_Estandar      String  @db.VarChar(30)
+  Requiere_Revelado_Quimico    Boolean @default(false)
+
+  obra Obra @relation(fields: [id_Obra], references: [id_Obra], onDelete: Cascade)
+
+  @@map("Fotografia")
+}
+
+model Orfebreria {
+  id_Obra                          Int     @id
+  Metal_Base_Dominante             String  @db.VarChar(30)
+  Kilataje_Estandar                String  @default("No Aplica") @db.VarChar(10)
+  Requeres_Certificado_Autenticidad Boolean @default(true)
+
+  obra Obra @relation(fields: [id_Obra], references: [id_Obra], onDelete: Cascade)
+
+  @@map("Orfebreria")
+}
+
+model Ceramica {
+  id_Obra                            Int    @id
+  Tecnica_Acabado                    String @db.VarChar(20)
+  Tipo_Arcilla_Base                  String @db.VarChar(20)
+  Temperatura_Coccion_Promedio_Celsius Int?
+
+  obra Obra @relation(fields: [id_Obra], references: [id_Obra], onDelete: Cascade)
+
+  @@map("Ceramica")
+}
