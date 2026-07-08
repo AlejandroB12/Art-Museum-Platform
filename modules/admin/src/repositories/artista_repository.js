@@ -1,4 +1,4 @@
-const Artista = require('../models/artista_model');
+const Artista = require('../models/mongoose/artista.model');
 
 async function findAll(select = '', sort = { _id: 1 }) {
     let query = Artista.find();
