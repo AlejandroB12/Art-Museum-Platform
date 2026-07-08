@@ -19,7 +19,7 @@ app.use('/api/', limiter);
 
 app.use(express.static(path.join(__dirname, '..', '..', 'views')));
 app.use(express.static(path.join(__dirname, '..', '..', 'assets')));
-app.use('/images', express.static(path.join(__dirname, '..', '..', 'assets', 'images')));
+app.use('/images/art_previews', express.static(path.join(__dirname, '..', '..', 'assets', 'images', 'artworks')));
 app.use('/controllers', express.static(path.join(__dirname, '..', '..', 'controllers')));
 
 const viewsPath = path.join(__dirname, '..', '..', 'views');

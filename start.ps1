@@ -19,7 +19,8 @@ const results = [];
     // MySQL
     try {
         const mysql = require('mysql2');
-        const db = mysql.createConnection({host:process.env.DB_HOST_MYSQL,user:process.env.DB_USER_MYSQL,password:process.env.DB_PASSWORD_MYSQL,database:process.env.DB_NAME_MYSQL});
+        const isRemote = process.env.DB_PORT_MYSQL && process.env.DB_PORT_MYSQL !== '3306';
+        const db = mysql.createConnection({host:process.env.DB_HOST_MYSQL,port:process.env.DB_PORT_MYSQL||3306,user:process.env.DB_USER_MYSQL,password:process.env.DB_PASSWORD_MYSQL,database:process.env.DB_NAME_MYSQL,ssl:isRemote?{rejectUnauthorized:false}:undefined});
         await new Promise((resolve,reject) => db.connect(err=>err?reject(err):resolve()));
         db.end();
         results.push('  [MySQL]     OK');
