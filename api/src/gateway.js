@@ -12,11 +12,11 @@ const ADMIN_URL = process.env.ADMIN_SERVICE_URL || 'http://localhost:3007';
 const apiProxy = createProxyMiddleware({
 
     changeOrigin: true,
-    proxyTimeout: 30000,
-    timeout: 30000,
 
     onProxyReq: (proxyReq, req) => {
-        if (req.session?.id_usuario && req.session?.usuario) {
+
+        if (req.session?.id_usuario && req.session?.usuario) 
+        {
             const token = generateToken(req.session.usuario);
             proxyReq.setHeader('x-user-token', token);
         }

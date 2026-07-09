@@ -1,0 +1,166 @@
+footer {
+    background: var(--footer-bg);
+    color: var(--text-secondary);
+    padding: 3rem 2rem 1.5rem 2rem;
+    border-top: 1px solid var(--border-color);
+    margin-top: 60px;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2rem;
+    flex-wrap: wrap;
+    max-width: 1200px;
+    margin: 0 auto 2rem auto;
+}
+
+.footer-left {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.footer-contact {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.contact-label {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.contact-phone {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+.contact-phone:hover {
+    color: var(--accent);
+}
+
+.footer-right {
+    display: flex;
+    flex-direction: column;
+}
+
+.newsletter-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.newsletter-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.newsletter-input-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.newsletter-input-group input {
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.3s;
+    min-width: 220px;
+}
+
+.newsletter-input-group input::placeholder {
+    color: var(--text-dim);
+}
+
+.newsletter-input-group input:focus {
+    border-color: var(--accent);
+}
+
+.newsletter-input-group button {
+    padding: 0.6rem 1.25rem;
+    background: var(--accent);
+    color: var(--bg-primary);
+    border: none;
+    border-radius: 4px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: opacity 0.3s;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.newsletter-input-group button:hover {
+    opacity: 0.85;
+}
+
+.footer-copy {
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    text-align: center;
+    border-top: 1px solid var(--border-color);
+    padding-top: 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.github-link {
+    display: inline-block;
+    color: var(--text-dim);
+    transition: color 0.15s;
+}
+
+.github-link:hover {
+    color: var(--accent);
+}
+
+.github-link svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .footer-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .footer-left {
+        align-items: center;
+    }
+
+    .newsletter-input-group {
+        flex-direction: column;
+    }
+
+    .newsletter-input-group input {
+        min-width: unset;
+        width: 100%;
+    }
+}

@@ -5,19 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DoArt Magic | Catálogo de Artistas</title>
     <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+    <link rel="stylesheet" href="/styles/theme.css">
     <link rel="stylesheet" href="/styles/artist-catalog-style.css">
 </head>
 <body>
 
    <nav class="navbar">
-        <a href="/home" class="logo"> ARTE CONTEMPORANEO</a>
+        <a href="/home" class="logo"><img src="/images/DoArt_Magic_Logo.png" alt="DoArt Magic" class="logo-img"></a>
         
         <div class="nav-container">
-            <ul class="nav-links">
-                <li><a href="/catalog/artwork">Catálogo</a></li>
-                <li><a href="/catalog/artist">Artistas</a></li>
-                
-            </ul>
+                <ul class="nav-links">
+                    <li><a href="/catalog/artwork">Catálogo</a></li>
+                    <li><a href="/catalog/artist">Artistas</a></li>
+                </ul>
 
             <div class="auth-buttons" id="auth-buttons">
                 <a href="/login" class="btn-login">INICIAR SESION</a>
@@ -32,19 +32,234 @@
             <p>Mentes detrás de la colección</p>
         </header>
 
+        <div class="filters-section">
+            <div class="search-bar">
+                <div class="search-wrapper">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="searchInput" placeholder="Buscar artistas por nombre...">
+                </div>
+            </div>
+            <div class="filters-row">
+                <div class="filter-group">
+                    <label>País</label>
+                    <button class="filter-toggle" data-target="paisFilter">Todos <span class="arrow">▾</span></button>
+                    <div class="filter-dropdown" id="paisFilter">
+                        <label class="filter-option select-all"><input type="checkbox" value="__all__" checked> Todos</label>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label>Género</label>
+                    <button class="filter-toggle" data-target="generoFilter">Todos <span class="arrow">▾</span></button>
+                    <div class="filter-dropdown" id="generoFilter">
+                        <label class="filter-option select-all"><input type="checkbox" value="__all__" checked> Todos</label>
+                    </div>
+                </div>
+                <div class="filter-group filter-group-sort">
+                    <label>Popularidad</label>
+                    <button class="filter-toggle filter-toggle-sort" data-target="popularidadSort">Todas <span class="arrow">▾</span></button>
+                    <div class="filter-dropdown" id="popularidadSort">
+                        <label class="filter-option"><input type="radio" name="popularidad" value="todas" checked> Todas</label>
+                        <label class="filter-option"><input type="radio" name="popularidad" value="mas"> Más populares</label>
+                        <label class="filter-option"><input type="radio" name="popularidad" value="menos"> Menos populares</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="artists-grid" id="artistsList">
             </div>
+
+        <div class="pagination" id="pagination"></div>
     </div>
 
+<link rel="stylesheet" href="/styles/footer.css">
 <script src="/controllers/authController.js"></script>
 <script src="/controllers/catalogController.js"></script>
 
 <script>
-    // Asegurar que el DOM esté completamente cargado
+    let allArtists = [];
+    let filteredArtists = [];
+    let currentPage = 1;
+    const ITEMS_PER_PAGE = 15;
+
     document.addEventListener('DOMContentLoaded', async function() 
     {
         await cargarArtistas();
+        initFilters();
     });
+
+    function initFilters() {
+        document.querySelectorAll('.filter-toggle').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const target = document.getElementById(btn.dataset.target);
+                const isOpen = target.classList.contains('open');
+                document.querySelectorAll('.filter-dropdown').forEach(d => d.classList.remove('open'));
+                document.querySelectorAll('.filter-toggle').forEach(b => b.classList.remove('active'));
+                if (!isOpen) {
+                    target.classList.add('open');
+                    btn.classList.add('active');
+                }
+            });
+        });
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.filter-dropdown').forEach(d => d.classList.remove('open'));
+            document.querySelectorAll('.filter-toggle').forEach(b => b.classList.remove('active'));
+        });
+        document.querySelectorAll('.filter-dropdown').forEach(d => {
+            d.addEventListener('click', (e) => e.stopPropagation());
+        });
+        document.getElementById('searchInput').addEventListener('input', aplicarFiltros);
+        document.addEventListener('change', (e) => {
+            if (e.target.type === 'checkbox') {
+                const container = e.target.closest('.filter-dropdown');
+                if (!container) return;
+                const allCheckbox = container.querySelector('input[value="__all__"]');
+                if (e.target.value === '__all__') {
+                    container.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = e.target.checked);
+                } else {
+                    const others = container.querySelectorAll('input[type="checkbox"]:not([value="__all__"])');
+                    const allChecked = Array.from(others).every(cb => cb.checked);
+                    allCheckbox.checked = allChecked;
+                }
+                actualizarTextoBoton(container);
+                aplicarFiltros();
+            }
+            if (e.target.type === 'radio') {
+                const container = e.target.closest('.filter-dropdown');
+                const btn = document.querySelector(`[data-target="${container.id}"]`);
+                const selected = container.querySelector('input[type="radio"]:checked');
+                if (btn && selected) {
+                    btn.childNodes[0].textContent = selected.closest('.filter-option').textContent.trim();
+                }
+                document.querySelectorAll('.sort-dropdown').forEach(d => d.classList.remove('open'));
+                document.querySelectorAll('.filter-toggle-sort').forEach(b => b.classList.remove('active'));
+                aplicarFiltros();
+            }
+        });
+    }
+
+    function actualizarTextoBoton(container) {
+        const btn = document.querySelector(`[data-target="${container.id}"]`);
+        if (!btn) return;
+        const allCheckbox = container.querySelector('input[value="__all__"]');
+        const checks = container.querySelectorAll('input[type="checkbox"]:not([value="__all__"]):checked');
+        if (allCheckbox?.checked || checks.length === 0) {
+            btn.childNodes[0].textContent = 'Todos';
+        } else {
+            btn.childNodes[0].textContent = `${checks.length} seleccionados`;
+        }
+    }
+
+    function obtenerSeleccionados(dropdownId) {
+        const checks = document.querySelectorAll(`#${dropdownId} input[type="checkbox"]:not([value="__all__"]):checked`);
+        return Array.from(checks).map(c => c.value);
+    }
+
+    function aplicarFiltros() {
+        const query = document.getElementById('searchInput').value.toLowerCase().trim();
+        const paisesSel = obtenerSeleccionados('paisFilter');
+        const generosSel = obtenerSeleccionados('generoFilter');
+
+        filteredArtists = allArtists.filter(a => {
+            if (!a.nombre || !a.apellido) return false;
+            const nombreCompleto = `${a.nombre} ${a.apellido}`.toLowerCase();
+            if (query && !nombreCompleto.includes(query)) return false;
+            if (paisesSel.length > 0) {
+                const pais = (a.nacionalidad || '').toLowerCase();
+                if (!paisesSel.some(p => pais.includes(p.toLowerCase()))) return false;
+            }
+            if (generosSel.length > 0) {
+                const generos = (a.generos || '').toLowerCase();
+                if (!generosSel.some(g => generos.includes(g.toLowerCase()))) return false;
+            }
+            return true;
+        });
+
+        const popularidad = document.querySelector('input[name="popularidad"]:checked')?.value || 'todas';
+        if (popularidad === 'mas') {
+            filteredArtists.sort((a, b) => (b._popularidad || 0) - (a._popularidad || 0));
+        } else if (popularidad === 'menos') {
+            filteredArtists.sort((a, b) => (a._popularidad || 0) - (b._popularidad || 0));
+        }
+
+        currentPage = 1;
+        renderPagina();
+        renderPaginacion();
+    }
+
+    function renderPagina() {
+        const container = document.getElementById('artistsList');
+        container.innerHTML = '';
+
+        if (filteredArtists.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#00ff00; grid-column:1/-1; padding:60px 0;">No se encontraron artistas con los filtros seleccionados.</p>';
+            return;
+        }
+
+        const start = (currentPage - 1) * ITEMS_PER_PAGE;
+        const paginaArtistas = filteredArtists.slice(start, start + ITEMS_PER_PAGE);
+
+        paginaArtistas.forEach(artista => {
+            const imgSrc = artista.fotografia || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22160%22 height=%22160%22%3E%3Crect fill=%22%231a1a1a%22 width=%22160%22 height=%22160%22/%3E%3Ctext fill=%22%23666%22 font-size=%2212%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3ESin%20Imagen%3C/text%3E%3C/svg%3E';
+            let especialidadesHtml = '';
+            if (artista.generos && artista.generos !== 'Sin géneros' && artista.generos !== 'NULL') {
+                const especialidades = artista.generos.split(',');
+                especialidadesHtml = especialidades.map(esp => `<span class="tag">${esp.trim()}</span>`).join('');
+            } else {
+                especialidadesHtml = '<span class="tag">Varias disciplinas</span>';
+            }
+            const card = document.createElement('div');
+            card.className = 'artist-card';
+            card.onclick = () => {
+                window.location.href = `/artist/profile/${artista.nombre}${artista.apellido}`;
+            };
+            card.innerHTML = `
+                <div class="artist-photo-frame">
+                    <img src="${imgSrc}" 
+                         alt="${artista.nombre} ${artista.apellido}" 
+                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22160%22 height=%22160%22%3E%3Crect fill=%22%231a1a1a%22 width=%22160%22 height=%22160%22/%3E%3Ctext fill=%22%23666%22 font-size=%2212%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3ESin%20Imagen%3C/text%3E%3C/svg%3E'">
+                </div>
+                <h3 class="artist-name">${artista.nombre} ${artista.apellido}</h3>
+                <div class="artist-specialty">
+                    ${especialidadesHtml}
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function renderPaginacion() {
+        const container = document.getElementById('pagination');
+        const totalPages = Math.max(1, Math.ceil(filteredArtists.length / ITEMS_PER_PAGE));
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+        let html = '';
+        html += `<button ${currentPage === 1 ? 'disabled' : ''} onclick="irPagina(${currentPage - 1})">◄ Anterior</button>`;
+
+        const maxVisible = 5;
+        let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+        let end = Math.min(totalPages, start + maxVisible - 1);
+        if (end - start + 1 < maxVisible) start = Math.max(1, end - maxVisible + 1);
+
+        if (start > 1) { html += '<button onclick="irPagina(1)">1</button>'; if (start > 2) html += '<span class="page-info">...</span>'; }
+
+        for (let i = start; i <= end; i++)
+            html += `<button class="${i === currentPage ? 'active' : ''}" onclick="irPagina(${i})">${i}</button>`;
+
+        if (end < totalPages) { if (end < totalPages - 1) html += '<span class="page-info">...</span>'; html += `<button onclick="irPagina(${totalPages})">${totalPages}</button>`; }
+
+        html += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="irPagina(${currentPage + 1})">Siguiente ►</button>`;
+        container.innerHTML = html;
+    }
+
+    function irPagina(pagina) {
+        currentPage = pagina;
+        renderPagina();
+        renderPaginacion();
+    }
     
     async function cargarArtistas() 
     {
@@ -61,7 +276,6 @@
                 return;
             }
             
-            // Limpiar el contenedor
             container.innerHTML = '';
             
             if (!artistas || artistas.length === 0) 
@@ -70,55 +284,13 @@
                 return;
             }
             
-            artistas.forEach((artista, index) => {
-
-                if (!artista.nombre || !artista.apellido) 
-                {
-                    return;
-                }
-                
-                const imgSrc = artista.fotografia || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22160%22 height=%22160%22%3E%3Crect fill=%22%231a1a1a%22 width=%22160%22 height=%22160%22/%3E%3Ctext fill=%22%23666%22 font-size=%2212%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3ESin%20Imagen%3C/text%3E%3C/svg%3E';
-                
-                const fechaNac = artista.fecha_nacimiento 
-                    ? new Date(artista.fecha_nacimiento).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })
-                    : 'Fecha no disponible';
-                
-                let especialidadesHtml = '';
-                if (artista.generos && artista.generos !== 'Sin géneros' && artista.generos !== 'NULL') {
-                    const especialidades = artista.generos.split(',');
-                    especialidadesHtml = especialidades.map(esp => `<span class="tag">${esp.trim()}</span>`).join('');
-                } 
-                
-                else 
-                {
-                    especialidadesHtml = '<span class="tag">Varias disciplinas</span>';
-                }
-                
-                const card = document.createElement('div');
-                card.className = 'artist-card';
-
-                card.onclick = () => {
-
-                    window.location.href = `/artist/profile/${artista.nombre}${artista.apellido}`;
-                };
-                
-                card.innerHTML = `
-                    <div class="artist-photo-frame">
-                        <img src="${imgSrc}" 
-                             alt="${artista.nombre} ${artista.apellido}" 
-                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22160%22 height=%22160%22%3E%3Crect fill=%22%231a1a1a%22 width=%22160%22 height=%22160%22/%3E%3Ctext fill=%22%23666%22 font-size=%2212%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3ESin%20Imagen%3C/text%3E%3C/svg%3E'">
-                    </div>
-                    <h3 class="artist-name">${artista.nombre} ${artista.apellido}</h3>
-                    <div class="artist-specialty">
-                        ${especialidadesHtml}
-                    </div>
-                    <div class="artist-info">
-                        <span>📅 ${fechaNac}</span>
-                    </div>
-                `;
-                
-                container.appendChild(card);
-            });
+            allArtists = artistas.map(a => ({
+                ...a,
+                _popularidad: a.generos && a.generos !== 'Sin géneros' && a.generos !== 'NULL'
+                    ? a.generos.split(',').length : 0
+            }));
+            poblarFiltros(artistas);
+            aplicarFiltros();
             
         } 
         
@@ -140,6 +312,32 @@
             }
         }
     }
+
+    function poblarFiltros(artistas) {
+        const paises = [...new Set(artistas.map(a => a.nacionalidad).filter(Boolean))].sort();
+        const generos = [...new Set(artistas.flatMap(a => {
+            if (!a.generos || a.generos === 'Sin géneros' || a.generos === 'NULL') return [];
+            return a.generos.split(',').map(g => g.trim()).filter(Boolean);
+        }))].sort();
+
+        const paisContainer = document.querySelector('#paisFilter');
+        paisContainer.innerHTML = '<label class="filter-option select-all"><input type="checkbox" value="__all__" checked> Todos</label>';
+        paises.forEach(p => {
+            const label = document.createElement('label');
+            label.className = 'filter-option';
+            label.innerHTML = `<input type="checkbox" value="${p}" checked> ${p}`;
+            paisContainer.appendChild(label);
+        });
+
+        const generosContainer = document.querySelector('#generoFilter');
+        generosContainer.innerHTML = '<label class="filter-option select-all"><input type="checkbox" value="__all__" checked> Todos</label>';
+        generos.forEach(g => {
+            const label = document.createElement('label');
+            label.className = 'filter-option';
+            label.innerHTML = `<input type="checkbox" value="${g}" checked> ${g}`;
+            generosContainer.appendChild(label);
+        });
+    }
     
     // Cargar información del usuario
     document.addEventListener('DOMContentLoaded', () => {
@@ -156,12 +354,22 @@
                             const userDiv = document.createElement('div');
                             userDiv.className = 'user-profile';
                             const panelLink = user.Rol === 'administrador' ? '/admin' : '/dashboard';
-                            const panelLabel = user.Rol === 'administrador' ? 'Panel Admin' : 'Panel de control';
+                            const panelLabel = user.Rol === 'administrador' ? 'Panel Admin' : 'Mi Feed';
+                            const initial = (user.Nombre || '').charAt(0).toUpperCase() || 'U';
+                            const initial2 = (user.Apellido || '').charAt(0).toUpperCase() || '';
                             userDiv.innerHTML = `
-                                <span style="margin-right: 15px; color: #eee; font-size: 0.75rem;">HOLA, ${user.Nombre}</span>
-                                <a href="${panelLink}" class="btn-panel">${panelLabel}</a>
-                                <a href="/logout" class="btn-logout" style="text-decoration: none; font-size: 0.7rem; margin-left: 10px;">Cerrar sesión</a>
+                                <div class="user-avatar">${initial}${initial2}</div>
+                                <div class="user-dropdown">
+                                    <div class="user-dropdown-header"> Hola, ${user.Nombre || ''} ${user.Apellido || ''}</div>
+                                    <a href="${panelLink}">${panelLabel}</a>
+                                    <div class="user-dropdown-divider"></div>
+                                    <a href="/logout">Cerrar sesión</a>
+                                </div>
                             `;
+                            const avatar = userDiv.querySelector('.user-avatar');
+                            const dropdown = userDiv.querySelector('.user-dropdown');
+                            avatar.addEventListener('click', (e) => { e.stopPropagation(); dropdown.classList.toggle('open'); });
+                            document.addEventListener('click', (e) => { if (!userDiv.contains(e.target)) dropdown.classList.remove('open'); });
                             navContainer.appendChild(userDiv);
                         });
                 }
@@ -169,5 +377,35 @@
             .catch(error => console.error("Error al cargar usuario:", error));
     });
 </script>
+
+<footer>
+    <div class="footer-content">
+        <div class="footer-left">
+            <div class="footer-contact">
+                <span class="contact-label">Contáctanos</span>
+                <a href="tel:+5802869711450" class="contact-phone">+58 (0286) 971-1450</a>
+            </div>
+        </div>
+        <div class="footer-right">
+            <form class="newsletter-form">
+                <label for="newsletter-email" class="newsletter-label">Suscríbete a nuestro newsletter</label>
+                <div class="newsletter-input-group">
+                    <input type="email" id="newsletter-email" placeholder="tu@email.com" required>
+                    <button type="submit">Suscribirse</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="footer-copy">
+        <a href="https://github.com/KelvysB13/Art-Museum-Platform" target="_blank" rel="noopener noreferrer" class="github-link">
+            <svg fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+            </svg>
+        </a>
+        &copy; 2026 DoArt Magic. All rights reserved.
+    </div>
+</footer>
+
+    <script src="/scripts/theme-switcher.js"></script>
 </body>
 </html>
