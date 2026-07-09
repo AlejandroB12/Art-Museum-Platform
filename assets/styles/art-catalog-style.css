@@ -292,7 +292,7 @@ body.modal-active > #main-content { filter: blur(15px); pointer-events: none; }
 .pagination button:disabled:hover { border-color: var(--border-color); color: var(--text-dim); }
 .pagination .page-info { color: var(--text-dim); font-size: 0.75rem; padding: 0 8px; }
 
-footer { text-align: center; padding: 40px 8%; border-top: 1px solid var(--border-color); color: var(--text-dim); font-size: 0.75rem; letter-spacing: 1px; text-transform: uppercase; margin-top: 20px; }
+footer { padding: 40px 8%; border-top: 1px solid var(--border-color); color: var(--text-dim); font-size: 0.75rem; letter-spacing: 1px; text-transform: uppercase; margin-top: 20px; }
 
 .theme-switcher-container {
     position: relative;
