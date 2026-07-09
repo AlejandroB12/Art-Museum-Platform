@@ -23,7 +23,7 @@
             <div id="catalog-group" class="sub-nav open">
                 <div class="nav-item active" id="btn-gestion" onclick="mostrarTab('gestion')">📦 Inventario</div>
                 <div class="nav-item" id="btn-facturacion" onclick="mostrarTab('facturacion')">🧾 Facturar Reservas</div>
-                <div class="nav-item" id="btn-autores" onclick="mostrarTab('autores')">✍️ Autores</div>
+                <div class="nav-item" id="btn-artistas" onclick="mostrarTab('artistas')">✍️ Artistas</div>
                 <div class="nav-item" id="btn-generos" onclick="mostrarTab('generos')">🎭 Géneros</div>
                 <div class="nav-item" id="btn-obras" onclick="mostrarTab('obras')">🖼️ Obras</div>
                 <div class="nav-item" id="btn-rep-obras" onclick="mostrarTab('rep-obras')">📊 Obras Vendidas</div>
@@ -85,7 +85,7 @@
         const tabToModule = {
             gestion: 'catalog', facturacion: 'catalog',
             'rep-obras': 'catalog', 'rep-facturas': 'catalog', 'rep-membresias': 'catalog',
-            generos: 'catalog', autores: 'catalog', obras: 'catalog', tendencias: 'catalog',
+            generos: 'catalog', artistas: 'catalog', obras: 'catalog', tendencias: 'catalog',
             usuarios: 'users', 'usuarios-pagos': 'users', 'validar-usuarios': 'users',
             'historial-estatus': 'security', 'logs-seguridad': 'security'
         };
@@ -101,7 +101,7 @@
                 gestion: 'Gestión de Inventario', facturacion: 'Facturación de Reservas',
                 'rep-obras': 'Reporte de Obras Vendidas', 'rep-facturas': 'Resumen de Facturación',
                 'rep-membresias': 'Reporte de Membresías Pagadas',
-                generos: 'Gestión de Géneros', autores: 'Gestión de Autores', obras: 'Gestión de Obras',
+                generos: 'Gestión de Géneros', artistas: 'Gestión de Artistas', obras: 'Gestión de Obras',
                 tendencias: 'Tendencias del Museo',
                 usuarios: 'Gestión de Usuarios del Sistema', 'usuarios-pagos': 'Validar Pagos de Membresía',
                 'validar-usuarios': 'Validar Registro de Usuarios',
@@ -191,14 +191,14 @@
                     const fn = window.cargarGeneros;
                     if (typeof fn === 'function') fn();
                 },
-                autores: () => {
-                    if (typeof window.cargarAutores === 'function') window.cargarAutores();
+                artistas: () => {
+                    if (typeof window.cargarArtistas === 'function') window.cargarArtistas();
                     if (typeof window.cargarNacionalidades === 'function') window.cargarNacionalidades();
                 },
                 obras: () => {
                     if (typeof window.cargarObrasAdmin === 'function') window.cargarObrasAdmin();
                     if (typeof window.cargarGenerosSelect === 'function') window.cargarGenerosSelect();
-                    if (typeof window.cargarAutoresSelect === 'function') window.cargarAutoresSelect();
+                    if (typeof window.cargarArtistasSelect === 'function') window.cargarArtistasSelect();
                 },
                 'rep-obras': () => {
                     const hoy = new Date();
@@ -258,7 +258,7 @@
         // Re-listen to document clicks for artista dropdown (re-binds after module load)
         document.addEventListener('click', function (e) {
             const c = document.getElementById('artista-selector-container');
-            const fn = window.cerrarDropdownAutores;
+            const fn = window.cerrarDropdownArtistas;
             if (c && !c.contains(e.target) && typeof fn === 'function') fn();
         });
     </script>

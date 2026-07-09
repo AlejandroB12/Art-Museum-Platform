@@ -1,15 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const adminService = require('../services/admin_service');
+const { validate } = require('../../../../shared/middlewares/validate_middleware');
+const envioSchema = require('../schema/envio.schema');
+const shippingService = require('../services/shipping_service');
 
-router.post('/api/registrar-envio', async (req, res) => {
+router.post('/api/registrar-envio', validate(envioSchema), async (req, res) => {
     try {
-        const { id_factura, municipio, parroquia, direccion_detallada } = req.body;
-        if (!id_factura) return res.status(400).json({ success: false, message: 'ID de factura es requerido' });
-        if (!municipio || !parroquia || !direccion_detallada) {
-            return res.status(400).json({ success: false, message: 'Todos los campos de dirección son obligatorios' });
-        }
-        const result = await adminService.registerShipping(req.body);
+        const result = await shippingService.registerShipping(req.body);
         res.json({ success: true, message: 'Envío registrado exitosamente', numero_guia: result.numero_guia });
     } catch (err) {
         if (err.message.includes("ya tiene un envío")) return res.status(400).json({ success: false, message: err.message });

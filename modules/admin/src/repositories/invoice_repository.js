@@ -86,6 +86,25 @@ async function membresiasResumen(fechaInicio, fechaFin) {
     );
 }
 
+async function ensureFacturaColumns() {
+    try {
+        await query("ALTER TABLE Factura MODIFY COLUMN Fecha_Venta timestamp NULL DEFAULT CURRENT_TIMESTAMP");
+    } catch {
+        try {
+            await query("ALTER TABLE Factura ADD COLUMN Fecha_Venta timestamp NULL DEFAULT CURRENT_TIMESTAMP");
+        } catch (err) {
+            console.error('Error creando Fecha_Venta:', err.message);
+        }
+    }
+    try {
+        await query("UPDATE Factura SET Fecha_Venta = NOW() WHERE Fecha_Venta IS NULL OR Fecha_Venta = '0000-00-00 00:00:00'");
+    } catch (err) {
+        console.error('Error actualizando Fecha_Venta NULL:', err.message);
+    }
+}
+
+ensureFacturaColumns();
+
 module.exports = {
     findById, create, updateObraStatus, deleteReserva, findObraById,
     upsertObra, obrasVendidasReport, facturacionResumen, membresiasResumen
