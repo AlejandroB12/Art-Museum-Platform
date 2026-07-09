@@ -4,15 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Museo | Arte Contemporáneo</title>
+    <title>DoArt Magic | Museo de Arte Contemporáneo</title>
+    <link rel="stylesheet" href="/styles/theme.css">
     <link rel="stylesheet" href="/styles/home-style.css">
+    <link rel="stylesheet" href="/styles/footer.css">
     <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
 </head>
 
 <body>
 
     <nav class="navbar">
-        <a href="#" class="logo"> DO ART MAGIC</a>
+        <a href="/home" class="logo"><img src="/images/DoArt_Magic_Logo.png" alt="DoArt Magic" class="logo-img"></a>
 
         <div class="nav-container">
             <ul class="nav-links">
@@ -32,7 +34,7 @@
             <span class="outline">Tu Estilo</span>
             <span class="neon">Tu Obra</span>
         </h1>
-        <p>Desde piezas físicas de vanguardia hasta activos digitales exclusivos. Ofrecemos obras contemporáneas que
+        <p>Desde piezas físicas de vanguardia hasta activos digitales exclusivos, <br>En DoArt Magic ofrecemos obras contemporáneas que
             conectan con tu visión personal del arte.</p>
         <a href="/catalog/artwork" class="btn-main">Ver Obras Disponibles</a>
     </header>
@@ -44,18 +46,9 @@
                 Museo</p>
         </div>
 
-        <div class="art-grid" id="db-art-grid">
-            <p class="loading-text">Cargando obras destacadas...</p>
-        </div>
-        <div id="loader-mas" class="loader-mas">
-            <span>Cargando más obras...</span>
-        </div>
+        <div class="art-grid" id="db-art-grid"></div>
 
     </section>
-
-    <footer>
-        &copy; 2026 DOART MAGIC TEAM. ALL RESERVED RIGHT.
-    </footer>
 
     <script src="/controllers/authController.js"></script>
     <script src="/controllers/catalogController.js"></script>
@@ -69,17 +62,28 @@
                     const authButtons = document.getElementById('auth-buttons');
                     const navContainer = document.querySelector('.nav-container');
                     if (authButtons) authButtons.style.display = 'none';
-                    const user = await AuthController.getCurrentUser();
+
                     if (!document.querySelector('.user-profile')) {
+                        const user = await AuthController.getCurrentUser();
                         const userDiv = document.createElement('div');
                         userDiv.className = 'user-profile';
                         const panelLink = user.Rol === 'administrador' ? '/admin' : '/dashboard';
                         const panelLabel = user.Rol === 'administrador' ? 'Panel Admin' : 'Mi Feed';
+                        const initial = (user.Nombre || '').charAt(0).toUpperCase() || 'U';
+                        const initial2 = (user.Apellido || '').charAt(0).toUpperCase() || '';
                         userDiv.innerHTML = `
-                        <span style="margin-right: 15px; color: #eee; font-size: 0.75rem;">HOLA, ${user.Nombre}</span>
-                        <a href="${panelLink}" class="btn-panel">${panelLabel}</a>
-                        <a href="/logout" class="btn-logout" style="text-decoration: none; font-size: 0.7rem; margin-left: 10px;">Cerrar sesión</a>
+                        <div class="user-avatar">${initial}${initial2}</div>
+                        <div class="user-dropdown">
+                            <div class="user-dropdown-header"> Hola, ${user.Nombre || ''} ${user.Apellido || ''}</div>
+                            <a href="${panelLink}">${panelLabel}</a>
+                            <div class="user-dropdown-divider"></div>
+                            <a href="/logout">Cerrar sesión</a>
+                        </div>
                     `;
+                        const avatar = userDiv.querySelector('.user-avatar');
+                        const dropdown = userDiv.querySelector('.user-dropdown');
+                        avatar.addEventListener('click', (e) => { e.stopPropagation(); dropdown.classList.toggle('open'); });
+                        document.addEventListener('click', (e) => { if (!userDiv.contains(e.target)) dropdown.classList.remove('open'); });
                         navContainer.appendChild(userDiv);
                     }
                 }
@@ -93,86 +97,118 @@
             window.location.href = '/catalog/artwork';
         }
 
-        let todasLasObras = [];
-        let obrasMostradas = 0;
-        const OBRAS_POR_CARGA = 12;
+        function crearCard(o) {
+            const img = o.fotografia || o.imagen_url || '';
+            const nombre = o.nombre || o.Nombre || '';
+            const artista = (o.artista_nombre && o.artista_apellido) ? o.artista_nombre + ' ' + o.artista_apellido : o.AutorNombre || o.autor || '';
+            const precio = o.precio_formateado || o.PrecioFormateado || (o.precio ? '$' + Number(o.precio).toLocaleString() : '');
+            const id = Number(o.id_obra || o.id_Obra || o.idObra);
+
+            const card = document.createElement('div');
+            card.className = 'art-card';
+            card.style.cssText = 'cursor:pointer; transition: transform 0.3s ease;';
+            card.onmouseover = () => card.style.transform = 'translateY(-5px)';
+            card.onmouseout = () => card.style.transform = 'translateY(0)';
+            card.onclick = () => guardarYAbrirObra(id);
+            card.innerHTML = `
+                <div class="art-img" style="background-image: url('${img}'); height:300px; background-size:cover; background-position:center;"></div>
+                <div class="art-info">
+                    <span class="art-author">${artista || 'Anónimo'}</span>
+                    <h3 class="art-title" style="margin:8px 0;">${nombre}</h3>
+                    <span class="price">${precio}</span>
+                </div>
+            `;
+            return card;
+        }
+
+        function iniciarCarrusel(track) {
+            if (!track || track.children.length < 2) return;
+            setInterval(() => {
+                const cards = track.children;
+                if (cards.length < 2) return;
+                const step = cards[0].offsetWidth + 25;
+                const first = track.firstElementChild;
+                const clone = first.cloneNode(true);
+                track.appendChild(clone);
+                track.style.transition = 'transform 0.5s ease';
+                track.style.transform = `translateX(-${step}px)`;
+                track.addEventListener('transitionend', function fn() {
+                    track.removeEventListener('transitionend', fn);
+                    track.style.transition = 'none';
+                    track.style.transform = 'translateX(0)';
+                    track.removeChild(track.firstElementChild);
+                }, { once: true });
+            }, 4000);
+        }
 
         async function cargarDestacadas() {
             const grid = document.getElementById('db-art-grid');
             grid.innerHTML = '<p class="loading-text">Cargando...</p>';
 
             try {
-                // Cargar en paralelo
                 const [populares, data] = await Promise.all([
                     RecommendationsController.getFeatured(),
-                    CatalogController.getFiltered({ genero: 'all', artista: 'all', orden: 'desc', pagina: 1, limite: 12 })
+                    CatalogController.getFiltered({ genero: 'all', artista: 'all', orden: 'desc', pagina: 1, limite: 25 })
                 ]);
 
                 const visto = new Set(populares.map(o => Number(o.idObra || o.id_Obra)));
                 const resto = (data.obras || []).filter(o => !visto.has(Number(o.id_Obra || o.idObra)));
-                todasLasObras = [...populares, ...resto];
-                obrasMostradas = 0;
-                grid.innerHTML = '';
-                mostrarLote();
+                const obras = [...populares, ...resto].slice(0, 25);
 
-                window._totalObrasHome = data.total || 0;
-                window._currentPageHome = 1;
+                if (obras.length === 0) {
+                    grid.innerHTML = '<p class="loading-text">No hay obras disponibles.</p>';
+                    return;
+                }
+
+                grid.innerHTML = '';
+                const row = document.createElement('div');
+                row.className = 'art-row';
+                const track = document.createElement('div');
+                track.className = 'art-row-track';
+                row.appendChild(track);
+                grid.appendChild(row);
+
+                obras.forEach(obra => track.appendChild(crearCard(obra)));
+                iniciarCarrusel(track);
 
             } catch (e) {
                 console.error('Error:', e);
+                grid.innerHTML = '<p class="loading-text" style="color:var(--accent);">Error al cargar obras destacadas</p>';
             }
         }
-
-        function mostrarLote() {
-            const grid = document.getElementById('db-art-grid');
-            const lote = todasLasObras.slice(obrasMostradas, obrasMostradas + OBRAS_POR_CARGA);
-
-            lote.forEach(o => {
-                const img = o.fotografia || o.imagen_url || '';
-                const nombre = o.nombre || o.Nombre || '';
-                const artista = (o.artista_nombre && o.artista_apellido) ? o.artista_nombre + ' ' + o.artista_apellido : o.AutorNombre || o.autor || '';
-                const precio = o.precio_formateado || o.PrecioFormateado || (o.precio ? '$' + Number(o.precio).toLocaleString() : '');
-                const id = Number(o.id_obra || o.id_Obra || o.idObra);
-
-                const card = document.createElement('div');
-                card.className = 'art-card';
-                card.style.cssText = 'cursor:pointer; transition: transform 0.3s ease;';
-                card.onmouseover = () => card.style.transform = 'translateY(-5px)';
-                card.onmouseout = () => card.style.transform = 'translateY(0)';
-                card.onclick = () => guardarYAbrirObra(id);
-                card.innerHTML = `
-            <div class="art-img" style="background-image: url('${img}'); height:300px; background-size:cover; background-position:center;"></div>
-            <div class="art-info">
-                <span class="art-author" style="color:#00ff00; font-size:0.65rem; text-transform:uppercase; font-weight:bold;">${artista || 'Anónimo'}</span>
-                <h3 class="art-title" style="margin:8px 0; color:white; font-size:1rem;">${nombre}</h3>
-                <span class="price" style="color:#00ff00; font-weight:bold;">${precio}</span>
-            </div>
-        `;
-                grid.appendChild(card);
-            });
-
-            obrasMostradas += OBRAS_POR_CARGA;
-        }
-
-        // Scroll infinito
-        window.addEventListener('scroll', () => {
-            if (obrasMostradas >= todasLasObras.length && window._currentPageHome * 12 < window._totalObrasHome) {
-                window._currentPageHome++;
-                CatalogController.getFiltered({ genero: 'all', artista: 'all', orden: 'desc', pagina: window._currentPageHome, limite: 12 })
-                    .then(data => {
-                        todasLasObras = [...todasLasObras, ...data.obras];
-                        mostrarLote();
-                    });
-                return;
-            }
-            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 800) {
-                mostrarLote();
-            }
-        });
 
         document.addEventListener('DOMContentLoaded', checkSession);
         document.addEventListener('DOMContentLoaded', cargarDestacadas);
     </script>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-left">
+                <div class="footer-contact">
+                    <span class="contact-label">Contáctanos</span>
+                    <a href="tel:+5802869711450" class="contact-phone">+58 (0286) 971-1450</a>
+                </div>
+            </div>
+            <div class="footer-right">
+                <form class="newsletter-form">
+                    <label for="newsletter-email" class="newsletter-label">Suscríbete a nuestro newsletter</label>
+                    <div class="newsletter-input-group">
+                        <input type="email" id="newsletter-email" placeholder="tu@email.com" required>
+                        <button type="submit">Suscribirse</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="footer-copy">
+            <a href="https://github.com/KelvysB13/Art-Museum-Platform" target="_blank" rel="noopener noreferrer" class="github-link">
+                <svg fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+            </a>
+            &copy; 2026 DoArt Magic. All rights reserved.
+        </div>
+    </footer>
+    <script src="/scripts/theme-switcher.js"></script>
 </body>
 
 </html>

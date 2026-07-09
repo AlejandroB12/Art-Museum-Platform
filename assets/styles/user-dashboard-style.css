@@ -33,7 +33,7 @@ body {
     width: 50px;
     height: 50px;
     border-radius: 12px;
-    border: 2px solid #00ff00;
+    border: 2px solid #18b2af;
     object-fit: cover;
 }
 
@@ -49,8 +49,8 @@ body {
 
 .menu a.active,
 .menu a:hover {
-    background: rgba(0, 255, 0, 0.1);
-    color: #00ff00;
+    background: rgba(24, 178, 175, 0.1);
+    color: #18b2af;
 }
 
 .btn-home {
@@ -131,7 +131,7 @@ body {
     background: #1a1a1a;
     padding: 20px;
     border-radius: 12px;
-    border-left: 5px solid #00ff00;
+    border-left: 5px solid #18b2af;
     margin-bottom: 15px;
     display: flex;
     justify-content: space-between;
@@ -162,7 +162,7 @@ select.input-select option {
 }
 
 .btn-main {
-    background: #00ff00;
+    background: #18b2af;
     color: #0F0F0F;
     border: none;
     padding: 15px;
@@ -182,7 +182,7 @@ select.input-select option {
 }
 
 .tabla-membresia th {
-    color: #00ff00;
+    color: #832aa0;
     text-transform: uppercase;
     font-size: 12px;
     padding: 15px;
@@ -202,7 +202,7 @@ select.input-select option {
 }
 
 .rec-section h3 {
-    color: #00ff00;
+    color: #832aa0;
     font-size: 1rem;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -224,7 +224,7 @@ select.input-select option {
 }
 
 .rec-card:hover {
-    border-color: #00ff00;
+    border-color: #18b2af;
     transform: translateY(-2px);
 }
 
@@ -240,7 +240,7 @@ select.input-select option {
 }
 
 .rec-card .rec-price {
-    color: #00ff00;
+    color: #18b2af;
     font-weight: bold;
     font-size: 1rem;
     margin-top: 8px;
@@ -253,7 +253,7 @@ select.input-select option {
 }
 
 .rec-stat span {
-    color: #00ff00;
+    color: #18b2af;
     font-weight: 600;
 }
 
@@ -277,14 +277,14 @@ select.input-select option {
 }
 
 .input-valid {
-    border-color: #00ff00 !important;
+    border-color: #18b2af !important;
 }
 
 /* --- Utility classes --- */
 .welcome-title { font-size: 3rem; }
 .welcome-sub { color: #666; margin-top: 10px; font-size: 1.2rem; }
 .section-title { margin-bottom: 20px; }
-.section-title-green { margin-bottom: 20px; color: #00ff00; }
+.section-title-green { margin-bottom: 20px; color: #832aa0; }
 .question-block { margin-bottom: 20px; }
 .question-title { font-size: 16px; }
 .status-msg { color: #666; font-size: 14px; margin-bottom: 30px; }
@@ -295,5 +295,5 @@ select.input-select option {
 .btn-blue-bg { background: #0088ff; color: white; }
 .btn-blue-bg:hover { background: #0077ee; }
 .recomendaciones-container { width: 100%; margin-top: 40px; }
-.premium-badge { font-size: 12px; color: #00ff00; }
+.premium-badge { font-size: 12px; color: #18b2af; }
 .sidebar-name { font-weight: 600; }

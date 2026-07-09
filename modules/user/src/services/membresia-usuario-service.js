@@ -11,13 +11,13 @@ async function getMembresiaUsuario(userId) {
 
         if (p.Tipo === 'solicitud') {
             if (p.EstadoPago === 'Pendiente') estadoColor = '#ffaa00';
-            else if (p.EstadoPago === 'Aprobado') estadoColor = '#00ff00';
+            else if (p.EstadoPago === 'Aprobado') estadoColor = '#18b2af';
         } else if (p.Tipo === 'total') {
             estiloFila = 'font-weight: bold; border-top: 2px solid #333;';
-            estadoColor = p.EstadoPago === 'Activa' ? '#00ff00' : '#ff0000';
+            estadoColor = p.EstadoPago === 'Activa' ? '#18b2af' : '#ff0000';
             diasLabel = (p.DiasRestantes > 0 ? p.DiasRestantes : 0) + ' días';
         } else if (p.Tipo === 'detalle') {
-            estadoColor = '#00ff00';
+            estadoColor = '#18b2af';
             diasLabel = p.DiasRestantes + ' días';
         }
 

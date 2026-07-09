@@ -37,13 +37,13 @@ body {
     font-size: 1.2rem;
     text-transform: uppercase;
     letter-spacing: 2px;
-    color: #00ff00;
+    color: #832aa0;
 }
 .datos-usuario {
     background: #0F0F0F;
     padding: 15px;
     border-radius: 2px;
-    border-left: 3px solid #00ff00;
+    border-left: 3px solid #18b2af;
     margin-bottom: 20px;
     font-size: 0.9rem;
 }
@@ -58,7 +58,7 @@ body {
     box-sizing: border-box;
 }
 .btn-pagar {
-    background: #00ff00;
+    background: #18b2af;
     color: #0F0F0F;
     border: none;
     padding: 15px;
@@ -70,8 +70,8 @@ body {
     transition: 0.3s;
 }
 .btn-pagar:hover {
-    background: #00cc00;
-    box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+    background: #139592;
+    box-shadow: 0 0 15px rgba(24, 178, 175, 0.3);
 }
 .secure-badge {
     text-align: center;
@@ -89,7 +89,7 @@ body {
 
 .obra-title { font-weight: bold; }
 .obra-author { font-size: 0.8rem; color: #888; }
-.obra-price { color: #00ff00; font-weight: bold; margin-top: 5px; }
+.obra-price { color: #18b2af; font-weight: bold; margin-top: 5px; }
 .user-data-loading { color: #666; }
 .flex-row-gap { display: flex; gap: 10px; }
 .input-half { width: 50%; }

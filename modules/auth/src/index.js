@@ -28,8 +28,11 @@ app.use(errorHandler);
 const PORT = process.env.AUTH_SERVICE_PORT || 3001;
 
 const start = async () => {
+
     await connectCassandra();
+
     app.listen(PORT, () => {
+        
         console.log(`Auth service corriendo en puerto ${PORT}`);
     });
 };

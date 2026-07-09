@@ -85,14 +85,14 @@
                 if (!user) {
                     datosEnvio.innerHTML = `
                         <div style="color: #ffaa00;">No has registrado tus datos de envío.</div>
-                        <a href="/dashboard" style="font-size: 0.8rem; color: #00ff00; text-decoration: none;">Completar dirección</a>
+                        <a href="/dashboard" style="font-size: 0.8rem; color: #18b2af; text-decoration: none;">Completar dirección</a>
                     `;
                 } else {
                     datosEnvio.innerHTML = `
                         <div style="font-weight:bold; color: #fff;">${user.Nombre} ${user.Apellido}</div>
                         <div style="color: #aaa;">Dirección: ${user.Calle || 'No registrada'}</div>
                         <div style="color: #aaa;">${user.Parroquia || ''}${user.Parroquia && user.Municipio ? ', ' : ''}${user.Municipio || ''}</div>
-                        <a href="/dashboard" style="font-size: 0.7rem; color: #00ff00; text-decoration: none;">Editar dirección</a>
+                        <a href="/dashboard" style="font-size: 0.7rem; color: #18b2af; text-decoration: none;">Editar dirección</a>
                     `;
                 }
             } catch (error) {

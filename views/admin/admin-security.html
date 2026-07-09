@@ -163,7 +163,7 @@ function cargarLogsSeguridad() {
                     f.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
                 let tipoClase = '';
-                if (l.tipo_evento === 'INICIO_SESION' || l.tipo_evento === 'APROBACION_USUARIO' || l.tipo_evento === 'APROBACION_PAGO') tipoClase = 'color: #00ff00;';
+                if (l.tipo_evento === 'INICIO_SESION' || l.tipo_evento === 'APROBACION_USUARIO' || l.tipo_evento === 'APROBACION_PAGO') tipoClase = 'color: #18b2af;';
                 else if (l.tipo_evento === 'CIERRE_SESION' || l.tipo_evento === 'CAMBIO_CONTRASENA') tipoClase = 'color: #e53e3e;';
 
                 tbody.innerHTML += `<tr>

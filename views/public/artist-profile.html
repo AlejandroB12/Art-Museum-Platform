@@ -5,13 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perfil del Autor | MUSEO CONTEMPORANEO</title>
     <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+    <link rel="stylesheet" href="/styles/theme.css">
     <link rel="stylesheet" href="/styles/artist-profile-style.css">
+    <link rel="stylesheet" href="/styles/footer.css">
 </head>
 
 <body>
     <div id="main-wrapper"> 
         <nav class="navbar">
-            <a href="/home" class="logo">ARTE CONTEMPORANEO</a>
+            <a href="/home" class="logo"><img src="/images/DoArt_Magic_Logo.png" alt="DoArt Magic" class="logo-img"></a>
             
             <div class="nav-container">
                 <ul class="nav-links">
@@ -21,7 +23,7 @@
 
                 <div class="auth-buttons" id="auth-buttons">
                     <a href="/login" class="btn-login">INICIAR SESION</a>
-                    <a href="/login" class="btn-register">REGISTRARTE</a>
+                    <a href="/register" class="btn-register">REGISTRARTE</a>
                 </div>
             </div>
         </nav>
@@ -179,7 +181,11 @@
                         const card = document.createElement('div');
                         card.className = 'art-card';
                         card.innerHTML = `
-                            <div class="art-img" style="background-image: url('${imgPath}')"></div>
+                            <div class="art-img" style="background-image: url('${imgPath}'); position: relative;">
+                                <svg class="heart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                </svg>
+                            </div>
                             <div class="art-info">
                                 <h3 class="art-title">${obra.nombre || 'Sin título'}</h3>
                                 <p style="color: #666; font-size: 0.7rem; margin-top: 5px;">Año: ${año}</p>
@@ -195,6 +201,8 @@
                         imgDiv.addEventListener('click', () => {
                             abrirModal(imgPath, obra.nombre || 'Sin título', nombreAutor, fichaTecnica);
                         });
+                        const heart = card.querySelector('.heart-icon');
+                        if (heart) heart.addEventListener('click', (e) => { e.stopPropagation(); e.currentTarget.classList.toggle('liked'); });
                         
                         // Agregar evento click al botón de compra
                         const buyBtn = card.querySelector('.btn-buy');
@@ -235,18 +243,30 @@
                     
                     if (data.autenticado) {
                         if (authContainer) authContainer.style.display = 'none';
-                        
+
                         AuthController.getCurrentUser()
                             .then(user => {
                                 const userDiv = document.createElement('div');
                                 userDiv.className = 'user-profile';
                                 const panelLink = user.Rol === 'administrador' ? '/admin' : '/dashboard';
-                                const panelLabel = user.Rol === 'administrador' ? 'PANEL ADMIN' : 'PANEL DE USUARIO';
+                                const panelLabel = user.Rol === 'administrador' ? 'Panel Admin' : 'Mi Feed';
+                                const nombre = user.Nombre || user.email || 'Usuario';
+                                const apellido = user.Apellido || '';
+                                const initial = nombre.charAt(0).toUpperCase();
+                                const initial2 = apellido.charAt(0).toUpperCase() || '';
                                 userDiv.innerHTML = `
-                                    <span style="margin-right: 15px; color:white;">Hola, ${user.Nombre || user.email || 'Usuario'}</span>
-                                    <a href="${panelLink}" style="margin-right: 15px; color: #00ff00; text-decoration: none; border: 1px solid #00ff00; padding: 5px 10px; font-size: 0.7rem;">${panelLabel}</a>
-                                    <a href="/logout" class="btn-logout" style="color:white; text-decoration:none;">Cerrar Sesión</a>
+                                    <div class="user-avatar">${initial}${initial2}</div>
+                                    <div class="user-dropdown">
+                                        <div class="user-dropdown-header"> Hola, ${nombre} ${apellido}</div>
+                                        <a href="${panelLink}">${panelLabel}</a>
+                                        <div class="user-dropdown-divider"></div>
+                                        <a href="/logout">Cerrar sesión</a>
+                                    </div>
                                 `;
+                                const avatar = userDiv.querySelector('.user-avatar');
+                                const dropdown = userDiv.querySelector('.user-dropdown');
+                                avatar.addEventListener('click', (e) => { e.stopPropagation(); dropdown.classList.toggle('open'); });
+                                document.addEventListener('click', (e) => { if (!userDiv.contains(e.target)) dropdown.classList.remove('open'); });
                                 if (navContainer) navContainer.appendChild(userDiv);
                             })
                             .catch(err => console.error("Error cargando usuario:", err));
@@ -255,5 +275,36 @@
                 .catch(err => console.error("Error verificando autenticación:", err));
         });
     </script>
+
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-left">
+                <div class="footer-contact">
+                    <span class="contact-label">Contáctanos</span>
+                    <a href="tel:+5802869711450" class="contact-phone">+58 (0286) 971-1450</a>
+                </div>
+            </div>
+            <div class="footer-right">
+                <form class="newsletter-form">
+                    <label for="newsletter-email" class="newsletter-label">Suscríbete a nuestro newsletter</label>
+                    <div class="newsletter-input-group">
+                        <input type="email" id="newsletter-email" placeholder="tu@email.com" required>
+                        <button type="submit">Suscribirse</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="footer-copy">
+            <a href="https://github.com/KelvysB13/Art-Museum-Platform" target="_blank" rel="noopener noreferrer" class="github-link">
+                <svg fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+            </a>
+            &copy; 2026 DoArt Magic. All rights reserved.
+        </div>
+    </footer>
+    <script src="/scripts/theme-switcher.js"></script>
 </body>
 </html>

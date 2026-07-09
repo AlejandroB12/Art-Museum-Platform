@@ -20,7 +20,7 @@
         }
 
         .genero-tag:hover {
-            border-color: #00ff00 !important;
+            border-color: #18b2af !important;
             color: #fff !important;
         }
 
@@ -245,7 +245,7 @@
                 }
 
                 obras.forEach(obra => {
-                    const estadoColor = obra.Estado === 'Pagado' ? '#00ff00' : '#ffaa00';
+                    const estadoColor = obra.Estado === 'Pagado' ? '#18b2af' : '#ffaa00';
                     contenedor.innerHTML += `
                         <div class="obra-comprada-card">
                             <div>
@@ -318,8 +318,8 @@
                                     ${obrasCollage}
                                     <div onclick="window.location.href='/artist/profile/${r.artista.replace(/\s+/g, '')}'" style="cursor:pointer; position:absolute; top:5px; left:35px; transform:translateX(-50%); z-index:10;">
                                         ${r.fotoArtista
-                                    ? `<img src="${r.fotoArtista}" style="width:60px; height:60px; border-radius:50%; object-fit:cover; border:2px solid #00ff00;">`
-                                    : `<div style="width:60px; height:60px; border-radius:50%; background:#1a1a1a; border:2px solid #00ff00; display:flex; align-items:center; justify-content:center; color:#00ff00; font-weight:bold; font-size:1.2rem;">${inicial}</div>`
+                                    ? `<img src="${r.fotoArtista}" style="width:60px; height:60px; border-radius:50%; object-fit:cover; border:2px solid #18b2af;">`
+                                    : `<div style="width:60px; height:60px; border-radius:50%; background:#1a1a1a; border:2px solid #18b2af; display:flex; align-items:center; justify-content:center; color:#18b2af; font-weight:bold; font-size:1.2rem;">${inicial}</div>`
                                 }
                                     </div>
                                 </div>
@@ -338,7 +338,7 @@
                     const dataGeneros = data5;
                     html += '<div class="rec-section" id="seccion-generos"><h3>✦ Géneros Populares</h3><div style="display:flex; flex-wrap:wrap; gap:8px;">';
                     dataGeneros.forEach(r => {
-                        html += `<div class="genero-tag" onclick="mostrarObrasGenero('${r.Genero}')" style="background:#1a1a1a; border:1px solid #333; padding:8px 14px; border-radius:20px; cursor:pointer; font-size:0.8rem; color:#ccc;">${r.Genero} <span style="color:#00ff00;">${r.ObrasVendidas}</span></div>`;
+                        html += `<div class="genero-tag" onclick="mostrarObrasGenero('${r.Genero}')" style="background:#1a1a1a; border:1px solid #333; padding:8px 14px; border-radius:20px; cursor:pointer; font-size:0.8rem; color:#ccc;">${r.Genero} <span style="color:#18b2af;">${r.ObrasVendidas}</span></div>`;
                     });
                     html += '</div><div id="genero-obra-preview" style="margin-top:10px; padding:10px; background:#111; border-radius:8px; min-height:60px;"><span style="color:#555;">Cargando géneros...</span></div></div>';
                     const primerGenero = dataGeneros[0].Genero;
@@ -411,7 +411,7 @@
                 onclick="event.stopPropagation(); sessionStorage.setItem('abrirObra', ${id}); window.location.href='/catalog/artwork';">
                 <div style="background-image:url('${img}'); background-size:cover; background-position:center; width:100px; height:70px; border-radius:4px; background-color:#1a1a1a;"></div>
                 <span style="font-size:0.65rem; color:#888;">${nombre}</span><br>
-                <span style="font-size:0.7rem; color:#00ff00;">$${Number(precio).toLocaleString()}</span>
+                <span style="font-size:0.7rem; color:#18b2af;">$${Number(precio).toLocaleString()}</span>
             </div>`;
                 }).join('');
             } catch (e) {
@@ -444,7 +444,7 @@
                             <tr>
                                 <td>${pago.Concepto}</td>
                                 <td>${pago.FechaInicio ? new Date(pago.FechaInicio).toLocaleDateString() : '-'}</td>
-                                <td style="color: #00ff00;">${pago.EstadoPago}</td>
+                                <td style="color: #18b2af;">${pago.EstadoPago}</td>
                                 <td>${diasLabel}</td>
                             </tr>
                         `;
