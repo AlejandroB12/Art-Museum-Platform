@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wizard Chatbot UI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../../assets/styles/wizard-bot-style.css">
+</head>
+<body>
+
+    <input type="checkbox" id="chat-toggle">
+
+    <label for="chat-toggle" class="chat-btn">
+        <i class="fa-regular fa-comment-dots"></i>
+    </label>
+
+    <div class="chat-window">
+        <div class="chat-header">
+            <div class="header-info">
+                <div class="avatar">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div class="bot-status">
+                    <h4 class="bot-name">Wizard-Bot</h4>
+                    <p class="status-text">En línea · Siempre disponible</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <i class="fa-solid fa-rotate-right" title="Reiniciar"></i>
+                <label for="chat-toggle"><i class="fa-solid fa-xmark" title="Cerrar"></i></label>
+            </div>
+        </div>
+
+        <div class="chat-body">
+            <div class="message-row">
+                <div class="message-bubble">
+                    ¡Hola! Se todos los secretos de este museo. ¿En qué puedo ayudarte?
+                </div>
+                <div class="message-time">01:25</div>
+            </div>
+        </div>
+
+        <div class="chat-chips">
+            <div class="chip">Servicios</div>
+            <div class="chip">Precios</div>
+            <div class="chip">Contacto</div>
+            <div class="chip">Horario</div>
+        </div>
+
+        <div class="chat-footer">
+            <div class="input-wrapper">
+                <input type="text" placeholder="Escribe tu mensaje..." autocomplete="off">
+            </div>
+            <button class="send-btn">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+</body>
+</html>
