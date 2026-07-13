@@ -5,9 +5,9 @@ function getUsuarioActual(req) {
     if (req.session && req.session.id_usuario) {
         return {
             id_usuario: req.session.id_usuario,
-            Nombre: req.session.usuario?.Nombre || 'Invitado',
-            Email: req.session.usuario?.Email || 'guest@museo.com',
-            Rol: req.session.usuario?.Rol || null
+            nombre: req.session.usuario?.nombre || 'Invitado',
+            email: req.session.usuario?.email || 'guest@museo.com',
+            rol: req.session.usuario?.rol || null
         };
     }
     return null;
@@ -24,19 +24,13 @@ async function getEstadoUsuario(req) {
     }
 
     const r = results[0];
-    let puedeAdquirir = r.PuedeAdquirir == 1;
-    const membresiaActiva = r.MembresiaActiva == 1;
-
-    if (!membresiaActiva && puedeAdquirir) {
-        await userRepo.updatePuedeAdquirir(req.session.id_usuario, 0);
-        puedeAdquirir = false;
-    }
+    const puedeAdquirir = r.membresia_activa;
 
     return {
         autenticado: true,
         puedeAdquirir,
         id_usuario: req.session.id_usuario,
-        rol: r.Rol || 'comprador'
+        rol: r.rol || 'comprador'
     };
 }
 

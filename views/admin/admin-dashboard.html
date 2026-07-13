@@ -245,12 +245,12 @@
             if (loader) setTimeout(loader, 50);
         }
 
-        function cerrarSesion() {
-            if (confirm("¿Cerrar sesión?")) {
-                localStorage.clear();
-                sessionStorage.clear();
-                window.location.href = '/logout';
-            }
+        async function cerrarSesion() {
+            if (!confirm("¿Cerrar sesión?")) return;
+            localStorage.clear();
+            sessionStorage.clear();
+            try { await fetch('/logout', { method: 'POST' }); } catch {}
+            window.location.href = '/';
         }
 
         window.onload = () => mostrarTab('gestion');

@@ -1,25 +1,26 @@
-const { loginSchema } = require('./login');
-const { recoverySchema } = require('./recovery');
-const { updatePasswordSchema } = require('./update_password');
-const { registerSchema } = require('./register');
-const { securityQuestionsSchema } = require('./security_questions');
+const { LoginRequest, LoginResponse } = require('./login');
+const { PasswordRecoveryRequest, PasswordRecoveryResponse } = require('./recovery');
+const { UpdatePasswordRequest, UpdatePasswordResponse } = require('./update_password');
+const { RegisterRequest, RegisterResponse } = require('./register');
+const { SecurityQuestionsRequest } = require('./security_questions');
 const {
-    usuarioActualSchema,
-    estadoUsuarioSchema,
-    logoutSchema,
-    sessionUserSchema,
-    estadoUsuarioResponseSchema
+    UsuarioActualRequest,
+    EstadoUsuarioRequest,
+    LogoutRequest,
+    SessionUserSchema,
+    EstadoUsuarioResponse
 } = require('./session');
+const { TIPOS_EVENTO, RegistrarEventoSeguridadInput } = require('./bitacora');
+const { ESTATUS_OBRA, RegistrarCambioEstatusInput } = require('./historial_estatus');
 
 module.exports = {
-    loginSchema,
-    recoverySchema,
-    updatePasswordSchema,
-    registerSchema,
-    securityQuestionsSchema,
-    usuarioActualSchema,
-    estadoUsuarioSchema,
-    logoutSchema,
-    sessionUserSchema,
-    estadoUsuarioResponseSchema
+    LoginRequest, LoginResponse,
+    PasswordRecoveryRequest, PasswordRecoveryResponse,
+    UpdatePasswordRequest, UpdatePasswordResponse,
+    RegisterRequest, RegisterResponse,
+    SecurityQuestionsRequest,
+    UsuarioActualRequest, EstadoUsuarioRequest, LogoutRequest,
+    SessionUserSchema, EstadoUsuarioResponse,
+    TIPOS_EVENTO, RegistrarEventoSeguridadInput,
+    ESTATUS_OBRA, RegistrarCambioEstatusInput
 };

@@ -1,51 +1,57 @@
 const userRepo = require('../repositories/user_repository');
 const membershipRepo = require('../repositories/membership_repository');
 const auditRepo = require('../repositories/audit_repository');
-const { loginSchema } = require('../schemas/login');
+const { verify } = require('../../../../shared/utils/hash_handler');
+const { LoginRequest } = require('../schemas/login');
 
-async function login(username, password, req) {
-    const { username: validatedUser, password: validatedPass } = loginSchema.parse({ username, password });
+class InvalidCredentialsError extends Error {
+    constructor() {
+        super('Credenciales inválidas');
+        this.name = 'InvalidCredentialsError';
+    }
+}
 
-    const results = await userRepo.findByEmail(validatedUser);
-    if (results.length === 0) return { error: 'credenciales', redirect: '/public/login.html?error=credenciales' };
+class InactiveAccountError extends Error {
+    constructor() {
+        super('Cuenta desactivada');
+        this.name = 'InactiveAccountError';
+    }
+}
+
+async function login(credentials, req) {
+    const { email, password } = credentials;
+
+    const results = await userRepo.findByEmail(email);
+    if (results.length === 0) {
+        throw new InvalidCredentialsError();
+    }
 
     const usuario = results[0];
-    if (usuario.Contraseña !== validatedPass) {
-        return { error: 'credenciales', redirect: '/public/login.html?error=credenciales' };
+    const passwordMatch = await verify(password, usuario.password);
+    if (!passwordMatch) {
+        throw new InvalidCredentialsError();
     }
 
-    if (usuario.Estatus === 0) {
-        return { pending: true };
-    }
-
-    const pagos = await membershipRepo.findLastPayment(usuario.id_usuario);
-    if (pagos.length > 0) {
-        const pago = pagos[0];
-        const fechaPago = new Date(pago.FechaPago);
-        const dias = (parseFloat(pago.MontoPagado) / 10) * 30;
-        const expiracion = new Date(fechaPago.getTime() + dias * 86400000);
-        const ahora = new Date();
-        if (ahora > expiracion) {
-            await userRepo.updatePuedeAdquirir(usuario.id_usuario, 0);
-        }
-    } else if (usuario.Rol !== 'administrador') {
-        await userRepo.updatePuedeAdquirir(usuario.id_usuario, 0);
+    if (!usuario.activo) {
+        throw new InactiveAccountError();
     }
 
     req.session.id_usuario = usuario.id_usuario;
     req.session.usuario = {
         id_usuario: usuario.id_usuario,
-        Nombre: usuario.Nombre,
-        Email: usuario.Email,
-        Rol: usuario.Rol
+        nombre: usuario.nombre,
+        email: usuario.email,
+        rol: usuario.rol
     };
 
     await auditRepo.registrarEvento(usuario.id_usuario, 'INICIO_SESION', 'Inicio de sesión exitoso', req);
 
-    if (usuario.Rol === 'administrador') {
-        return { success: true, redirect: '/admin/admin-dashboard.html' };
-    }
-    return { success: true, redirect: `/private/user-dashboard.html?email=${usuario.Email}` };
+    return {
+        id_usuario: usuario.id_usuario,
+        nombre: usuario.nombre,
+        email: usuario.email,
+        rol: usuario.rol
+    };
 }
 
-module.exports = { login };
+module.exports = { login, InvalidCredentialsError, InactiveAccountError };

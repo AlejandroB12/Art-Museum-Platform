@@ -462,12 +462,12 @@
             } catch (error) { console.error(error); }
         }
 
-        function logout() {
-            if (confirm("¿Deseas cerrar tu sesión?")) {
-                localStorage.clear();
-                sessionStorage.clear();
-                window.location.href = "/logout";
-            }
+        async function logout() {
+            if (!confirm("¿Deseas cerrar tu sesión?")) return;
+            localStorage.clear();
+            sessionStorage.clear();
+            try { await fetch('/logout', { method: 'POST' }); } catch {}
+            window.location.href = "/";
         }
 
         // --- VALIDACIONES ---

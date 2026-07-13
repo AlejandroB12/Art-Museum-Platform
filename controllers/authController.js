@@ -12,7 +12,7 @@ const AuthController = {
   },
 
   async login(credentials) {
-    const res = await fetch('/login-auth', {
+    const res = await fetch('/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(credentials)
@@ -21,7 +21,7 @@ const AuthController = {
   },
 
   async register(data) {
-    const res = await fetch('/registrar', {
+    const res = await fetch('/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -57,8 +57,16 @@ const AuthController = {
   },
 
   async logout() {
-    const res = await fetch('/logout');
+    const res = await fetch('/logout', { method: 'POST' });
     if (!res.ok) throw new Error('Error al cerrar sesión');
     return res.json();
+  },
+
+  async logoutUser(event) {
+    if (event) event.preventDefault();
+    localStorage.clear();
+    sessionStorage.clear();
+    try { await this.logout(); } catch {}
+    window.location.href = '/';
   }
 };

@@ -1,21 +1,38 @@
-const { client } = require('../config/database');
-const { RegistrarEventoSeguridadInput, RegistrarCambioEstatusInput } = require('../models');
+const { cassandraModels } = require('../config/database');
+const { RegistrarEventoSeguridadInput } = require('../schemas/bitacora');
+const { RegistrarCambioEstatusInput } = require('../schemas/historial_estatus');
+
+function getBitacora() { return cassandraModels.instance?.BitacoraSeguridad; }
+function getHistorial() { return cassandraModels.instance?.HistorialEstatusObra; }
+function getRawClient() { return cassandraModels.connection; }
+
+function normalizeIp(ip) {
+    if (!ip) return undefined;
+    // ::ffff:127.0.0.1 → 127.0.0.1 (IPv4-mapped IPv6)
+    if (ip.startsWith('::ffff:')) return ip.substring(7);
+    // Pure IPv6 como ::1 → undefined (solo auditoría IPv4)
+    if (/^(\d{1,3}\.){3}\d{1,3}$/.test(ip)) return ip;
+    return undefined;
+}
 
 async function registrarEvento(id_usuario, tipo_evento, descripcion, req) {
     const payload = RegistrarEventoSeguridadInput.parse({
         id_usuario,
         tipo_evento,
         descripcion,
-        ip_origen: req?.ip || '',
+        ip_origen: normalizeIp(req?.ip),
         dispositivo: req?.headers?.['user-agent'] || ''
     });
 
-    await client.execute(
-        `INSERT INTO bitacora_seguridad (id_usuario, fecha_evento, tipo_evento, descripcion, ip_origen, dispositivo)
-         VALUES (?, toTimestamp(now()), ?, ?, ?, ?)`,
-        [payload.id_usuario, payload.tipo_evento, payload.descripcion, payload.ip_origen, payload.dispositivo],
-        { prepare: true }
-    );
+    const Bitacora = getBitacora();
+    if (!Bitacora) throw new Error('Cassandra no conectado');
+
+    return new Promise((resolve, reject) => {
+        Bitacora.create(payload, (err, model) => {
+            if (err) reject(err);
+            else resolve(model);
+        });
+    });
 }
 
 async function registrarCambioEstatus(id_obra, estatus_anterior, estatus_nuevo, modificado_por, motivo) {
@@ -25,47 +42,81 @@ async function registrarCambioEstatus(id_obra, estatus_anterior, estatus_nuevo, 
         motivo: motivo || ''
     });
 
-    await client.execute(
-        `INSERT INTO historial_estatus_obra (id_obra, fecha_cambio, estatus_anterior, estatus_nuevo, modificado_por, motivo)
-         VALUES (?, toTimestamp(now()), ?, ?, ?, ?)`,
-        [payload.id_obra, payload.estatus_anterior, payload.estatus_nuevo, payload.modificado_por, payload.motivo],
-        { prepare: true }
-    );
+    const Historial = getHistorial();
+    if (!Historial) throw new Error('Cassandra no conectado');
+
+    return new Promise((resolve, reject) => {
+        Historial.create(payload, (err, model) => {
+            if (err) reject(err);
+            else resolve(model);
+        });
+    });
 }
 
 async function findAllLogs() {
-    const result = await client.execute('SELECT * FROM bitacora_seguridad ALLOW FILTERING');
-    return result.rows;
+    const Bitacora = getBitacora();
+    if (!Bitacora) throw new Error('Cassandra no conectado');
+
+    return new Promise((resolve, reject) => {
+        Bitacora.find({}, { raw: true }, (err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
+        });
+    });
 }
 
 async function findLogsByUser(id_usuario) {
-    const result = await client.execute(
-        'SELECT * FROM bitacora_seguridad WHERE id_usuario = ?', [parseInt(id_usuario)]
-    );
-    return result.rows;
+    const Bitacora = getBitacora();
+    if (!Bitacora) throw new Error('Cassandra no conectado');
+
+    return new Promise((resolve, reject) => {
+        Bitacora.find({ id_usuario: parseInt(id_usuario) }, { raw: true }, (err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
+        });
+    });
 }
 
 async function findLogsByUserAndType(id_usuario, tipo_evento) {
-    const result = await client.execute(
-        'SELECT * FROM bitacora_seguridad WHERE id_usuario = ? AND tipo_evento = ? ALLOW FILTERING',
-        [parseInt(id_usuario), tipo_evento]
-    );
-    return result.rows;
+    const Bitacora = getBitacora();
+    if (!Bitacora) throw new Error('Cassandra no conectado');
+
+    return new Promise((resolve, reject) => {
+        Bitacora.find(
+            { id_usuario: parseInt(id_usuario), tipo_evento },
+            { raw: true },
+            (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows);
+            }
+        );
+    });
 }
 
 async function findObrasConHistorial() {
+    const client = getRawClient();
+    if (!client) throw new Error('Cassandra no conectado');
+
     const result = await client.execute('SELECT DISTINCT id_obra FROM historial_estatus_obra');
     return result.rows.map(r => r.id_obra);
 }
 
 async function findHistorialByObra(id_obra) {
-    const result = await client.execute(
-        'SELECT * FROM historial_estatus_obra WHERE id_obra = ?', [parseInt(id_obra)]
-    );
-    return result.rows;
+    const Historial = getHistorial();
+    if (!Historial) throw new Error('Cassandra no conectado');
+
+    return new Promise((resolve, reject) => {
+        Historial.find({ id_obra: parseInt(id_obra) }, { raw: true }, (err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
+        });
+    });
 }
 
 async function registrarBatch(queries) {
+    const client = getRawClient();
+    if (!client) throw new Error('Cassandra no conectado');
+
     await client.batch(queries, { prepare: true });
 }
 

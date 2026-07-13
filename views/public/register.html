@@ -53,7 +53,7 @@
 
             <!-- FORM VIEW -->
             <div id="formView" class="form-view">
-                <form class="login-form" action="/registrar" method="POST">
+                <form class="login-form" id="registerForm">
                     <h2 class="welcome-title">CREAR CUENTA</h2>
 
                     <div id="error-message" class="mensaje" style="display: none;"></div>
@@ -426,86 +426,62 @@
             nextEl.style.display = 'block';
         }
 
-        // --- SUBMIT: COMBINAR CAMPOS ---
-        document.querySelector('.login-form').addEventListener('submit', function (e) {
-            const tipo = document.getElementById('tipo-cedula').value;
-            const cedula = document.getElementById('cedula');
-            const cedDigits = cedula.value.replace(/\D/g, '');
-            if (cedDigits.length === 0) {
-                e.preventDefault();
-                cedula.setCustomValidity('La cédula es obligatoria.');
-                cedula.reportValidity();
-                return;
-            }
-            cedula.value = cedDigits;
+        // --- SUBMIT: API JSON ---
+        document.getElementById('registerForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
 
-            const prefijo = document.getElementById('prefijo-telefono').value;
-            const telefono = document.getElementById('telefono');
-            const telDigits = telefono.value.replace(/\D/g, '');
-            if (telDigits.length === 0) {
-                e.preventDefault();
-                telefono.setCustomValidity('El teléfono es obligatorio.');
-                telefono.reportValidity();
-                return;
-            }
-            telefono.value = prefijo + '-' + telDigits;
+            const mensaje = document.getElementById('error-message');
+            mensaje.style.display = 'none';
 
-            const tarjeta = document.getElementById('card-number');
-            const cardDigits = tarjeta.value.replace(/\s/g, '');
-            if (cardDigits.length === 0) {
-                e.preventDefault();
-                tarjeta.setCustomValidity('El número de tarjeta es obligatorio.');
-                tarjeta.reportValidity();
-                return;
-            }
-            if (cardDigits.length !== 16 || /[^0-9]/.test(cardDigits)) {
-                e.preventDefault();
-                tarjeta.setCustomValidity('La tarjeta debe tener 16 dígitos.');
-                tarjeta.reportValidity();
+            const cedDigits = document.getElementById('cedula').value.replace(/\D/g, '');
+            if (!cedDigits) {
+                mensaje.textContent = 'La cédula es obligatoria.';
+                mensaje.style.display = 'block';
                 return;
             }
 
-            const expMes = document.getElementById('exp-mes');
-            const expAnio = document.getElementById('exp-anio');
-            if (!expMes.value || !expAnio.value) {
-                e.preventDefault();
-                (expMes.value ? expAnio : expMes).setCustomValidity('Seleccione mes y año de vencimiento.');
-                (expMes.value ? expAnio : expMes).reportValidity();
-                return;
-            }
-            const mes = parseInt(expMes.value, 10);
-            const anio = parseInt(expAnio.value, 10) + 2000;
-            const vence = new Date(anio, mes, 0);
-            if (vence < new Date()) {
-                e.preventDefault();
-                expAnio.setCustomValidity('La tarjeta está vencida.');
-                expAnio.reportValidity();
+            const prefijo = document.getElementById('prefijo-telefono').value;
+            const telDigits = document.getElementById('telefono').value.replace(/\D/g, '');
+            if (!telDigits) {
+                mensaje.textContent = 'El teléfono es obligatorio.';
+                mensaje.style.display = 'block';
                 return;
             }
 
-            const cvv = document.querySelector('input[name="cvv"]');
-            if (cvv.value.length === 0) {
-                e.preventDefault();
-                cvv.setCustomValidity('El CVV es obligatorio.');
-                cvv.reportValidity();
-                return;
-            }
-            if (cvv.value.length !== 3) {
-                e.preventDefault();
-                cvv.setCustomValidity('El CVV debe tener 3 dígitos.');
-                cvv.reportValidity();
-                return;
+            const body = {
+                nombre: document.querySelector('input[name="nombre"]').value,
+                apellido: document.querySelector('input[name="apellido"]').value,
+                correo: document.querySelector('input[name="correo"]').value,
+                password: document.querySelector('input[name="password"]').value,
+                confirmPassword: document.querySelector('input[name="password"]').value,
+                cedula: cedDigits,
+                telefono: prefijo + telDigits,
+                parroquia: document.getElementById('select-parroquia').value || undefined,
+                calle: document.querySelector('input[name="calle"]').value || undefined
+            };
+
+            try {
+                const res = await fetch('/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    const errMsg = Array.isArray(data.error) ? data.error.map(i => i.message).join('. ') : data.error;
+                    mensaje.textContent = errMsg || 'Error al registrar';
+                    mensaje.style.display = 'block';
+                    return;
+                }
+                document.getElementById('formView').style.display = 'none';
+                document.getElementById('successView').style.display = 'block';
+                document.getElementById('successNombre').textContent = data.nombre || 'Usuario';
+                document.getElementById('successCorreo').textContent = data.correo || '';
+            } catch (err) {
+                mensaje.textContent = 'Error de conexión con el servidor';
+                mensaje.style.display = 'block';
             }
         });
-
-        // --- SUCCESS VIEW ---
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('success') === '1') {
-            document.getElementById('formView').style.display = 'none';
-            document.getElementById('successView').style.display = 'block';
-            document.getElementById('successNombre').textContent = params.get('nombre') || 'Usuario';
-            document.getElementById('successCorreo').textContent = params.get('correo') || '';
-        }
 
         // --- TYPEWRITER ---
         const text = "La magía del arte \nte espera.";

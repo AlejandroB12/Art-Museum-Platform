@@ -27,10 +27,10 @@ const apiProxy = createProxyMiddleware({
         const { path } = req;
 
         if (
-            path === '/login-auth' ||
+            path === '/login' ||
+            path === '/register' ||
             path === '/recuperar-pw' ||
             path === '/update-password' ||
-            path === '/registrar' ||
             path === '/guardar-seguridad' ||
             path === '/verificar-preguntas' ||
             path === '/logout' ||
@@ -86,7 +86,9 @@ const shouldProxy = (pathname) => {
 
     return (
         pathname.startsWith('/api/') ||
+        pathname === '/login' ||
         pathname.startsWith('/login-') ||
+        pathname === '/register' ||
         pathname.startsWith('/registrar') ||
         pathname.startsWith('/logout') ||
         pathname.startsWith('/recuperar-') ||

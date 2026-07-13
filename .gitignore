@@ -53,3 +53,7 @@ jspm_packages/
 # === DataStax Astra Secure Connect Bundle ===
 *.scb
 secure-connect-*.zip
+
+# === Prisma (auth module) - generated files ===
+modules/auth/src/prisma/schema.prisma
+modules/auth/src/models/generated/

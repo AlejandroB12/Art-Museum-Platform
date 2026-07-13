@@ -77,7 +77,7 @@ try {
         ]
     });
 
-    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+    app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 } catch (e) {
     console.log('Swagger no disponible. Ejecute: npm install swagger-jsdoc swagger-ui-express');
 }
@@ -102,5 +102,5 @@ const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
     console.log(`API Gateway corriendo en http://localhost:${PORT}`);
-    console.log(`Documentación: http://localhost:${PORT}/api-docs`);
+    console.log(`Documentación: http://localhost:${PORT}/docs`);
 });
