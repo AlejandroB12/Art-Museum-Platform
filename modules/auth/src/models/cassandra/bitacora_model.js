@@ -11,6 +11,7 @@ module.exports = {
     },
 
     key: [['id_usuario'], 'fecha_evento', 'tipo_evento'],
+    clustering_order: { fecha_evento: 'DESC', tipo_evento: 'ASC' },
     table_name: 'bitacora_seguridad',
     
     options: {

@@ -208,7 +208,7 @@
                         const buyBtn = card.querySelector('.btn-buy');
                         buyBtn.addEventListener('click', (e) => {
                             e.stopPropagation();
-                            comprar(obra.id_obra, obra.nombre);
+                            comprar(obra.id_obra, obra.nombre, nombreAutor, obra.precio || 0, imgPath);
                         });
                         
                         gallery.appendChild(card);
@@ -222,10 +222,11 @@
             }
         }
 
-        function comprar(id, nombre) {
-            alert(`Solicitud de adquisición para la obra: ${nombre || 'ID: ' + id}\n\nPróximamente estará disponible el sistema de compras.`);
-            // Aquí puedes redirigir a una página de checkout o abrir un modal de compra
-            // window.location.href = `/comprar/${id}`;
+        function comprar(id, nombre, artista, precio, imagen) {
+            localStorage.setItem('obraSeleccionada', JSON.stringify({
+                id_Obra: id, nombre: nombre, artista: artista, precio: precio, imagen: imagen
+            }));
+            window.location.href = "/checkout";
         }
 
         // Event listener para el selector de orden
@@ -305,6 +306,7 @@
             &copy; 2026 DoArt Magic. All rights reserved.
         </div>
     </footer>
+    <script src="/controllers/checkoutController.js"></script>
     <script src="/scripts/theme-switcher.js"></script>
 </body>
 </html>

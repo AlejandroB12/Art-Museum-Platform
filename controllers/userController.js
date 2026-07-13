@@ -12,7 +12,7 @@ const UserController = {
   },
 
   async requestPayment(data) {
-    const res = await fetch('/solicitar-pago', {
+    const res = await fetch('/api/solicitar-pago', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -22,7 +22,7 @@ const UserController = {
   },
 
   async getMyPurchases() {
-    const res = await fetch('/mis-compras');
+    const res = await fetch('/api/mis-compras');
     if (!res.ok) throw new Error('Error al obtener compras');
     return res.json();
   },

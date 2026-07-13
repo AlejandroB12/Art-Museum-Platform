@@ -2,9 +2,9 @@ const { cassandraModels } = require('../config/database');
 const { RegistrarEventoSeguridadInput } = require('../schemas/bitacora');
 const { RegistrarCambioEstatusInput } = require('../schemas/historial_estatus');
 
-function getBitacora() { return cassandraModels.instance?.BitacoraSeguridad; }
-function getHistorial() { return cassandraModels.instance?.HistorialEstatusObra; }
-function getRawClient() { return cassandraModels.connection; }
+function getBitacora() { return cassandraModels.instance?.bitacora; }
+function getHistorial() { return cassandraModels.instance?.historial_estatus; }
+function getRawClient() { return cassandraModels.instance?.obras_vendidas?._driver?._properties?.cql || cassandraModels.orm?._client; }
 
 function normalizeIp(ip) {
     if (!ip) return undefined;
@@ -28,7 +28,8 @@ async function registrarEvento(id_usuario, tipo_evento, descripcion, req) {
     if (!Bitacora) throw new Error('Cassandra no conectado');
 
     return new Promise((resolve, reject) => {
-        Bitacora.create(payload, (err, model) => {
+        const record = new Bitacora(payload);
+        record.save((err, model) => {
             if (err) reject(err);
             else resolve(model);
         });
@@ -46,7 +47,8 @@ async function registrarCambioEstatus(id_obra, estatus_anterior, estatus_nuevo, 
     if (!Historial) throw new Error('Cassandra no conectado');
 
     return new Promise((resolve, reject) => {
-        Historial.create(payload, (err, model) => {
+        const record = new Historial(payload);
+        record.save((err, model) => {
             if (err) reject(err);
             else resolve(model);
         });

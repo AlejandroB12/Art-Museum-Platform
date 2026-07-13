@@ -22,6 +22,7 @@ module.exports = {
     },
 
     key: [['anio_mes'], 'fecha_venta', 'id_factura'],
+    clustering_order: { fecha_venta: 'DESC', id_factura: 'ASC' },
     table_name: 'obras_vendidas_por_periodo',
     
     options: {

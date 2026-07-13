@@ -40,6 +40,7 @@ async function login(credentials, req) {
     req.session.usuario = {
         id_usuario: usuario.id_usuario,
         nombre: usuario.nombre,
+        apellido: usuario.apellido,
         email: usuario.email,
         rol: usuario.rol
     };
@@ -49,6 +50,7 @@ async function login(credentials, req) {
     return {
         id_usuario: usuario.id_usuario,
         nombre: usuario.nombre,
+        apellido: usuario.apellido,
         email: usuario.email,
         rol: usuario.rol
     };

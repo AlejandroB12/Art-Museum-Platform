@@ -45,7 +45,10 @@ const apiProxy = createProxyMiddleware({
             path === '/solicitar-pago' ||
             path === '/api/solicitar-pago' ||
             path === '/mis-compras' ||
-            path === '/api/datos-envio-pago'
+            path === '/api/mis-compras' ||
+            path === '/api/datos-envio-pago' ||
+            path === '/api/tarjeta' ||
+            path === '/api/guardar-tarjeta'
 
         ) return USER_URL;
 

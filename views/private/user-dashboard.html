@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Premium - Museo de Arte</title>
+    <title>DoArt Magic | Dashboard</title>
     <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
     <link rel="stylesheet" href="/styles/user-dashboard-style.css">
     <style>
@@ -557,6 +557,15 @@
                 const result = await UserController.requestPayment({ cardNumber: card, expiry: expiry, cvv: cvv });
 
                 if (result && result.success !== false) {
+                    // Guardar tarjeta para futuras compras
+                    try {
+                        await fetch('/api/guardar-tarjeta', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ numero: card, expiracion: expiry, titular: '' })
+                        });
+                    } catch (saveErr) { console.error("Error guardando tarjeta:", saveErr); }
+
                     alert("Solicitud enviada con éxito. El administrador revisará tu información pronto.");
                     document.getElementById('card-number').value = '';
                     document.getElementById('expiry-month').value = '';

@@ -11,6 +11,7 @@ module.exports = {
     },
 
     key: [['id_obra'], 'fecha_cambio'],
+    clustering_order: { fecha_cambio: 'DESC' },
     table_name: 'historial_estatus_obra',
 
     options: {

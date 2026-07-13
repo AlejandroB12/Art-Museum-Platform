@@ -9,6 +9,22 @@ const CheckoutController = {
     return res.json();
   },
 
+  async getCard() {
+    const res = await fetch('/api/tarjeta');
+    if (!res.ok) throw new Error('Error al obtener tarjeta');
+    return res.json();
+  },
+
+  async saveCard(data) {
+    const res = await fetch('/api/guardar-tarjeta', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error('Error al guardar tarjeta');
+    return res.json();
+  },
+
   async getEstados() {
     const res = await fetch('/api/estados');
     if (!res.ok) throw new Error('Error al obtener estados');

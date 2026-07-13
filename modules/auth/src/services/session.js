@@ -1,13 +1,23 @@
 const userRepo = require('../repositories/user_repository');
 
 function getUsuarioActual(req) {
-    if (req.session && req.session.usuario) return req.session.usuario;
+    if (req.session && req.session.usuario) {
+        const u = req.session.usuario;
+        return {
+            id_usuario: u.id_usuario,
+            Nombre: u.nombre || u.Nombre || '',
+            Apellido: u.apellido || u.Apellido || '',
+            Email: u.email || u.Email || '',
+            Rol: u.rol || u.Rol || ''
+        };
+    }
     if (req.session && req.session.id_usuario) {
         return {
             id_usuario: req.session.id_usuario,
-            nombre: req.session.usuario?.nombre || 'Invitado',
-            email: req.session.usuario?.email || 'guest@museo.com',
-            rol: req.session.usuario?.rol || null
+            Nombre: req.session.usuario?.nombre || req.session.usuario?.Nombre || 'Invitado',
+            Apellido: req.session.usuario?.apellido || req.session.usuario?.Apellido || '',
+            Email: req.session.usuario?.email || req.session.usuario?.Email || 'guest@museo.com',
+            Rol: req.session.usuario?.rol || req.session.usuario?.Rol || null
         };
     }
     return null;

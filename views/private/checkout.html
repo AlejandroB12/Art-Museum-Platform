@@ -2,43 +2,189 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Finalizar Compra | MUSEO CONTEMPORANEO</title>
+    <title>DoArt Magic | Checkout</title>
     <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
     <link rel="stylesheet" href="/styles/checkout-style.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        .checkout-overlay {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+        }
+        .checkout-modal {
+            background: #0F0F0F;
+            border: 1px solid #222;
+            padding: 35px 40px;
+            width: 100%;
+            max-width: 520px;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+            max-height: 95vh;
+            overflow-y: auto;
+        }
+        .checkout-modal::-webkit-scrollbar { width: 4px; }
+        .checkout-modal::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+        .checkout-close {
+            position: absolute;
+            top: 12px;
+            right: 18px;
+            font-size: 1.8rem;
+            color: #666;
+            cursor: pointer;
+            text-decoration: none;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+        .checkout-close:hover { color: #fff; }
+        .checkout-modal h2 {
+            margin: 0 0 20px 0;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #832aa0;
+        }
+        .obra-resumen {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #222;
+            padding-bottom: 20px;
+        }
+        .obra-img {
+            width: 80px; height: 80px;
+            object-fit: cover;
+            border: 1px solid #333;
+            flex-shrink: 0;
+        }
+        .obra-title { font-weight: bold; }
+        .obra-author { font-size: 0.8rem; color: #888; }
+        .obra-price { color: #18b2af; font-weight: bold; margin-top: 5px; }
+        .datos-usuario {
+            background: #0F0F0F;
+            padding: 15px;
+            border-radius: 2px;
+            border-left: 3px solid #18b2af;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+        .user-data-loading { color: #666; }
+        .section-label {
+            font-size: 0.75rem;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            background: #0F0F0F;
+            border: 1px solid #222;
+            color: white;
+            margin: 8px 0;
+            border-radius: 2px;
+            box-sizing: border-box;
+        }
+        .flex-row-gap { display: flex; gap: 10px; }
+        .input-half { width: 50%; }
+        .btn-pagar {
+            background: #18b2af;
+            color: #0F0F0F;
+            border: none;
+            padding: 15px;
+            width: 100%;
+            cursor: pointer;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-top: 20px;
+            transition: 0.3s;
+        }
+        .btn-pagar:hover {
+            background: #139592;
+            box-shadow: 0 0 15px rgba(24, 178, 175, 0.3);
+        }
+        .btn-pagar:disabled { opacity: 0.6; cursor: not-allowed; }
+        .secure-badge {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #666;
+            margin-top: 20px;
+        }
+        .error-msg-checkout {
+            color: #ff4444;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            display: none;
+        }
+        .save-card-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: #888;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+        .save-card-label input { width: auto; margin: 0; }
+    </style>
 </head>
 <body>
+<div class="checkout-overlay">
+    <div class="checkout-modal">
+        <a href="/catalog/artwork" class="checkout-close">&times;</a>
+        <h2>Confirmar Adquisici&oacute;n</h2>
 
-<div class="checkout-box">
-    <h2>Confirmar Adquisición</h2>
-    
-    <div class="obra-resumen">
-        <img id="img-obra" src="" class="obra-img" alt="Miniatura de la obra">
-        <div>
-            <div id="titulo-obra" class="obra-title">Cargando obra...</div>
-            <div id="artista-obra" class="obra-author">Artista</div>
-            <div id="precio-obra" class="obra-price">0$</div>
+        <div class="obra-resumen">
+            <img id="img-obra" src="" class="obra-img" alt="Miniatura">
+            <div>
+                <div id="titulo-obra" class="obra-title">Cargando obra...</div>
+                <div id="artista-obra" class="obra-author">Artista</div>
+                <div id="precio-obra" class="obra-price">0$</div>
+            </div>
         </div>
-    </div>
 
-    <div class="section-label">Información de Envío</div><br>
-    <div class="datos-usuario" id="datos-envio">
-        <div class="user-data-loading">Cargando tus datos...</div>
-    </div>
-
-    <form id="form-pago" novalidate>
-        <div class="section-label">Detalles de Pago</div><br>
-        <input type="text" id="card-number" placeholder="Número de Tarjeta" minlength="16" maxlength="19" pattern="\d{16,19}" title="Debe contener entre 16 y 19 dígitos numéricos" required autocomplete="cc-number">
-        <div class="flex-row-gap">
-            <input type="text" id="expiry-date" placeholder="MM/AA" minlength="5" maxlength="5" pattern="(0[1-9]|1[0-2])\/\d{2}" title="Formato: MM/AA (ej: 12/28)" required class="input-half" autocomplete="cc-exp">
-            <input type="password" id="cvv" placeholder="CVC" minlength="3" maxlength="4" pattern="\d{3,4}" title="Debe contener 3 o 4 dígitos" required class="input-half" autocomplete="cc-csc">
+        <div class="section-label">Informaci&oacute;n de Env&iacute;o</div><br>
+        <div class="datos-usuario" id="datos-envio">
+            <div class="user-data-loading">Cargando tus datos...</div>
         </div>
-        <input type="text" id="codigo-membresia" placeholder="Código de seguridad de membresía" minlength="6" maxlength="6" pattern="\d{6}" title="Debe ser un código de 6 dígitos" required>
-        <div id="error-msg" class="error-msg-checkout"></div>
-        <button type="submit" class="btn-pagar">Pagar Ahora</button>
-    </form>
 
-    <div class="secure-badge">
-        🔒 Pago 100% seguro y cifrado. Museo Contemporáneo 2026.
+        <form id="form-pago" novalidate>
+            <div class="section-label">Detalles de Pago</div><br>
+            <input type="text" id="card-number" placeholder="N&uacute;mero de Tarjeta" minlength="16" maxlength="19" required autocomplete="cc-number">
+            <div class="flex-row-gap">
+                <input type="text" id="expiry-date" placeholder="MM/AA" minlength="5" maxlength="5" required class="input-half" autocomplete="cc-exp">
+                <input type="password" id="cvv" placeholder="CVC" minlength="3" maxlength="4" required class="input-half" autocomplete="cc-csc">
+            </div>
+            <input type="text" id="codigo-membresia" placeholder="C&oacute;digo de seguridad de membres&iacute;a" minlength="6" maxlength="6" required>
+            <label class="save-card-label">
+                <input type="checkbox" id="guardar-tarjeta" checked>
+                <span>Guardar tarjeta para pr&oacute;ximas compras</span>
+            </label>
+            <div id="error-msg" class="error-msg-checkout"></div>
+            <button type="submit" class="btn-pagar">Pagar Ahora</button>
+        </form>
+
+        <div class="secure-badge">
+            &#x1f512; Pago 100% seguro y cifrado. Museo Contempor&aacute;neo 2026.
+        </div>
     </div>
 </div>
 
@@ -48,7 +194,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', async () => {
 
-        // --- 0. VERIFICAR SESIÓN PRIMERO ---
+        // --- 0. VERIFICAR SESIÓN ---
         try {
             const sesionData = await AuthController.checkSession();
             if (!sesionData.autenticado) {
@@ -61,159 +207,145 @@
             window.location.href = "/login";
             return;
         }
-        
-        // --- 1. CARGAR DATOS DE LA OBRA DESDE LOCALSTORAGE ---
-        const cargarObraSeleccionada = () => {
-            const obraData = localStorage.getItem('obraSeleccionada');
-            if (obraData) {
-                const obra = JSON.parse(obraData);
-                document.getElementById('img-obra').src = obra.imagen;
-                document.getElementById('titulo-obra').innerText = obra.nombre;
-                document.getElementById('artista-obra').innerText = obra.artista;
-                document.getElementById('precio-obra').innerText = `${obra.precio}$`;
-            } else {
+
+        // --- 1. CARGAR OBRA DESDE LOCALSTORAGE ---
+        const cargarObra = () => {
+            const data = localStorage.getItem('obraSeleccionada');
+            if (!data) {
                 alert("No se ha seleccionado ninguna obra.");
                 window.location.href = "/catalog/artwork";
+                return;
             }
+            const obra = JSON.parse(data);
+            document.getElementById('img-obra').src = obra.imagen || '';
+            document.getElementById('titulo-obra').innerText = obra.nombre || '';
+            document.getElementById('artista-obra').innerText = obra.artista || '';
+            document.getElementById('precio-obra').innerText = obra.precio ? `$${Number(obra.precio).toLocaleString()}` : '0$';
         };
 
-        const cargarUsuarioSesion = async () => {
+        // --- 2. CARGAR DATOS DE ENVÍO + TARJETA ---
+        async function cargarUsuario() {
             try {
                 const user = await UserController.getShippingPaymentData();
-                const datosEnvio = document.getElementById('datos-envio');
-
+                const el = document.getElementById('datos-envio');
                 if (!user) {
-                    datosEnvio.innerHTML = `
-                        <div style="color: #ffaa00;">No has registrado tus datos de envío.</div>
-                        <a href="/dashboard" style="font-size: 0.8rem; color: #18b2af; text-decoration: none;">Completar dirección</a>
-                    `;
+                    el.innerHTML = '<div style="color:#ffaa00;">No has registrado tus datos de envío. <a href="/dashboard" style="color:#18b2af;">Completar dirección</a></div>';
                 } else {
-                    datosEnvio.innerHTML = `
-                        <div style="font-weight:bold; color: #fff;">${user.Nombre} ${user.Apellido}</div>
-                        <div style="color: #aaa;">Dirección: ${user.Calle || 'No registrada'}</div>
-                        <div style="color: #aaa;">${user.Parroquia || ''}${user.Parroquia && user.Municipio ? ', ' : ''}${user.Municipio || ''}</div>
-                        <a href="/dashboard" style="font-size: 0.7rem; color: #18b2af; text-decoration: none;">Editar dirección</a>
+                    el.innerHTML = `
+                        <div style="font-weight:bold;color:#fff;">${user.Nombre} ${user.Apellido}</div>
+                        <div style="color:#aaa;">Dirección: ${user.Calle || 'No registrada'}</div>
+                        <div style="color:#aaa;">${user.Parroquia || ''}${user.Parroquia && user.Municipio ? ', ' : ''}${user.Municipio || ''}</div>
+                        <a href="/dashboard" style="font-size:0.7rem;color:#18b2af;">Editar dirección</a>
                     `;
                 }
-            } catch (error) {
-                console.error("Error al obtener datos de envío:", error);
-                const datosEnvio = document.getElementById('datos-envio');
-                if (datosEnvio) datosEnvio.innerHTML = `<div style="color: #ff4444;">Error al cargar datos de envío.</div>`;
+            } catch (err) {
+                console.error("Error cargando datos de envío:", err);
+                document.getElementById('datos-envio').innerHTML = '<div style="color:#ff4444;">Error al cargar datos de envío.</div>';
             }
-        };
 
-        // --- 2. FORMATEO EN VIVO DE CAMPOS (como en register.html) ---
+            // Cargar tarjeta guardada
+            try {
+                const card = await CheckoutController.getCard();
+                if (card && card.numero) {
+                    document.getElementById('card-number').value = card.numero;
+                    document.getElementById('expiry-date').value = card.expiracion;
+                }
+            } catch (err) {
+                console.error("Error cargando tarjeta:", err);
+            }
+        }
+
+        // --- 3. FORMATEO DE CAMPOS ---
         document.getElementById('card-number').addEventListener('input', (e) => {
             let value = e.target.value.replace(/\D/g, '');
             e.target.value = value.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
         });
-
         document.getElementById('expiry-date').addEventListener('input', (e) => {
             let value = e.target.value.replace(/\D/g, '');
             if (value.length >= 2) e.target.value = value.slice(0, 2) + '/' + value.slice(2, 4);
             else e.target.value = value;
         });
-
         document.getElementById('cvv').addEventListener('input', (e) => {
             e.target.value = e.target.value.replace(/\D/g, '');
         });
-
         document.getElementById('codigo-membresia').addEventListener('input', (e) => {
             e.target.value = e.target.value.replace(/\D/g, '');
         });
 
-        // --- 3. VALIDAR CAMPOS DEL FORMULARIO ---
+        // --- 4. VALIDACIÓN ---
         function mostrarError(msg) {
             const el = document.getElementById('error-msg');
             el.innerText = msg;
             el.style.display = 'block';
         }
-
         function ocultarError() {
             document.getElementById('error-msg').style.display = 'none';
         }
-
-        function validarFormulario() {
+        function validar() {
             ocultarError();
             const card = document.getElementById('card-number').value.replace(/\s/g, '');
             const expiry = document.getElementById('expiry-date').value;
             const cvv = document.getElementById('cvv').value;
             const codigo = document.getElementById('codigo-membresia').value;
 
-            if (!/^\d{16,19}$/.test(card)) {
-                mostrarError("El número de tarjeta debe tener entre 16 y 19 dígitos.");
-                return false;
-            }
-            if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry)) {
-                mostrarError("La fecha de expiración debe tener formato MM/AA (ej: 12/28).");
-                return false;
-            }
+            if (!/^\d{16,19}$/.test(card)) { mostrarError("El número de tarjeta debe tener entre 16 y 19 dígitos."); return false; }
+            if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry)) { mostrarError("Fecha de expiración debe tener formato MM/AA."); return false; }
             const [mes, anio] = expiry.split('/');
             const ahora = new Date();
-            const mesActual = ahora.getMonth() + 1;
-            const anioActual = parseInt(ahora.getFullYear().toString().slice(2));
-            if (parseInt(anio) < anioActual || (parseInt(anio) === anioActual && parseInt(mes) < mesActual)) {
-                mostrarError("La tarjeta está vencida.");
-                return false;
+            if (parseInt(anio) < parseInt(ahora.getFullYear().toString().slice(2)) ||
+                (parseInt(anio) === parseInt(ahora.getFullYear().toString().slice(2)) && parseInt(mes) < ahora.getMonth() + 1)) {
+                mostrarError("La tarjeta está vencida."); return false;
             }
-            if (!/^\d{3,4}$/.test(cvv)) {
-                mostrarError("El CVC debe tener 3 o 4 dígitos.");
-                return false;
-            }
-            if (!/^\d{6}$/.test(codigo)) {
-                mostrarError("El código de seguridad de membresía debe tener 6 dígitos.");
-                return false;
-            }
+            if (!/^\d{3,4}$/.test(cvv)) { mostrarError("El CVC debe tener 3 o 4 dígitos."); return false; }
+            if (!/^\d{6}$/.test(codigo)) { mostrarError("El código de seguridad de membresía debe tener 6 dígitos."); return false; }
             return true;
         }
 
-        // --- 4. PROCESAR EL FORMULARIO DE PAGO ---
+        // --- 5. PROCESAR PAGO ---
         document.getElementById('form-pago').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            if (!validarFormulario()) return;
+            if (!validar()) return;
 
-            const btnPagar = e.target.querySelector('.btn-pagar');
+            const btn = e.target.querySelector('.btn-pagar');
             const obraData = JSON.parse(localStorage.getItem('obraSeleccionada'));
+            if (!obraData || !obraData.id_Obra) { mostrarError("Error: No se seleccionó ninguna obra válida."); return; }
 
-            if (!obraData || !obraData.id_Obra) {
-                alert("Error: No se seleccionó ninguna obra válida.");
-                return;
-            }
-
-            const idObra = Number(obraData.id_Obra);
-            if (!Number.isInteger(idObra) || idObra <= 0) {
-                mostrarError("ID de obra inválido.");
-                return;
-            }
-
-            btnPagar.innerText = "PROCESANDO...";
-            btnPagar.disabled = true;
+            const idObra = String(obraData.id_Obra);
+            btn.innerText = "PROCESANDO...";
+            btn.disabled = true;
 
             try {
                 const resultado = await CheckoutController.confirmReservation({ id_obra: idObra });
-
                 if (resultado && resultado.success !== false) {
+                    const guardar = document.getElementById('guardar-tarjeta').checked;
+                    if (guardar) {
+                        try {
+                            await CheckoutController.saveCard({
+                                numero: document.getElementById('card-number').value.replace(/\s/g, ''),
+                                expiracion: document.getElementById('expiry-date').value,
+                                titular: ''
+                            });
+                        } catch (saveErr) { console.error('Error guardando tarjeta:', saveErr); }
+                    }
                     alert("¡Pago procesado y reserva guardada!");
                     localStorage.removeItem('obraSeleccionada');
                     window.location.href = "/catalog/artwork";
                 } else {
                     mostrarError(resultado?.error || "No se pudo procesar el pago");
-                    btnPagar.innerText = "PAGAR AHORA";
-                    btnPagar.disabled = false;
+                    btn.innerText = "Pagar Ahora";
+                    btn.disabled = false;
                 }
-            } catch (error) {
-                console.error("Error en la petición:", error);
+            } catch (err) {
+                console.error("Error en pago:", err);
                 mostrarError("Error de conexión con el servidor.");
-                btnPagar.innerText = "PAGAR AHORA";
-                btnPagar.disabled = false;
+                btn.innerText = "Pagar Ahora";
+                btn.disabled = false;
             }
         });
 
-        cargarObraSeleccionada();
-        cargarUsuarioSesion();
+        cargarObra();
+        cargarUsuario();
     });
 </script>
-
 </body>
 </html>

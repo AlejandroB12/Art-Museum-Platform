@@ -1,7 +1,18 @@
 const { Sequelize } = require('sequelize');
 const path = require('path');
+const dns = require('dns');
 const cassandra = require('express-cassandra');
+
+const _origSyncModel = cassandra.syncModelFileToDB;
+cassandra.syncModelFileToDB = function (file, cb) {
+    if (file.name.includes('Model')) return _origSyncModel(file, cb);
+    const patched = { ...file, name: file.name.replace(/_model\./i, 'Model.') };
+    return _origSyncModel(patched, cb);
+};
+
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '..', '..', '.env') });
+
+dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 const sequelize = new Sequelize(process.env.SUPABASE_URL, {
     dialect: 'postgres',
@@ -26,11 +37,8 @@ const connectCassandra = () => {
                 keyspace: process.env.CASSANDRA_KEYSPACE || 'museo_db'
             },
             ormOptions: {
-                defaultReplicationStrategy: {
-                    class: 'SimpleStrategy',
-                    replication_factor: 1
-                },
-                migration: 'safe'
+                migration: 'safe',
+                createKeyspace: false
             }
         }, (err) => {
             if (err) {

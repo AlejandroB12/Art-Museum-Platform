@@ -3,6 +3,7 @@ const userRepo = require('../repositories/user_repository');
 const invoiceRepo = require('../repositories/invoice_repository');
 const auditRepo = require('../repositories/audit_repository');
 const recommendationRepo = require('../repositories/recommendation_repository');
+const { queryRaw } = require('../config/database');
 
 const generoMap = { 'Pintura': 1, 'Escultura': 2, 'Fotografía': 3, 'Orfebreria': 4, 'Ceramica': 5 };
 
@@ -26,11 +27,8 @@ async function confirmarReserva(id_obra, id_usuario, req) {
     const generoNombre = obraMongo.genero?.nombre || 'Pintura';
     const idGenero = generoMap[generoNombre] || 1;
 
-    await userRepo.queryRaw("SET FOREIGN_KEY_CHECKS = 0");
     await invoiceRepo.upsertObra(id_obra, obraMongo.nombre, obraMongo.fecha_creacion || fecha, obraMongo.precio, idGenero, obraMongo.fotografia || '');
-    await userRepo.queryRaw("SET FOREIGN_KEY_CHECKS = 1");
-
-    await userRepo.queryRaw("INSERT INTO Reserva (id_Obra, id_Usuario, Fecha_Reserva) VALUES (?, ?, ?)", [id_obra, id_usuario, fecha]);
+    await queryRaw("INSERT INTO reserva (id_obra, id_usuario, fecha_reserva) VALUES ($1, $2, $3)", [id_obra, id_usuario, fecha]);
     await obraRepo.findByIdAndUpdate(id_obra, { estado_obra: 'Reservado' });
 
     auditRepo.registrarEvento(id_usuario, 'CONFIRMAR_RESERVA', `Obra ${id_obra} reservada`, req).catch(() => {});
@@ -45,12 +43,7 @@ async function checkMembresia(id_usuario) {
     const results = await userRepo.findWithMembresiaStatus(id_usuario);
     if (results.length === 0) return true;
     const r = results[0];
-    const membresiaActiva = r.MembresiaActiva == 1;
-    if (!membresiaActiva) {
-        userRepo.updatePuedeAdquirir(id_usuario, 0).catch(() => {});
-        return false;
-    }
-    return r.PuedeAdquirir == 1;
+    return r.membresia_activa === true || r.membresia_activa === 't';
 }
 
 module.exports = { confirmarReserva };

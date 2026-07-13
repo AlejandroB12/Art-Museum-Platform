@@ -4,7 +4,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_change_me';
 
 const generateToken = (user) => {
 
-    return jwt.sign({ id: user.id_usuario, email: user.Email, rol: user.Rol, nombre: user.Nombre }, JWT_SECRET, { expiresIn: '24h' });
+    return jwt.sign({ id: user.id_usuario, email: user.email, rol: user.rol, nombre: user.nombre }, JWT_SECRET, { expiresIn: '24h' });
 };
 
 const sessionFromToken = (req, _res, next) => {
@@ -24,9 +24,9 @@ const sessionFromToken = (req, _res, next) => {
             req.session.usuario = {
 
                 id_usuario: decoded.id,
-                Email: decoded.email,
-                Rol: decoded.rol,
-                Nombre: decoded.nombre
+                email: decoded.email,
+                rol: decoded.rol,
+                nombre: decoded.nombre
             };
 
         } catch (_err) { }
