@@ -35,7 +35,8 @@ const apiProxy = createProxyMiddleware({
             path === '/verificar-preguntas' ||
             path === '/logout' ||
             path === '/api/usuario-actual' ||
-            path === '/api/estado-usuario'
+            path === '/api/estado-usuario' ||
+            path === '/api/preguntas-seguridad'
 
         ) return AUTH_URL;
 
@@ -48,7 +49,9 @@ const apiProxy = createProxyMiddleware({
             path === '/api/mis-compras' ||
             path === '/api/datos-envio-pago' ||
             path === '/api/tarjeta' ||
-            path === '/api/guardar-tarjeta'
+            path === '/api/guardar-tarjeta' ||
+            path === '/api/favoritos' ||
+            path === '/api/perfil'
 
         ) return USER_URL;
 

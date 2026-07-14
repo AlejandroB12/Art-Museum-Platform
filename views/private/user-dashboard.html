@@ -1,612 +1,861 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DoArt Magic | Dashboard</title>
     <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+    <link rel="stylesheet" href="/styles/theme.css">
     <link rel="stylesheet" href="/styles/user-dashboard-style.css">
+    <script src="/scripts/theme-switcher.js"></script>
     <style>
-        .rec-mini-obra {
-            cursor: pointer;
-            transition: transform 0.2s;
-            flex-shrink: 0;
-        }
+        .menu-icon svg { width: 18px; height: 18px; display: block; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+        .menu-icon { display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex-shrink: 0; }
+        .btn-home .menu-icon svg { stroke: var(--text-muted); transition: stroke 0.25s; }
+        .btn-home:hover .menu-icon svg { stroke: var(--accent); }
+        .btn-logout svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
 
-        .rec-mini-obra:hover {
-            transform: scale(1.1);
-            z-index: 2;
-        }
+        .view { display: none; width: 100%; max-width: 880px; overflow: hidden; }
+        .active-view { display: block; animation: fadeIn 0.35s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
-        .genero-tag:hover {
-            border-color: #18b2af !important;
-            color: #fff !important;
-        }
+        .page-header { margin-bottom: 20px; }
+        .page-header h1 { font-size: 1.6rem; font-weight: 700; color: var(--text-primary); margin: 0; }
+        .page-header p { color: var(--text-muted); font-size: 0.9rem; margin-top: 4px; }
 
-        .view {
-            display: none;
-        }
+        .card { background: var(--bg-card); border: 1px solid var(--border-color); padding: 24px; border-radius: 16px; width: 100%; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+        .card-header h2 { margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--text-primary); letter-spacing: 0.3px; }
+        .card-divider { margin-top: 28px; border-top: 1px solid var(--border-color); padding-top: 24px; }
+        .card-divider h3 { font-size: 0.85rem; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
 
-        .view.active-view {
-            display: block;
+        .settings-group { margin-bottom: 32px; }
+        .settings-group h3 { font-size: 0.85rem; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+
+        .btn-sm { padding: 8px 18px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; font-size: 0.8rem; transition: all 0.25s; }
+        .btn-primary { background: var(--accent); color: #0F0F0F; }
+        .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+        .btn-secondary { background: var(--bg-hover); color: var(--text-secondary); border: 1px solid var(--border-color); }
+        .btn-secondary:hover { border-color: var(--accent); color: var(--text-primary); }
+        .btn-danger { background: rgba(255,50,50,0.12); color: #ff4d4d; border: 1px solid rgba(255,77,77,0.25); }
+        .btn-danger:hover { background: #ff4d4d; color: #fff; }
+        .btn-main { background: var(--accent); color: #0F0F0F; border: none; padding: 14px; width: 100%; border-radius: 10px; font-weight: 700; cursor: pointer; margin-top: 20px; font-size: 0.9rem; transition: all 0.25s; }
+        .btn-main:hover { opacity: 0.85; transform: translateY(-1px); box-shadow: 0 4px 20px var(--accent-shadow); }
+
+        .inline-flex { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+        .success-msg { color: var(--accent); font-size: 0.85rem; margin-top: 10px; font-weight: 500; }
+        .status-msg { color: var(--text-dim); font-size: 0.85rem; }
+        .empty-state { color: var(--text-dim); font-size: 0.9rem; padding: 24px 0; text-align: center; }
+
+        .obra-comprada-card {
+            background: var(--bg-hover);
+            padding: 20px 24px;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent);
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.25s;
+            gap: 16px;
         }
+        .obra-comprada-card:hover { transform: translateX(4px); background: var(--bg-dropdown); }
+        .obra-comprada-card .obra-nombre { font-size: 1.05rem; font-weight: 600; color: var(--text-primary); }
+        .obra-comprada-card .obra-genero { font-size: 0.85rem; color: var(--text-muted); margin-top: 2px; }
+        .obra-comprada-card .obra-precio { font-size: 1.15rem; font-weight: 700; }
+        .obra-comprada-card .obra-fecha { font-size: 0.75rem; color: var(--text-dim); margin-top: 2px; }
+        .obra-comprada-card .obra-estado-badge { font-size: 0.7rem; padding: 3px 10px; border-radius: 4px; font-weight: 600; display: inline-block; margin-top: 4px; }
+
+        .fav-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+        .fav-card {
+            background: var(--bg-hover);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px;
+            transition: all 0.25s;
+        }
+        .fav-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 8px 24px var(--accent-shadow); }
+        .fav-card img { width: 100%; height: 140px; object-fit: cover; border-radius: 8px; background: var(--bg-primary); }
+        .fav-card h4 { color: var(--text-primary); font-size: 0.85rem; margin: 10px 0 4px; font-weight: 600; }
+        .favorito-btn { background: none; border: none; cursor: pointer; color: #ff4757; padding: 4px; transition: 0.3s; display: inline-flex; align-items: center; justify-content: center; }
+        .favorito-btn svg { width: 20px; height: 20px; fill: #ff4757; stroke: none; display: block; }
+        .favorito-btn:hover { transform: scale(1.25); }
+
+        .perfil-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .perfil-grid .full-width { grid-column: 1 / -1; }
+        .perfil-grid label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .perfil-grid input, .perfil-grid select { width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid var(--border-input); color: var(--text-primary); border-radius: 8px; margin-top: 5px; transition: border-color 0.2s; }
+        .perfil-grid input:focus, .perfil-grid select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-light); }
+        .perfil-grid input:disabled, .perfil-grid select:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .tabla-membresia { width: 100%; border-collapse: separate; border-spacing: 0 8px; color: var(--text-primary); }
+        .tabla-membresia th { color: var(--accent); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px; padding: 12px; border-bottom: 2px solid var(--border-color); text-align: left; font-weight: 600; }
+        .tabla-membresia td { padding: 14px 12px; background: var(--bg-hover); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
+        .tabla-membresia td:first-child { border-radius: 8px 0 0 8px; }
+        .tabla-membresia td:last-child { border-radius: 0 8px 8px 0; }
+
+        .tarjeta-display { background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-top: 12px; }
+        .tarjeta-display .card-number-display { font-size: 1.25rem; letter-spacing: 2px; color: var(--text-primary); font-family: monospace; }
+        .tarjeta-display .card-meta { color: var(--text-muted); font-size: 0.8rem; margin-top: 8px; }
+        .tarjeta-display .card-meta span { color: var(--text-secondary); }
+
+        .flex-row { display: flex; gap: 10px; margin-top: 10px; }
+        .flex-half { flex: 0.5; }
+        .flex-04 { flex: 0.4; }
+        input, select, .input-select { background: var(--bg-input); border: 1px solid var(--border-input); color: var(--text-primary); padding: 14px; border-radius: 8px; width: 100%; margin-top: 6px; transition: border-color 0.2s; }
+        input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-light); }
+        select option { background: var(--bg-dropdown); color: var(--text-primary); }
+        .error-msg { color: #ff4444; font-size: 0.75rem; display: block; margin-top: 4px; }
+        .input-error { border-color: #ff4444 !important; box-shadow: 0 0 0 1px #ff4444; }
+        .input-valid { border-color: var(--accent) !important; }
+
+        .theme-buttons, .accent-buttons { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+        .theme-btn, .accent-btn {
+            padding: 10px 22px; border-radius: 8px; border: 1px solid var(--border-color); cursor: pointer;
+            background: var(--bg-hover); color: var(--text-secondary); transition: all 0.25s; font-size: 0.85rem; font-weight: 500;
+        }
+        .theme-btn:hover, .accent-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+        .theme-btn.active, .accent-btn.active { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+        .accent-swatch { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+
+        .question-block { margin-bottom: 14px; }
+        .question-title { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
+
+        .membresia-badge { padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block; }
+
+
     </style>
 </head>
-
 <body>
 
-    <aside class="sidebar">
-        <div class="user-info">
-            <img id="user-avatar" src="https://ui-avatars.com/api/?name=U&background=00ff00&color=000&bold=true"
-                class="avatar" alt="Avatar">
+<aside class="sidebar">
+    <div class="user-info">
+        <img id="user-avatar" src="https://ui-avatars.com/api/?name=U&background=00ff00&color=000&bold=true" class="avatar" alt="Avatar">
+        <div>
+            <p class="premium-badge">Premium</p>
+            <p id="sidebar-nombre" class="sidebar-name">Cargando...</p>
+        </div>
+    </div>
+
+    <div class="btn-home-wrapper">
+        <a href="/home" class="btn-home">
+            <span class="menu-icon"><svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg></span>
+            Volver al Inicio
+        </a>
+    </div>
+    <nav class="menu">
+        <a href="#" class="active" onclick="showView('view-compras', this); cargarCompras();">
+            <span class="menu-icon"><svg viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg></span>
+            Mis Compras
+        </a>
+        <a href="#" onclick="showView('view-favoritos', this); cargarFavoritos();">
+            <span class="menu-icon"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></span>
+            Favoritos
+        </a>
+        <a href="#" onclick="showView('view-datos', this); cargarDatos();">
+            <span class="menu-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+            Datos Personales
+        </a>
+        <a href="#" onclick="showView('view-preferencias', this)">
+            <span class="menu-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span>
+            Preferencias
+        </a>
+        <button class="menu-toggle" onclick="toggleSubmenu(this)">
+            <span class="menu-icon"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
+            Membresía
+            <svg class="chevron-sub" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="submenu">
             <div>
-                <p class="premium-badge">Premium</p>
-                <p id="sidebar-nombre" class="sidebar-name">Cargando...</p>
+                <a href="#" onclick="showView('view-membresia-table', this); cargarMembresia();">Mi Membresía</a>
+                <a href="#" onclick="showView('view-tarjeta-card', this); cargarTarjeta();">Tu Tarjeta</a>
             </div>
         </div>
-
-        <nav class="menu">
-            <a href="/home" class="btn-home">🏠 Volver al Inicio</a>
-
-            <a href="#" class="active" onclick="showView('view-dashboard', this)">Dashboard</a>
-            <a href="#" onclick="showView('view-compras', this); cargarCompras();">Mis Compras</a>
-            <a href="#" onclick="showView('view-membresia', this); cargarMembresia();">Membresía</a>
-            <a href="#" onclick="showView('view-seguridad', this)">Códigos de Seguridad</a>
-        </nav>
-
-        <div class="logout-container">
-            <a class="btn-logout" onclick="logout()">
-                <span>✕</span> Cerrar Sesión
-            </a>
+        <button class="menu-toggle" onclick="toggleSubmenu(this)">
+            <span class="menu-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></span>
+            Privacidad
+            <svg class="chevron-sub" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="submenu">
+            <div>
+                <a href="#" onclick="showView('view-password-form', this);">Cambiar Contraseña</a>
+                <a href="#" onclick="showView('view-preguntas-form', this); cargarPreguntas();">Preguntas de Seguridad</a>
+            </div>
         </div>
-    </aside>
+    </nav>
 
-    <main class="main-content">
-        <section id="view-dashboard" class="view active-view">
-            <h1 id="welcome-msg" class="welcome-title">Bienvenido</h1>
-            <p class="welcome-sub">Tu panel de control exclusivo está listo.</p>
+    <div class="logout-container">
+        <a class="btn-logout" onclick="logout()">
+            <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Cerrar Sesión
+        </a>
+    </div>
+</aside>
 
-            <!-- Géneros (horizontal arriba) -->
-            <div id="generos-container"
-                style="width:100%; margin-top: 30px; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 20px;">
+<main class="main-content">
+
+    <!-- ==================== MIS COMPRAS ==================== -->
+    <section id="view-compras" class="view active-view">
+        <div class="page-header">
+            <h1>Mis Compras</h1>
+            <p>Historial de obras que has adquirido en la plataforma.</p>
+        </div>
+        <div class="card">
+            <div id="lista-compras"><p class="status-msg">Consultando tu colección...</p></div>
+        </div>
+    </section>
+
+    <!-- ==================== FAVORITOS ==================== -->
+    <section id="view-favoritos" class="view">
+        <div class="page-header">
+            <h1>Favoritos</h1>
+            <p>Tus obras favoritas, guardadas para tenerlas siempre a la vista.</p>
+        </div>
+        <div class="card">
+            <div id="lista-favoritos"><p class="status-msg">Cargando tus favoritos...</p></div>
+        </div>
+    </section>
+
+    <!-- ==================== DATOS PERSONALES ==================== -->
+    <section id="view-datos" class="view">
+        <div class="page-header">
+            <h1>Datos Personales</h1>
+            <p>Administra tu información personal y dirección de envío.</p>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h2>Mi Perfil</h2>
+                <button class="btn-sm btn-secondary" id="btn-editar-datos" onclick="toggleEditarDatos()">✎ Editar</button>
             </div>
+            <form id="form-datos">
+                <div class="perfil-grid">
+                    <div>
+                        <label>Nombre</label>
+                        <input type="text" id="perfil-nombre" disabled>
+                    </div>
+                    <div>
+                        <label>Apellido</label>
+                        <input type="text" id="perfil-apellido" disabled>
+                    </div>
+                    <div>
+                        <label>Email</label>
+                        <input type="email" id="perfil-email" disabled>
+                    </div>
+                    <div>
+                        <label>Teléfono</label>
+                        <input type="text" id="perfil-telefono" disabled>
+                    </div>
+                    <div class="full-width">
+                        <label>Dirección (Calle / Av)</label>
+                        <input type="text" id="perfil-calle" disabled>
+                    </div>
+                    <div>
+                        <label>Estado</label>
+                        <select id="perfil-estado" disabled onchange="cargarMunicipiosPerfil()"></select>
+                    </div>
+                    <div>
+                        <label>Municipio</label>
+                        <select id="perfil-municipio" disabled onchange="cargarParroquiasPerfil()"></select>
+                    </div>
+                    <div class="full-width">
+                        <label>Parroquia</label>
+                        <select id="perfil-parroquia" disabled></select>
+                    </div>
+                </div>
+                <div id="datos-msg" class="success-msg" style="display:none; margin-top:15px;"></div>
+                <button type="submit" id="btn-guardar-datos" class="btn-main" style="display:none;">Guardar Cambios</button>
+            </form>
+        </div>
+    </section>
 
-            <!-- Dashboard dos columnas -->
-            <div style="display: flex; gap: 30px; margin-top: 20px; width: 100%; justify-content: space-between;">
-                <div style="flex: 1.5; min-width: 0; padding-right:15px;" id="recomendados-left"></div>
-                <div style="width: 250px; flex-shrink: 0;" id="artistas-right"></div>
-            </div>
-
-            <div id="recomendaciones-container" class="recomendaciones-container"></div>
-        </section>
-
-        <section id="view-compras" class="view">
-            <div class="card">
-                <h2 class="section-title-green">Mis Obras Adquiridas</h2>
-                <div id="lista-compras">
-                    <p class="status-msg">Consultando tu colección...</p>
+    <!-- ==================== PREFERENCIAS ==================== -->
+    <section id="view-preferencias" class="view">
+        <div class="page-header">
+            <h1>Preferencias</h1>
+            <p>Personaliza la apariencia visual de la plataforma a tu gusto.</p>
+        </div>
+        <div class="card">
+            <div class="settings-group">
+                <h3>Modo Visual</h3>
+                <div class="theme-buttons">
+                    <button class="theme-btn active" data-theme="dark" onclick="cambiarTema('dark')">🌙 Oscuro</button>
+                    <button class="theme-btn" data-theme="light" onclick="cambiarTema('light')">☀️ Claro</button>
                 </div>
             </div>
-        </section>
-
-        <section id="view-seguridad" class="view">
-            <div class="card">
-                <h2 class="section-title">Configuración de Seguridad</h2>
-                <p id="status-msg" class="status-msg">Protege tu cuenta con
-                    estas 3 preguntas.</p>
-                <form id="form-seguridad">
-                    <div class="question-block">
-                        <h3 class="question-title">Pregunta #1</h3>
-                        <select name="pregunta1" required>
-                            <option value="mascota">¿Nombre de tu primera mascota?</option>
-                        </select>
-                        <input type="text" name="resp1" placeholder="Tu respuesta" required>
-                    </div>
-                    <div class="question-block">
-                        <h3 class="question-title">Pregunta #2</h3>
-                        <select name="pregunta2" required>
-                            <option value="escuela">¿Nombre de tu primera escuela?</option>
-                        </select>
-                        <input type="text" name="resp2" placeholder="Tu respuesta" required>
-                    </div>
-                    <div class="question-block">
-                        <h3 class="question-title">Pregunta #3</h3>
-                        <select name="pregunta3" required>
-                            <option value="ciudad">¿Ciudad donde naciste?</option>
-                        </select>
-                        <input type="text" name="resp3" placeholder="Tu respuesta" required>
-                    </div>
-
-                    <button type="submit" id="btn-save" class="btn-main">Guardar Configuración</button>
-                    <button type="button" id="btn-edit" class="btn-edit" onclick="toggleEdit(true)">Modificar
-                        Respuestas</button>
-                </form>
-            </div>
-        </section>
-
-        <section id="view-membresia" class="view">
-            <div class="card">
-                <h2 class="section-title">Mi Membresía</h2>
-                <table class="tabla-membresia">
-                    <thead>
-                        <tr>
-                            <th>Concepto</th>
-                            <th>Fecha Pago</th>
-                            <th>Estado</th>
-                            <th>Días Restantes</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabla-membresia-body">
-                    </tbody>
-                </table>
-                <div class="card-divider">
-                    <h3>Informar pago realizado</h3>
-                    <div class="input-group">
-                        <input type="text" id="card-number" maxlength="19" placeholder="4444-4444-4444-4444"
-                            oninput="formatearTarjeta(); limpiarError('card-number')">
-                        <span id="error-card-number" class="error-msg"></span>
-                    </div>
-                    <div class="flex-row">
-                        <div class="flex-half">
-                            <select id="expiry-month" class="input-select" onchange="limpiarError('expiry-month')">
-                                <option value="">Mes</option>
-                                <option value="01">01 - Enero</option>
-                                <option value="02">02 - Febrero</option>
-                                <option value="03">03 - Marzo</option>
-                                <option value="04">04 - Abril</option>
-                                <option value="05">05 - Mayo</option>
-                                <option value="06">06 - Junio</option>
-                                <option value="07">07 - Julio</option>
-                                <option value="08">08 - Agosto</option>
-                                <option value="09">09 - Septiembre</option>
-                                <option value="10">10 - Octubre</option>
-                                <option value="11">11 - Noviembre</option>
-                                <option value="12">12 - Diciembre</option>
-                            </select>
-                            <span id="error-expiry-month" class="error-msg"></span>
-                        </div>
-                        <div class="flex-half">
-                            <select id="expiry-year" class="input-select" onchange="limpiarError('expiry-year')">
-                                <option value="">Año</option>
-                            </select>
-                            <span id="error-expiry-year" class="error-msg"></span>
-                        </div>
-                        <div class="flex-04">
-                            <input type="text" id="cvv" maxlength="3" placeholder="CVV" oninput="limpiarError('cvv')">
-                            <span id="error-cvv" class="error-msg"></span>
-                        </div>
-                    </div>
-                    <button class="btn-main btn-blue-bg" onclick="enviarSolicitudPago()">
-                        Enviar Pago para Revisión
+            <div class="card-divider settings-group">
+                <h3>Color de Acento</h3>
+                <div class="accent-buttons">
+                    <button class="accent-btn active" data-accent="teal" onclick="cambiarAcento('teal')">
+                        <span class="accent-swatch" style="background:#25E4AE;"></span>Turquesa
+                    </button>
+                    <button class="accent-btn" data-accent="purple" onclick="cambiarAcento('purple')">
+                        <span class="accent-swatch" style="background:#C81CDE;"></span>Púrpura
                     </button>
                 </div>
             </div>
-        </section>
-    </main>
+        </div>
+    </section>
 
-    <script src="/controllers/authController.js"></script>
-    <script src="/controllers/userController.js"></script>
-    <script src="/controllers/recommendationsController.js"></script>
-    <script>
-        let currentUserId = null;
-        let intervaloMembresia = null;
+    <!-- ==================== MEMBRESÍA / TABLA ==================== -->
+    <section id="view-membresia-table" class="view">
+        <div class="page-header">
+            <h1>Mi Membresía</h1>
+            <p>Historial de pagos y estado de tu suscripción.</p>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h2>Mi Membresía</h2>
+                <span id="membresia-estado-badge" class="membresia-badge"></span>
+            </div>
+            <table class="tabla-membresia">
+                <thead><tr><th>Concepto</th><th>Fecha Pago</th><th>Estado</th><th>Días Restantes</th></tr></thead>
+                <tbody id="tabla-membresia-body"></tbody>
+            </table>
+        </div>
+    </section>
 
-        // Lógica para cambiar entre vistas
-        function showView(viewId, element) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
-            document.querySelectorAll('.menu a').forEach(a => a.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active-view');
-            element.classList.add('active');
+    <!-- ==================== MEMBRESÍA / TARJETA ==================== -->
+    <section id="view-tarjeta-card" class="view">
+        <div class="page-header">
+            <h1>Tu Tarjeta</h1>
+            <p>Administra tu tarjeta registrada e informa pagos.</p>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h2>Tu Tarjeta Registrada</h2>
+                <button class="btn-sm btn-secondary" onclick="mostrarEditarTarjeta()" id="btn-editar-tarjeta">✎ Editar Tarjeta</button>
+            </div>
+            <div id="tarjeta-display-section">
+                <div class="tarjeta-display" id="tarjeta-info">
+                    <div class="card-number-display" id="card-masked">Cargando...</div>
+                    <div class="card-meta">Vence: <span id="card-expiry-display">-</span></div>
+                </div>
+                <div id="tarjeta-edit-form" style="display:none; margin-top:15px;">
+                    <div class="inline-flex">
+                        <input type="text" id="edit-card-number" placeholder="Número de tarjeta" maxlength="19" style="flex:2;">
+                        <input type="text" id="edit-card-expiry" placeholder="MM/AA" maxlength="5" style="flex:1;">
+                    </div>
+                    <div class="inline-flex" style="margin-top:10px;">
+                        <button class="btn-sm btn-primary" onclick="guardarTarjeta()">Guardar</button>
+                        <button class="btn-sm btn-secondary" onclick="cancelarEditarTarjeta()">Cancelar</button>
+                    </div>
+                    <span id="tarjeta-msg" class="success-msg" style="display:none;"></span>
+                </div>
+            </div>
 
-            // Auto-refresh cada 3s en la vista Membresía
-            if (intervaloMembresia) { clearInterval(intervaloMembresia); intervaloMembresia = null; }
-            if (viewId === 'view-membresia') {
-                intervaloMembresia = setInterval(cargarMembresia, 3000);
-            }
+            <div class="card-divider">
+                <h3>Informar pago realizado</h3>
+                <div class="input-group">
+                    <input type="text" id="card-number" maxlength="19" placeholder="4444-4444-4444-4444" oninput="formatearTarjeta(); limpiarError('card-number')">
+                    <span id="error-card-number" class="error-msg"></span>
+                </div>
+                <div class="flex-row">
+                    <div class="flex-half">
+                        <select id="expiry-month" class="input-select" onchange="limpiarError('expiry-month')">
+                            <option value="">Mes</option>
+                            <option value="01">01 - Enero</option><option value="02">02 - Febrero</option>
+                            <option value="03">03 - Marzo</option><option value="04">04 - Abril</option>
+                            <option value="05">05 - Mayo</option><option value="06">06 - Junio</option>
+                            <option value="07">07 - Julio</option><option value="08">08 - Agosto</option>
+                            <option value="09">09 - Septiembre</option><option value="10">10 - Octubre</option>
+                            <option value="11">11 - Noviembre</option><option value="12">12 - Diciembre</option>
+                        </select>
+                        <span id="error-expiry-month" class="error-msg"></span>
+                    </div>
+                    <div class="flex-half">
+                        <select id="expiry-year" class="input-select" onchange="limpiarError('expiry-year')">
+                            <option value="">Año</option>
+                        </select>
+                        <span id="error-expiry-year" class="error-msg"></span>
+                    </div>
+                    <div class="flex-04">
+                        <input type="text" id="cvv" maxlength="3" placeholder="CVV" oninput="limpiarError('cvv')">
+                        <span id="error-cvv" class="error-msg"></span>
+                    </div>
+                </div>
+                <button class="btn-main" onclick="enviarSolicitudPago()">Enviar Pago para Revisión</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== PRIVACIDAD / CONTRASEÑA ==================== -->
+    <section id="view-password-form" class="view">
+        <div class="page-header">
+            <h1>Cambiar Contraseña</h1>
+            <p>Actualiza tu contraseña para mantener tu cuenta segura.</p>
+        </div>
+        <div class="card">
+            <form id="form-password">
+                <input type="password" id="pw-actual" placeholder="Contraseña actual" required style="margin-bottom:10px;">
+                <input type="password" id="pw-nueva" placeholder="Nueva contraseña (mín. 12 caracteres)" required style="margin-bottom:10px;">
+                <input type="password" id="pw-confirmar" placeholder="Confirmar nueva contraseña" required style="margin-bottom:10px;">
+                <span id="pw-msg" class="success-msg" style="display:none;"></span>
+                <button type="submit" class="btn-main">Actualizar Contraseña</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- ==================== PRIVACIDAD / PREGUNTAS ==================== -->
+    <section id="view-preguntas-form" class="view">
+        <div class="page-header">
+            <h1>Preguntas de Seguridad</h1>
+            <p>Estas preguntas te ayudarán a recuperar tu cuenta si olvidas tu contraseña.</p>
+        </div>
+        <div class="card">
+            <form id="form-seguridad">
+                <div class="question-block">
+                    <h4 class="question-title">Pregunta #1</h4>
+                    <select name="pregunta1" required>
+                        <option value="mascota">¿Nombre de tu primera mascota?</option>
+                        <option value="escuela">¿Nombre de tu primera escuela?</option>
+                        <option value="ciudad">¿Ciudad donde naciste?</option>
+                        <option value="comida">¿Cuál es tu comida favorita?</option>
+                        <option value="libro">¿Cuál es tu libro favorito?</option>
+                        <option value="amigo">¿Nombre de tu mejor amigo de la infancia?</option>
+                    </select>
+                    <input type="text" name="resp1" placeholder="Tu respuesta" required>
+                </div>
+                <div class="question-block">
+                    <h4 class="question-title">Pregunta #2</h4>
+                    <select name="pregunta2" required>
+                        <option value="mascota">¿Nombre de tu primera mascota?</option>
+                        <option value="escuela">¿Nombre de tu primera escuela?</option>
+                        <option value="ciudad">¿Ciudad donde naciste?</option>
+                        <option value="comida">¿Cuál es tu comida favorita?</option>
+                        <option value="libro">¿Cuál es tu libro favorito?</option>
+                        <option value="amigo">¿Nombre de tu mejor amigo de la infancia?</option>
+                    </select>
+                    <input type="text" name="resp2" placeholder="Tu respuesta" required>
+                </div>
+                <div class="question-block">
+                    <h4 class="question-title">Pregunta #3</h4>
+                    <select name="pregunta3" required>
+                        <option value="mascota">¿Nombre de tu primera mascota?</option>
+                        <option value="escuela">¿Nombre de tu primera escuela?</option>
+                        <option value="ciudad">¿Ciudad donde naciste?</option>
+                        <option value="comida">¿Cuál es tu comida favorita?</option>
+                        <option value="libro">¿Cuál es tu libro favorito?</option>
+                        <option value="amigo">¿Nombre de tu mejor amigo de la infancia?</option>
+                    </select>
+                    <input type="text" name="resp3" placeholder="Tu respuesta" required>
+                </div>
+                <span id="seg-msg" class="success-msg" style="display:none;"></span>
+                <button type="submit" class="btn-main">Guardar Configuración</button>
+            </form>
+        </div>
+    </section>
+</main>
+
+<script src="/controllers/authController.js"></script>
+<script src="/controllers/userController.js"></script>
+<script src="/controllers/checkoutController.js"></script>
+<script>
+let currentUserId = null;
+let intervaloMembresia = null;
+let editandoDatos = false;
+
+// ==================== SUBMENÚ ====================
+function toggleSubmenu(btn) {
+    btn.classList.toggle('open');
+    btn.nextElementSibling.classList.toggle('open');
+}
+
+// ==================== NAVEGACIÓN ====================
+function showView(viewId, element) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
+    document.querySelectorAll('.menu a, .menu-toggle').forEach(a => a.classList.remove('active'));
+    document.getElementById(viewId).classList.add('active-view');
+    if (element) {
+        element.classList.add('active');
+        const parentToggle = element.closest('.submenu')?.previousElementSibling;
+        if (parentToggle && parentToggle.classList.contains('menu-toggle')) {
+            parentToggle.classList.add('active');
         }
+    }
+    if (intervaloMembresia) { clearInterval(intervaloMembresia); intervaloMembresia = null; }
+    if (viewId === 'view-membresia' || viewId === 'view-membresia-table') intervaloMembresia = setInterval(cargarMembresia, 3000);
+}
 
+// ==================== CARGA INICIAL ====================
+document.addEventListener('DOMContentLoaded', () => {
+    const anioSelect = document.getElementById('expiry-year');
+    const anioActual = new Date().getFullYear();
+    for (let a = anioActual; a <= 2100; a++) { const opt = document.createElement('option'); opt.value = a; opt.textContent = a; anioSelect.appendChild(opt); }
+    AuthController.getCurrentUser().then(data => {
+        if (data.Nombre) {
+            currentUserId = data.id_usuario;
+            document.getElementById('sidebar-nombre').innerText = data.Nombre;
+            document.getElementById('user-avatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.Nombre)}&background=00ff00&color=000&bold=true&size=128`;
+            cargarCompras();
+        }
+    }).catch(err => console.error("Error cargando sesión:", err));
+});
 
-
-        // CARGA INICIAL: Nombre, Foto y Recomendaciones
-        document.addEventListener('DOMContentLoaded', () => {
-            const anioSelect = document.getElementById('expiry-year');
-            const anioActual = new Date().getFullYear();
-            for (let a = anioActual; a <= 2100; a++) {
-                const opt = document.createElement('option');
-                opt.value = a;
-                opt.textContent = a;
-                anioSelect.appendChild(opt);
-            }
-            AuthController.getCurrentUser()
-                .then(data => {
-                    if (data.Nombre) {
-                        currentUserId = data.id_usuario;
-                        document.getElementById('sidebar-nombre').innerText = data.Nombre;
-                        document.getElementById('welcome-msg').innerText = `¡Bienvenido, ${data.Nombre}!`;
-                        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.Nombre)}&background=00ff00&color=000&bold=true&size=128`;
-                        document.getElementById('user-avatar').src = avatarUrl;
-                        cargarRecomendaciones();
-                    }
-                })
-                .catch(err => console.error("Error cargando sesión:", err));
+// ==================== MIS COMPRAS ====================
+async function cargarCompras() {
+    const contenedor = document.getElementById('lista-compras');
+    try {
+        const obras = await UserController.getMyPurchases();
+        contenedor.innerHTML = '';
+        if (obras.length === 0) { contenedor.innerHTML = '<div class="empty-state">Aún no has realizado ninguna compra. Explora el catálogo para encontrar obras que te inspiren.</div>'; return; }
+        obras.forEach(obra => {
+            const estadoColor = obra.Estado === 'Pagado' ? 'var(--accent)' : '#ffaa00';
+            contenedor.innerHTML += `<div class="obra-comprada-card"><div>
+                <div class="obra-nombre">${obra.Nombre}</div>
+                <div class="obra-genero">${obra.Genero}</div></div>
+                <div style="text-align:right;"><div class="obra-precio" style="color:${estadoColor}">$${obra.Precio}</div>
+                <div class="obra-fecha">${new Date(obra.Fecha_emision).toLocaleDateString()}</div>
+                <span class="obra-estado-badge" style="color:${estadoColor};border:1px solid ${estadoColor};">${obra.Estado}</span></div></div>`;
         });
+    } catch (error) { console.error(error); contenedor.innerHTML = '<div class="empty-state" style="color:#ff4d4d;">Error al conectar con la base de datos.</div>'; }
+}
 
-        // CONSULTA A BASE DE DATOS: Cargar obras compradas
-        async function cargarCompras() {
-            const contenedor = document.getElementById('lista-compras');
+// ==================== FAVORITOS ====================
+async function cargarFavoritos() {
+    const container = document.getElementById('lista-favoritos');
+    container.innerHTML = '<p class="status-msg">Cargando tus favoritos...</p>';
+    try {
+        const ids = await UserController.getFavoritos();
+        if (!ids || ids.length === 0) { container.innerHTML = '<div class="empty-state">No tienes obras favoritas aún. Explora el catálogo y marca las que más te gusten.</div>'; return; }
+        let html = '<div class="fav-grid">';
+        for (const id of ids) {
             try {
-                const obras = await UserController.getMyPurchases();
-
-                contenedor.innerHTML = '';
-                if (obras.length === 0) {
-                    contenedor.innerHTML = '<p style="color: #666;">Aún no has realizado ninguna compra.</p>';
-                    return;
-                }
-
-                obras.forEach(obra => {
-                    const estadoColor = obra.Estado === 'Pagado' ? '#18b2af' : '#ffaa00';
-                    contenedor.innerHTML += `
-                        <div class="obra-comprada-card">
-                            <div>
-                                <strong style="font-size: 1.1rem; color: #fff;">${obra.Nombre}</strong>
-                                <p style="color: #888; font-size: 0.9rem;">Género: ${obra.Genero}</p>
-                            </div>
-                            <div style="text-align: right;">
-                                <p style="color: ${estadoColor}; font-weight: bold; font-size: 1.2rem;">$${obra.Precio}</p>
-                                <p style="color: #444; font-size: 0.8rem;">Fecha: ${new Date(obra.Fecha_emision).toLocaleDateString()}</p>
-                                <span style="color: ${estadoColor}; font-size: 0.7rem; border: 1px solid ${estadoColor}; padding: 2px 8px; border-radius: 2px;">${obra.Estado}</span>
-                            </div>
-                        </div>
-                    `;
-                });
-            } catch (error) {
-                console.error("Error al cargar obras:", error);
-                contenedor.innerHTML = '<p style="color: #ff4d4d;">Error al conectar con la base de datos.</p>';
-            }
+                const res = await fetch(`/api/artworks/${id}`);
+                if (!res.ok) continue;
+                const obra = await res.json();
+                html += `<div class="fav-card">
+                    <img src="${obra.fotografia || ''}" alt="${obra.nombre || ''}" onerror="this.style.display='none'">
+                    <h4>${obra.nombre || 'Obra #' + id}</h4>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+                        <span style="color:var(--accent);font-size:0.85rem;">${obra.precio_formateado || ''}</span>
+                        <button class="favorito-btn" onclick="quitarFavorito(${id})" title="Quitar de favoritos"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>
+                    </div>
+                </div>`;
+            } catch (e) { console.error('Error cargando obra', id, e); }
         }
+        html += '</div>';
+        container.innerHTML = html;
+    } catch (err) { console.error(err); container.innerHTML = '<div class="empty-state" style="color:#ff4d4d;">Error al cargar favoritos.</div>'; }
+}
 
-        // --- RECOMENDACIONES DESDE NEO4J ---
-        async function cargarRecomendaciones() {
-            const container = document.getElementById('recomendaciones-container');
-            container.innerHTML = '<div class="loading-rec">Cargando recomendaciones personalizadas...</div>';
+async function quitarFavorito(id_obra) {
+    try {
+        await UserController.toggleFavorito(id_obra, false);
+        cargarFavoritos();
+    } catch (err) { alert('Error al quitar favorito.'); }
+}
 
-            try {
-                // Lanzar TODAS las llamadas en paralelo
-                const [data1, data2, data4, data5, data6] = await Promise.all([
-                    RecommendationsController.getSameGenre(currentUserId).catch(() => null),
-                    RecommendationsController.getCollaborative(currentUserId).catch(() => null),
-                    RecommendationsController.getPopularArtists().catch(() => null),
-                    RecommendationsController.getPopularGenres().catch(() => null),
-                    RecommendationsController.getForYou(currentUserId).catch(() => null)
-                ]);
-
-                let html = '';
-
-                // 1. Mismo género
-                if (data1 && data1.length > 0) {
-                    html += '<div class="rec-section"><h3>✦ Obras del mismo género que compraste</h3><div class="rec-grid">';
-                    data1.forEach(r => {
-                        html += `<div class="rec-card"><h4>${r.Nombre}</h4><div class="rec-meta">${r.Genero}</div><div class="rec-price">$${r.Precio.toLocaleString()}</div></div>`;
-                    });
-                    html += '</div></div>';
-                }
-
-                // 2. Colaborativo
-                if (data2 && data2.length > 0) {
-                    html += '<div class="rec-section"><h3>✦ Otros compradores también compraron</h3><div class="rec-grid">';
-                    data2.forEach(r => {
-                        html += `<div class="rec-card"><h4>${r.Nombre}</h4><div class="rec-meta">Coincidencias: ${r.CantidadCoincidencias} compradores</div><div class="rec-price">$${r.Precio.toLocaleString()}</div></div>`;
-                    });
-                    html += '</div></div>';
-                }
-
-                // 3. Artistas populares
-                if (data4 && data4.length > 0) {
-                    html += '<div class="rec-section" id="seccion-artistas"><h3>✦ Artistas populares</h3><div style="display:flex; flex-direction:column; gap:15px;">';
-                    data4.forEach(r => {
-                        const inicial = (r.artista || 'A')[0].toUpperCase();
-                        const obrasCollage = r.obras.map((o, i) => `
-                        <div onclick="event.stopPropagation(); sessionStorage.setItem('abrirObra', ${o.id}); window.location.href='/catalog/artwork';" 
-                             title="${o.nombre}" style="position:absolute; top:0; left:${i * 30}px; width:60px; height:60px; border-radius:6px; background-image:url('${o.fotografia || ''}'); background-size:cover; background-position:center; background-color:#1a1a1a; opacity:0.4; z-index:${5 - i}; filter:blur(1px);"></div>
-                    `).join('');
-
-                        html += `
-                        <div class="rec-card" style="padding:12px 10px; position:relative; overflow:visible;">
-                            <div style="position:relative; height:60px; margin-bottom:5px;">
-                                <div style="position:relative; width:70px; height:70px; margin:0 auto;">
-                                    ${obrasCollage}
-                                    <div onclick="window.location.href='/artist/profile/${r.artista.replace(/\s+/g, '')}'" style="cursor:pointer; position:absolute; top:5px; left:35px; transform:translateX(-50%); z-index:10;">
-                                        ${r.fotoArtista
-                                    ? `<img src="${r.fotoArtista}" style="width:60px; height:60px; border-radius:50%; object-fit:cover; border:2px solid #18b2af;">`
-                                    : `<div style="width:60px; height:60px; border-radius:50%; background:#1a1a1a; border:2px solid #18b2af; display:flex; align-items:center; justify-content:center; color:#18b2af; font-weight:bold; font-size:1.2rem;">${inicial}</div>`
-                                }
-                                    </div>
-                                </div>
-                            </div>
-                            <div style="text-align:center; cursor:pointer;" onclick="window.location.href='/artist/profile/${r.artista.replace(/\s+/g, '')}'">
-                                <h4 style="margin:0; font-size:0.85rem; color:#fff;">${r.artista}</h4>
-                                <div style="font-size:0.7rem; color:#888; margin-top:4px;">🏆 ${r.obrasVendidas} · 👁 ${r.totalVistas}</div>
-                            </div>
-                        </div>`;
-                    });
-                    html += '</div></div>';
-                }
-
-                // 4. Géneros populares
-                if (data5 && data5.length > 0) {
-                    const dataGeneros = data5;
-                    html += '<div class="rec-section" id="seccion-generos"><h3>✦ Géneros Populares</h3><div style="display:flex; flex-wrap:wrap; gap:8px;">';
-                    dataGeneros.forEach(r => {
-                        html += `<div class="genero-tag" onclick="mostrarObrasGenero('${r.Genero}')" style="background:#1a1a1a; border:1px solid #333; padding:8px 14px; border-radius:20px; cursor:pointer; font-size:0.8rem; color:#ccc;">${r.Genero} <span style="color:#18b2af;">${r.ObrasVendidas}</span></div>`;
-                    });
-                    html += '</div><div id="genero-obra-preview" style="margin-top:10px; padding:10px; background:#111; border-radius:8px; min-height:60px;"><span style="color:#555;">Cargando géneros...</span></div></div>';
-                    const primerGenero = dataGeneros[0].Genero;
-                    setTimeout(() => mostrarObrasGenero(primerGenero), 800);
-                }
-
-                // 5. Recomendados para ti
-                if (data6 && data6.length > 0) {
-                    html += '<div class="rec-section" id="seccion-recomendados"><h3>✦ Recomendados para ti</h3><div class="rec-grid">';
-                    data6.forEach(r => {
-                        html += `<div class="rec-card" onclick="sessionStorage.setItem('abrirObra', ${r.idObra}); window.location.href='/catalog/artwork';" style="cursor:pointer; margin-bottom:20px;">
-                        <div style="background-image:url('${r.fotografia || ''}'); background-size:cover; background-position:center; width:100%; height:200px; border-radius:8px; margin-bottom:12px; background-color:#1a1a1a;"></div>
-                        <h4>${r.nombre}</h4>
-                        <div class="rec-meta">${r.motivo || 'Basado en tu actividad'}</div>
-                        <div class="rec-price">$${Number(r.precio).toLocaleString()}</div>
-                    </div>`;
-                    });
-                    html += '</div></div>';
-                }
-
-                if (!html) html = '<p style="color: #666;">Interactúa con más obras para ver recomendaciones.</p>';
-
-                // Insertar directamente en contenedores
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = html;
-
-                const generosBlock = tempDiv.querySelector('#seccion-generos');
-                if (generosBlock) {
-                    document.getElementById('generos-container').innerHTML = generosBlock.outerHTML;
-                    generosBlock.remove();
-                    setTimeout(() => {
-                        const tag = document.querySelector('#generos-container .genero-tag');
-                        if (tag) mostrarObrasGenero(tag.textContent.trim().split(' ')[0]);
-                    }, 600);
-                }
-
-                const artistasBlock = tempDiv.querySelector('#seccion-artistas');
-                if (artistasBlock) {
-                    document.getElementById('artistas-right').innerHTML = artistasBlock.outerHTML;
-                    artistasBlock.remove();
-                }
-
-                const recBlock = tempDiv.querySelector('#seccion-recomendados');
-                if (recBlock) {
-                    document.getElementById('recomendados-left').innerHTML = recBlock.outerHTML;
-                    recBlock.remove();
-                }
-
-                container.innerHTML = tempDiv.innerHTML;
-
-            } catch (e) {
-                console.error('Error cargando recomendaciones:', e);
-                container.innerHTML = '<p style="color: #ff4d4d;">Error al cargar recomendaciones.</p>';
-            }
-        }
-
-        // Función para mostrar obras por género
-        async function mostrarObrasGenero(genero) {
-            const preview = document.getElementById('genero-obra-preview');
-            if (!preview) return;
-            preview.innerHTML = '<span style="color:#555;">Cargando...</span>';
-            try {
-                const obras = await RecommendationsController.getByGenre(genero);
-                preview.innerHTML = obras.map(o => {
-                    const img = o.fotografia || '';
-                    const nombre = o.Nombre || '';
-                    const precio = o.Precio || 0;
-                    const id = o.id_Obra || '';
-                    return `<div style="display:inline-block; text-align:center; width:100px; cursor:pointer; margin-right:10px;"
-                onclick="event.stopPropagation(); sessionStorage.setItem('abrirObra', ${id}); window.location.href='/catalog/artwork';">
-                <div style="background-image:url('${img}'); background-size:cover; background-position:center; width:100px; height:70px; border-radius:4px; background-color:#1a1a1a;"></div>
-                <span style="font-size:0.65rem; color:#888;">${nombre}</span><br>
-                <span style="font-size:0.7rem; color:#18b2af;">$${Number(precio).toLocaleString()}</span>
-            </div>`;
-                }).join('');
-            } catch (e) {
-                preview.innerHTML = '<span style="color:#555;">No disponible</span>';
-            }
-        }
-
-        // Resto de funciones (Membresía, Logout, Seguridad) se mantienen igual...
-        async function cargarMembresia() {
-            const tbody = document.getElementById('tabla-membresia-body');
-            try {
-                const datos = await UserController.getMyMembership();
-                tbody.innerHTML = '';
-                if (datos.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Sin registros.</td></tr>';
-                    return;
-                }
-                datos.forEach(pago => {
-                    const { estadoColor = '#ff0000', diasLabel = '-', estiloFila = '' } = pago;
-
-                    if (pago.Tipo === 'total') {
-                        tbody.innerHTML += `
-                            <tr style="${estiloFila}">
-                                <td colspan="3" style="text-align: right; padding-right: 20px;">${pago.Concepto}:</td>
-                                <td style="color: ${estadoColor}; font-size: 1.1rem; font-weight: bold;">${diasLabel}</td>
-                            </tr>
-                        `;
-                    } else if (pago.Tipo === 'detalle') {
-                        tbody.innerHTML += `
-                            <tr>
-                                <td>${pago.Concepto}</td>
-                                <td>${pago.FechaInicio ? new Date(pago.FechaInicio).toLocaleDateString() : '-'}</td>
-                                <td style="color: #18b2af;">${pago.EstadoPago}</td>
-                                <td>${diasLabel}</td>
-                            </tr>
-                        `;
-                    } else {
-                        tbody.innerHTML += `
-                            <tr>
-                                <td>${pago.Concepto}</td>
-                                <td>${pago.FechaInicio ? new Date(pago.FechaInicio).toLocaleDateString() : '-'}</td>
-                                <td style="color: ${estadoColor}">${pago.EstadoPago}</td>
-                                <td>-</td>
-                            </tr>
-                        `;
-                    }
-                });
-            } catch (error) { console.error(error); }
-        }
-
-        async function logout() {
-            if (!confirm("¿Deseas cerrar tu sesión?")) return;
-            localStorage.clear();
-            sessionStorage.clear();
-            try { await fetch('/logout', { method: 'POST' }); } catch {}
-            window.location.href = "/";
-        }
-
-        // --- VALIDACIONES ---
-        function limpiarError(id) {
-            const input = document.getElementById(id);
-            const error = document.getElementById('error-' + id);
-            if (error) error.textContent = '';
-            input.classList.remove('input-error');
-        }
-
-        function marcarError(id, mensaje) {
-            const input = document.getElementById(id);
-            const error = document.getElementById('error-' + id);
-            if (error) error.textContent = mensaje;
-            input.classList.add('input-error');
-        }
-
-        function formatearTarjeta() {
-            const input = document.getElementById('card-number');
-            let valor = input.value.replace(/[^0-9]/g, '').slice(0, 16);
-            let formateado = '';
-            for (let i = 0; i < valor.length; i++) {
-                if (i > 0 && i % 4 === 0) formateado += '-';
-                formateado += valor[i];
-            }
-            input.value = formateado;
-        }
-
-        function validarTarjeta(numero) {
-            const limpio = numero.replace(/-/g, '');
-            if (!/^\d{16}$/.test(limpio)) return 'Deben ser 16 dígitos (4444-4444-4444-4444)';
-            return '';
-        }
-
-        function validarFechaExpiracion(mes, anio) {
-            if (!mes) return 'Selecciona el mes';
-            if (!anio) return 'Selecciona el año';
-            const ahora = new Date();
-            const expira = new Date(parseInt(anio), parseInt(mes), 0);
-            if (expira < ahora) return 'Tarjeta vencida';
-            return '';
-        }
-
-        function validarCVV(cvv) {
-            if (!/^\d{3}$/.test(cvv)) return 'Debe ser 3 dígitos';
-            return '';
-        }
-
-        // --- LÓGICA DE GESTIÓN DE PAGOS ---
-        async function enviarSolicitudPago() {
-            const card = document.getElementById('card-number').value.trim();
-            const mes = document.getElementById('expiry-month').value;
-            const anio = document.getElementById('expiry-year').value;
-            const cvv = document.getElementById('cvv').value.trim();
-
-            let valido = true;
-
-            const errCard = validarTarjeta(card);
-            if (errCard) { marcarError('card-number', errCard); valido = false; }
-
-            const errExpiry = validarFechaExpiracion(mes, anio);
-            if (errExpiry) {
-                if (!mes) marcarError('expiry-month', errExpiry);
-                if (!anio) marcarError('expiry-year', 'Selecciona el año');
-                if (mes && anio) {
-                    marcarError('expiry-month', errExpiry);
-                    marcarError('expiry-year', errExpiry);
-                }
-                valido = false;
-            }
-
-            const errCvv = validarCVV(cvv);
-            if (errCvv) { marcarError('cvv', errCvv); valido = false; }
-
-            if (!valido) return;
-
-            document.getElementById('card-number').classList.add('input-valid');
-            document.getElementById('expiry-month').classList.add('input-valid');
-            document.getElementById('expiry-year').classList.add('input-valid');
-            document.getElementById('cvv').classList.add('input-valid');
-
-            const expiry = mes + '/' + anio.slice(-2);
-
-            if (!confirm("¿Confirmas que deseas enviar los datos para revisión del administrador?")) return;
-
-            try {
-                const result = await UserController.requestPayment({ cardNumber: card, expiry: expiry, cvv: cvv });
-
-                if (result && result.success !== false) {
-                    // Guardar tarjeta para futuras compras
-                    try {
-                        await fetch('/api/guardar-tarjeta', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ numero: card, expiracion: expiry, titular: '' })
-                        });
-                    } catch (saveErr) { console.error("Error guardando tarjeta:", saveErr); }
-
-                    alert("Solicitud enviada con éxito. El administrador revisará tu información pronto.");
-                    document.getElementById('card-number').value = '';
-                    document.getElementById('expiry-month').value = '';
-                    document.getElementById('expiry-year').value = '';
-                    document.getElementById('cvv').value = '';
-                    document.querySelectorAll('.input-valid').forEach(e => e.classList.remove('input-valid'));
-                } else {
-                    alert("Error al enviar la solicitud al servidor.");
-                }
-            } catch (error) {
-                console.error("Error:", error);
-                alert("Ocurrió un error de conexión.");
-            }
-        }
-
-        // Asegúrate de que este evento esté correctamente asignado
-        const form = document.getElementById('form-seguridad');
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault(); // ¡Esto evita el envío tradicional del formulario!
-
-            const datos = [
-                { pregunta: form.querySelector('select[name="pregunta1"]').value, resp: form.querySelector('input[name="resp1"]').value },
-                { pregunta: form.querySelector('select[name="pregunta2"]').value, resp: form.querySelector('input[name="resp2"]').value },
-                { pregunta: form.querySelector('select[name="pregunta3"]').value, resp: form.querySelector('input[name="resp3"]').value }
-            ];
-
-            try {
-                const result = await AuthController.saveSecurityQuestions(datos);
-
-                if (result && result.success !== false) {
-                    alert("¡Preguntas guardadas con éxito!");
-                } else {
-                    const errorText = result?.message || 'Error desconocido';
-                    alert("Error: " + errorText);
-                }
-            } catch (error) {
-                console.error("Error al conectar:", error);
+// ==================== MEMBRESÍA ====================
+async function cargarMembresia() {
+    const tbody = document.getElementById('tabla-membresia-body');
+    try {
+        const datos = await UserController.getMyMembership();
+        tbody.innerHTML = '';
+        if (datos.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-dim)">Sin registros de membresía.</td></tr>'; return; }
+        let estadoGeneral = 'Vencida';
+        datos.forEach(pago => {
+            const { estadoColor = '#ff0000', diasLabel = '-', estiloFila = '' } = pago;
+            if (pago.Tipo === 'total') {
+                estadoGeneral = pago.EstadoPago;
+                tbody.innerHTML += `<tr style="${estiloFila}"><td colspan="3" style="text-align:right;padding-right:20px;">${pago.Concepto}:</td><td style="color:${estadoColor};font-size:1.1rem;font-weight:bold;">${diasLabel}</td></tr>`;
+            } else if (pago.Tipo === 'detalle') {
+                tbody.innerHTML += `<tr><td>${pago.Concepto}</td><td>${pago.FechaInicio ? new Date(pago.FechaInicio).toLocaleDateString() : '-'}</td><td style="color:var(--accent);">${pago.EstadoPago}</td><td>${diasLabel}</td></tr>`;
+            } else {
+                tbody.innerHTML += `<tr><td>${pago.Concepto}</td><td>${pago.FechaInicio ? new Date(pago.FechaInicio).toLocaleDateString() : '-'}</td><td style="color:${estadoColor}">${pago.EstadoPago}</td><td>-</td></tr>`;
             }
         });
-    </script>
+        const badge = document.getElementById('membresia-estado-badge');
+        badge.textContent = estadoGeneral === 'Activa' ? '✓ Activa' : '✗ Vencida';
+        badge.style.background = estadoGeneral === 'Activa' ? 'var(--accent-light)' : 'rgba(255,77,77,0.15)';
+        badge.style.color = estadoGeneral === 'Activa' ? 'var(--accent)' : '#ff4d4d';
+    } catch (error) { console.error(error); }
+}
+
+// ==================== TARJETA ====================
+async function cargarTarjeta() {
+    try {
+        const card = await UserController.getTarjeta();
+        if (card && card.numero) {
+            document.getElementById('card-masked').textContent = card.enmascarado || '**** ' + card.numero.slice(-4);
+            document.getElementById('card-expiry-display').textContent = card.expiracion || '-';
+        } else {
+            document.getElementById('card-masked').textContent = 'Sin tarjeta registrada';
+            document.getElementById('card-expiry-display').textContent = '-';
+        }
+    } catch (err) { console.error(err); }
+}
+
+function mostrarEditarTarjeta() {
+    document.getElementById('tarjeta-info').style.display = 'none';
+    document.getElementById('tarjeta-edit-form').style.display = 'block';
+    document.getElementById('btn-editar-tarjeta').style.display = 'none';
+    const cardNum = document.getElementById('card-masked').textContent;
+    if (cardNum !== 'Sin tarjeta registrada') {
+        document.getElementById('edit-card-number').value = document.getElementById('card-masked').textContent.replace(/[^0-9]/g, '');
+        document.getElementById('edit-card-expiry').value = document.getElementById('card-expiry-display').textContent;
+    }
+}
+
+function cancelarEditarTarjeta() {
+    document.getElementById('tarjeta-edit-form').style.display = 'none';
+    document.getElementById('tarjeta-info').style.display = 'block';
+    document.getElementById('btn-editar-tarjeta').style.display = '';
+    document.getElementById('tarjeta-msg').style.display = 'none';
+}
+
+async function guardarTarjeta() {
+    const numero = document.getElementById('edit-card-number').value.replace(/\s/g, '');
+    const expiracion = document.getElementById('edit-card-expiry').value;
+    if (!/^\d{16,19}$/.test(numero)) { mostrarMsg('tarjeta-msg', 'Número inválido (16-19 dígitos)', true); return; }
+    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiracion)) { mostrarMsg('tarjeta-msg', 'Formato MM/AA inválido', true); return; }
+    try {
+        await UserController.guardarTarjeta({ numero, expiracion, titular: '' });
+        mostrarMsg('tarjeta-msg', 'Tarjeta actualizada correctamente');
+        cancelarEditarTarjeta();
+        cargarTarjeta();
+    } catch (err) { mostrarMsg('tarjeta-msg', 'Error al guardar', true); }
+}
+
+// ==================== DATOS PERSONALES ====================
+async function cargarDatos() {
+    try {
+        const perfil = await UserController.getPerfil();
+        if (!perfil) return;
+        document.getElementById('perfil-nombre').value = perfil.nombre || '';
+        document.getElementById('perfil-apellido').value = perfil.apellido || '';
+        document.getElementById('perfil-email').value = perfil.email || '';
+        document.getElementById('perfil-telefono').value = perfil.telefono || '';
+        document.getElementById('perfil-calle').value = perfil.calle || '';
+        await cargarEstadosPerfil(perfil);
+    } catch (err) { console.error(err); }
+}
+
+function toggleEditarDatos() {
+    editandoDatos = !editandoDatos;
+    const inputs = document.querySelectorAll('#form-datos input, #form-datos select');
+    inputs.forEach(inp => { if (inp.id !== 'perfil-email') inp.disabled = !editandoDatos; });
+    document.getElementById('btn-editar-datos').textContent = editandoDatos ? '✕ Cancelar' : '✎ Editar';
+    document.getElementById('btn-guardar-datos').style.display = editandoDatos ? 'block' : 'none';
+    document.getElementById('datos-msg').style.display = 'none';
+}
+
+async function cargarEstadosPerfil(perfil) {
+    const selEstado = document.getElementById('perfil-estado');
+    selEstado.innerHTML = '<option value="">Seleccione...</option>';
+    try {
+        const estados = await CheckoutController.getEstados();
+        estados.forEach(e => {
+            const opt = document.createElement('option');
+            opt.value = e.id_estado; opt.textContent = e.nombre;
+            if (perfil && perfil.id_estado == e.id_estado) opt.selected = true;
+            selEstado.appendChild(opt);
+        });
+        if (perfil && perfil.id_estado) await cargarMunicipiosPerfil(perfil);
+    } catch (err) { console.error(err); }
+}
+
+async function cargarMunicipiosPerfil(perfilData) {
+    const selEstado = document.getElementById('perfil-estado');
+    const selMunicipio = document.getElementById('perfil-municipio');
+    selMunicipio.innerHTML = '<option value="">Seleccione...</option>';
+    selMunicipio.disabled = !editandoDatos || !selEstado.value;
+    if (!selEstado.value) return;
+    try {
+        const municipios = await CheckoutController.getMunicipios(selEstado.value);
+        municipios.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m.id_municipio; opt.textContent = m.nombre;
+            const targetId = perfilData ? perfilData.id_municipio : (window._perfilTemp ? window._perfilTemp.id_municipio : null);
+            if (targetId == m.id_municipio) opt.selected = true;
+            selMunicipio.appendChild(opt);
+        });
+        const targetId = perfilData ? perfilData.id_municipio : (window._perfilTemp ? window._perfilTemp.id_municipio : null);
+        if (targetId) await cargarParroquiasPerfil(perfilData || window._perfilTemp);
+    } catch (err) { console.error(err); }
+}
+
+async function cargarParroquiasPerfil(perfilData) {
+    const selMunicipio = document.getElementById('perfil-municipio');
+    const selParroquia = document.getElementById('perfil-parroquia');
+    selParroquia.innerHTML = '<option value="">Seleccione...</option>';
+    selParroquia.disabled = !editandoDatos || !selMunicipio.value;
+    if (!selMunicipio.value) return;
+    try {
+        const parroquias = await CheckoutController.getParroquias(selMunicipio.value);
+        parroquias.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id_parroquia; opt.textContent = p.nombre;
+            const targetId = perfilData ? perfilData.id_parroquia : (window._perfilTemp ? window._perfilTemp.id_parroquia : null);
+            if (targetId == p.id_parroquia) opt.selected = true;
+            selParroquia.appendChild(opt);
+        });
+    } catch (err) { console.error(err); }
+}
+
+document.getElementById('form-datos').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+        await UserController.updatePerfil({
+            nombre: document.getElementById('perfil-nombre').value,
+            apellido: document.getElementById('perfil-apellido').value,
+            telefono: document.getElementById('perfil-telefono').value,
+            calle: document.getElementById('perfil-calle').value,
+            id_parroquia: parseInt(document.getElementById('perfil-parroquia').value) || null
+        });
+        mostrarMsg('datos-msg', 'Datos actualizados correctamente');
+        toggleEditarDatos();
+    } catch (err) { mostrarMsg('datos-msg', 'Error al guardar', true); }
+});
+
+// ==================== PRIVACIDAD / CONTRASEÑA ====================
+document.getElementById('form-password').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const actual = document.getElementById('pw-actual').value;
+    const nueva = document.getElementById('pw-nueva').value;
+    const confirmar = document.getElementById('pw-confirmar').value;
+    if (nueva !== confirmar) { mostrarMsg('pw-msg', 'Las contraseñas no coinciden', true); return; }
+    if (nueva.length < 12) { mostrarMsg('pw-msg', 'Mínimo 12 caracteres', true); return; }
+    if (nueva === actual) { mostrarMsg('pw-msg', 'La nueva contraseña debe ser diferente', true); return; }
+    try {
+        const res = await AuthController.updatePassword({ userId: currentUserId, currentPassword: actual, newPassword: nueva, confirmNewPassword: confirmar });
+        if (res.success) {
+            mostrarMsg('pw-msg', 'Contraseña actualizada exitosamente');
+            document.getElementById('form-password').reset();
+        } else {
+            mostrarMsg('pw-msg', res.error?.message || res.error || 'Error al actualizar', true);
+        }
+    } catch (err) { mostrarMsg('pw-msg', 'Error de conexión', true); }
+});
+
+// ==================== PRIVACIDAD / PREGUNTAS ====================
+async function cargarPreguntas() {
+    try {
+        const res = await fetch('/api/preguntas-seguridad');
+        if (!res.ok) return;
+        const preguntas = await res.json();
+        if (preguntas && preguntas.length > 0) {
+            const selects = document.querySelectorAll('#form-seguridad select');
+            const inputs = document.querySelectorAll('#form-seguridad input[type="text"]');
+            preguntas.forEach((p, i) => {
+                if (selects[i]) {
+                    const valor = Object.entries({
+                        mascota: '¿Nombre de tu primera mascota?', escuela: '¿Nombre de tu primera escuela?',
+                        ciudad: '¿Ciudad donde naciste?', comida: '¿Cuál es tu comida favorita?',
+                        libro: '¿Cuál es tu libro favorito?', amigo: '¿Nombre de tu mejor amigo de la infancia?'
+                    }).find(([k, v]) => v === p.pregunta)?.[0] || p.pregunta;
+                    selects[i].value = valor;
+                }
+                if (inputs[i]) inputs[i].value = p.respuesta;
+            });
+        }
+    } catch (err) { console.error(err); }
+}
+
+document.getElementById('form-seguridad').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const datos = [
+        { pregunta: form.querySelector('select[name="pregunta1"]').value, resp: form.querySelector('input[name="resp1"]').value },
+        { pregunta: form.querySelector('select[name="pregunta2"]').value, resp: form.querySelector('input[name="resp2"]').value },
+        { pregunta: form.querySelector('select[name="pregunta3"]').value, resp: form.querySelector('input[name="resp3"]').value }
+    ];
+    try {
+        const result = await AuthController.saveSecurityQuestions(datos);
+        if (result && result.success !== false) {
+            mostrarMsg('seg-msg', 'Preguntas guardadas con éxito');
+        } else { mostrarMsg('seg-msg', result?.message || 'Error al guardar', true); }
+    } catch (err) { mostrarMsg('seg-msg', 'Error de conexión', true); }
+});
+
+// ==================== PREFERENCIAS ====================
+function cambiarTema(tema) {
+    if (window.DoArtTheme) window.DoArtTheme.saveTheme(tema);
+    document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === tema));
+}
+
+function cambiarAcento(acento) {
+    if (window.DoArtTheme) window.DoArtTheme.saveAccent(acento);
+    document.querySelectorAll('.accent-btn').forEach(b => b.classList.toggle('active', b.dataset.accent === acento));
+}
+
+// ==================== UTILIDADES ====================
+function mostrarMsg(id, msg, error) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.style.display = 'block';
+    el.style.color = error ? '#ff4444' : 'var(--accent, #18b2af)';
+    if (!error) setTimeout(() => el.style.display = 'none', 4000);
+}
+
+function logout() {
+    if (!confirm("¿Deseas cerrar tu sesión?")) return;
+    localStorage.clear(); sessionStorage.clear();
+    try { fetch('/logout', { method: 'POST' }); } catch {}
+    window.location.href = "/";
+}
+
+function limpiarError(id) {
+    const input = document.getElementById(id);
+    const error = document.getElementById('error-' + id);
+    if (error) error.textContent = '';
+    if (input) input.classList.remove('input-error');
+}
+function marcarError(id, mensaje) {
+    const input = document.getElementById(id);
+    const error = document.getElementById('error-' + id);
+    if (error) error.textContent = mensaje;
+    if (input) input.classList.add('input-error');
+}
+function formatearTarjeta() {
+    const input = document.getElementById('card-number');
+    let valor = input.value.replace(/[^0-9]/g, '').slice(0, 16);
+    let formateado = '';
+    for (let i = 0; i < valor.length; i++) { if (i > 0 && i % 4 === 0) formateado += '-'; formateado += valor[i]; }
+    input.value = formateado;
+}
+function validarTarjeta(numero) { const limpio = numero.replace(/-/g, ''); if (!/^\d{16}$/.test(limpio)) return 'Deben ser 16 dígitos'; return ''; }
+function validarFechaExpiracion(mes, anio) {
+    if (!mes) return 'Selecciona el mes'; if (!anio) return 'Selecciona el año';
+    const ahora = new Date(); const expira = new Date(parseInt(anio), parseInt(mes), 0);
+    if (expira < ahora) return 'Tarjeta vencida'; return '';
+}
+function validarCVV(cvv) { if (!/^\d{3}$/.test(cvv)) return 'Debe ser 3 dígitos'; return ''; }
+
+async function enviarSolicitudPago() {
+    const card = document.getElementById('card-number').value.trim();
+    const mes = document.getElementById('expiry-month').value;
+    const anio = document.getElementById('expiry-year').value;
+    const cvv = document.getElementById('cvv').value.trim();
+    let valido = true;
+    const errCard = validarTarjeta(card); if (errCard) { marcarError('card-number', errCard); valido = false; }
+    const errExpiry = validarFechaExpiracion(mes, anio);
+    if (errExpiry) {
+        if (!mes) marcarError('expiry-month', errExpiry);
+        if (!anio) marcarError('expiry-year', 'Selecciona el año');
+        if (mes && anio) { marcarError('expiry-month', errExpiry); marcarError('expiry-year', errExpiry); }
+        valido = false;
+    }
+    const errCvv = validarCVV(cvv); if (errCvv) { marcarError('cvv', errCvv); valido = false; }
+    if (!valido) return;
+    document.getElementById('card-number').classList.add('input-valid');
+    document.getElementById('expiry-month').classList.add('input-valid');
+    document.getElementById('expiry-year').classList.add('input-valid');
+    document.getElementById('cvv').classList.add('input-valid');
+    const expiry = mes + '/' + anio.slice(-2);
+    if (!confirm("¿Confirmas que deseas enviar los datos para revisión del administrador?")) return;
+    try {
+        const result = await UserController.requestPayment({ cardNumber: card, expiry, cvv });
+        if (result && result.success !== false) {
+            try { await fetch('/api/guardar-tarjeta', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({numero: card.replace(/-/g, ''), expiracion: expiry, titular: ''}) }); } catch {}
+            alert("Solicitud enviada con éxito. El administrador revisará tu información pronto.");
+            document.getElementById('card-number').value = '';
+            document.getElementById('expiry-month').value = '';
+            document.getElementById('expiry-year').value = '';
+            document.getElementById('cvv').value = '';
+            document.querySelectorAll('.input-valid').forEach(e => e.classList.remove('input-valid'));
+        } else { alert("Error al enviar la solicitud al servidor."); }
+    } catch (error) { console.error("Error:", error); alert("Ocurrió un error de conexión."); }
+}
+</script>
 </body>
-
 </html>

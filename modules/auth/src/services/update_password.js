@@ -31,8 +31,8 @@ async function updatePassword(parsed, req) {
     }
 
     const hashedPassword = await hash(newPassword);
-    await userRepo.updatePassword(validatedId, hashedPassword);
-    await auditRepo.registrarEvento(validatedId, 'CAMBIO_CONTRASENA', 'Contraseña actualizada exitosamente', req);
+    await userRepo.updatePassword(userId, hashedPassword);
+    await auditRepo.registrarEvento(userId, 'CAMBIO_CONTRASENA', 'Contraseña actualizada exitosamente', req);
 }
 
 module.exports = { updatePassword, InvalidCurrentPasswordError, UserNotFoundError };

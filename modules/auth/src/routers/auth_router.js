@@ -82,6 +82,7 @@ router.post('/update-password', async (req, res) => {
 
 router.use(require('./recuperar_pw'));
 router.use(require('./guardar_seguridad'));
+router.use(require('./preguntas_seguridad'));
 router.use(require('./usuario_actual'));
 router.use(require('./estado_usuario'));
 

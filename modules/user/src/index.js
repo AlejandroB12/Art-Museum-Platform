@@ -62,6 +62,16 @@ const start = async () => {
             )
         `);
         console.log('Tabla tarjeta sincronizada en Supabase');
+        await queryRaw(`
+            CREATE TABLE IF NOT EXISTS favorito (
+                id_favorito SERIAL PRIMARY KEY,
+                id_usuario INTEGER NOT NULL REFERENCES usuario(id_usuario),
+                id_obra INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW(),
+                UNIQUE(id_usuario, id_obra)
+            )
+        `);
+        console.log('Tabla favorito sincronizada en Supabase');
     } catch (err) {
         console.error('Error creando tablas en Supabase:', err.message);
     }
