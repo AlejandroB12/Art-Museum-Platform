@@ -18,4 +18,12 @@ async function registrarCambioEstatus(id_obra, estatus_anterior, estatus_nuevo, 
     );
 }
 
-module.exports = { registrarEvento, registrarCambioEstatus };
+async function findHistorialByObra(id_obra) {
+    const result = await client.execute(
+        'SELECT * FROM historial_estatus_obra WHERE id_obra = ?',
+        [parseInt(id_obra)]
+    );
+    return result.rows;
+}
+
+module.exports = { registrarEvento, registrarCambioEstatus, findHistorialByObra };

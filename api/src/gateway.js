@@ -71,10 +71,12 @@ const apiProxy = createProxyMiddleware({
 
         if (
             path === '/confirmar-reserva' ||
+            path === '/cancelar-reserva' ||
             path.startsWith('/api/estados') ||
             path.startsWith('/api/municipios') ||
             path.startsWith('/api/parroquias') ||
-            path.startsWith('/api/direcciones')
+            path.startsWith('/api/direcciones') ||
+            path.startsWith('/api/estados-obra')
 
         ) return CHECKOUT_URL;
 
@@ -104,6 +106,7 @@ const shouldProxy = (pathname) => {
         pathname.startsWith('/solicitar-') ||
         pathname.startsWith('/mis-') ||
         pathname.startsWith('/confirmar-') ||
+        pathname.startsWith('/cancelar-') ||
         pathname.startsWith('/consultas/') ||
         pathname.startsWith('/generar-') ||
         pathname.startsWith('/cassandra/') ||

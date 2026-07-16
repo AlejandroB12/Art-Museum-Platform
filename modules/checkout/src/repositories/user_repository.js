@@ -1,22 +1,43 @@
-const { query, queryRaw } = require('../config/database');
+const { Usuario, Comprador, Membresia } = require('../config/database');
+const { Op } = require('sequelize');
 
 async function findWithMembresiaStatus(id) {
-    const rows = await query(`
-        SELECT u.rol,
-               EXISTS (
-                   SELECT 1 FROM membresia m
-                   WHERE m.id_usuario = u.id_usuario
-                   AND CURRENT_DATE BETWEEN m.fecha_inicio AND m.fecha_expiracion
-               ) AS membresia_activa,
-               TRUE AS puede_adquirir
-        FROM usuario u
-        WHERE u.id_usuario = $1
-    `, [id]);
-    return rows;
+    const user = await Usuario.findByPk(Number(id), {
+        attributes: ['rol'],
+        include: [{
+            model: Membresia,
+            attributes: [],
+            required: false,
+            where: {
+                fecha_inicio: { [Op.lte]: new Date() },
+                fecha_expiracion: { [Op.gte]: new Date() }
+            }
+        }]
+    });
+    if (!user) return [];
+    const membresias = user.Membresia || [];
+    return [{
+        rol: user.rol,
+        membresia_activa: membresias.length > 0
+    }];
 }
 
-async function updatePuedeAdquirir(id, value) {
-    // No-op en PostgreSQL: no existe columna PuedeAdquirir
+async function findWithComprador(id) {
+    const user = await Usuario.findByPk(Number(id), {
+        include: [{ model: Comprador }]
+    });
+    if (!user) return [];
+    const u = user.toJSON();
+    const c = u.Comprador;
+    return [{
+        ...u,
+        cedula: c?.cedula,
+        telefono: c?.telefono,
+        id_estado: c?.id_estado,
+        id_municipio: c?.id_municipio,
+        id_parroquia: c?.id_parroquia,
+        calle: c?.calle
+    }];
 }
 
-module.exports = { findWithMembresiaStatus, updatePuedeAdquirir, queryRaw };
+module.exports = { findWithMembresiaStatus, findWithComprador };
