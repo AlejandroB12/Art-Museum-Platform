@@ -2,53 +2,55 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Finalizar Compra | MUSEO CONTEMPORANEO</title>
+    <title>DoArt Magic | Checkout</title>
     <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+    <link rel="stylesheet" href="/styles/theme.css">
     <link rel="stylesheet" href="/styles/checkout-style.css">
 </head>
 <body>
+<div class="checkout-overlay">
+    <div class="checkout-modal">
+        <a href="/catalog/artwork" class="checkout-close">&times;</a>
+        <h2>Confirmar Adquisici&oacute;n</h2>
 
-<div class="checkout-box">
-    <h2>Confirmar Adquisición</h2>
-    
-    <div class="obra-resumen">
-        <img id="img-obra" src="" class="obra-img" alt="Miniatura de la obra">
-        <div>
-            <div id="titulo-obra" class="obra-title">Cargando obra...</div>
-            <div id="artista-obra" class="obra-author">Artista</div>
-            <div id="precio-obra" class="obra-price">0$</div>
+        <div class="obra-resumen">
+            <img id="img-obra" src="" class="obra-img" alt="Miniatura">
+            <div>
+                <div id="titulo-obra" class="obra-title">Cargando obra...</div>
+                <div id="artista-obra" class="obra-author">Artista</div>
+                <div id="precio-obra" class="obra-price">0$</div>
+            </div>
         </div>
-    </div>
 
-    <div class="section-label">Información de Envío</div><br>
-    <div class="datos-usuario" id="datos-envio">
-        <div class="user-data-loading">Cargando tus datos...</div>
-    </div>
-
-    <form id="form-pago" novalidate>
-        <div class="section-label">Detalles de Pago</div><br>
-        <input type="text" id="card-number" placeholder="Número de Tarjeta" minlength="16" maxlength="19" pattern="\d{16,19}" title="Debe contener entre 16 y 19 dígitos numéricos" required autocomplete="cc-number">
-        <div class="flex-row-gap">
-            <input type="text" id="expiry-date" placeholder="MM/AA" minlength="5" maxlength="5" pattern="(0[1-9]|1[0-2])\/\d{2}" title="Formato: MM/AA (ej: 12/28)" required class="input-half" autocomplete="cc-exp">
-            <input type="password" id="cvv" placeholder="CVC" minlength="3" maxlength="4" pattern="\d{3,4}" title="Debe contener 3 o 4 dígitos" required class="input-half" autocomplete="cc-csc">
+        <div class="section-label">Informaci&oacute;n de Env&iacute;o</div>
+        <div class="datos-usuario" id="datos-envio">
+            <div class="user-data-loading">Cargando tus datos...</div>
         </div>
-        <input type="text" id="codigo-membresia" placeholder="Código de seguridad de membresía" minlength="6" maxlength="6" pattern="\d{6}" title="Debe ser un código de 6 dígitos" required>
-        <div id="error-msg" class="error-msg-checkout"></div>
-        <button type="submit" class="btn-pagar">Pagar Ahora</button>
-    </form>
 
-    <div class="secure-badge">
-        🔒 Pago 100% seguro y cifrado. Museo Contemporáneo 2026.
+        <div class="section-label">Tarjeta</div>
+        <div id="checkout-card-display" class="checkout-card-info">Cargando tarjeta...</div>
+
+        <form id="form-pago" novalidate>
+            <div class="section-label">C&oacute;digo de Seguridad</div>
+            <input type="text" id="codigo-membresia" placeholder="C&oacute;digo de seguridad de membres&iacute;a" minlength="6" maxlength="6" required>
+            <div id="error-msg" class="error-msg-checkout"></div>
+            <button type="submit" class="btn-pagar">Pagar Ahora</button>
+        </form>
+
+        <div class="secure-badge">
+            Pago 100% seguro y cifrado. Museo Contempor&aacute;neo 2026.
+        </div>
     </div>
 </div>
 
+<script src="/scripts/theme-switcher.js"></script>
 <script src="/controllers/authController.js"></script>
 <script src="/controllers/userController.js"></script>
 <script src="/controllers/checkoutController.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', async () => {
 
-        // --- 0. VERIFICAR SESIÓN PRIMERO ---
+        // --- 0. VERIFICAR SESIÓN ---
         try {
             const sesionData = await AuthController.checkSession();
             if (!sesionData.autenticado) {
@@ -61,159 +63,95 @@
             window.location.href = "/login";
             return;
         }
-        
-        // --- 1. CARGAR DATOS DE LA OBRA DESDE LOCALSTORAGE ---
-        const cargarObraSeleccionada = () => {
-            const obraData = localStorage.getItem('obraSeleccionada');
-            if (obraData) {
-                const obra = JSON.parse(obraData);
-                document.getElementById('img-obra').src = obra.imagen;
-                document.getElementById('titulo-obra').innerText = obra.nombre;
-                document.getElementById('artista-obra').innerText = obra.artista;
-                document.getElementById('precio-obra').innerText = `${obra.precio}$`;
-            } else {
-                alert("No se ha seleccionado ninguna obra.");
-                window.location.href = "/catalog/artwork";
-            }
-        };
 
-        const cargarUsuarioSesion = async () => {
+        // --- 1. CARGAR OBRA DESDE LOCALSTORAGE ---
+        const data = localStorage.getItem('obraSeleccionada');
+        if (!data) {
+            alert("No se ha seleccionado ninguna obra.");
+            window.location.href = "/catalog/artwork";
+            return;
+        }
+        const obra = JSON.parse(data);
+        document.getElementById('img-obra').src = obra.imagen || '';
+        document.getElementById('titulo-obra').innerText = obra.nombre || '';
+        document.getElementById('artista-obra').innerText = obra.artista || '';
+        document.getElementById('precio-obra').innerText = obra.precio ? `$${Number(obra.precio).toLocaleString()}` : '0$';
+
+        // --- 2. CARGAR DATOS DE ENVÍO + TARJETA ---
+        async function cargarUsuario() {
             try {
                 const user = await UserController.getShippingPaymentData();
-                const datosEnvio = document.getElementById('datos-envio');
-
+                const el = document.getElementById('datos-envio');
                 if (!user) {
-                    datosEnvio.innerHTML = `
-                        <div style="color: #ffaa00;">No has registrado tus datos de envío.</div>
-                        <a href="/dashboard" style="font-size: 0.8rem; color: #18b2af; text-decoration: none;">Completar dirección</a>
-                    `;
+                    el.innerHTML = '<div style="color:#ffaa00;">No has registrado tus datos de envío. <a href="/dashboard" style="color:var(--accent);">Completar dirección</a></div>';
                 } else {
-                    datosEnvio.innerHTML = `
-                        <div style="font-weight:bold; color: #fff;">${user.Nombre} ${user.Apellido}</div>
-                        <div style="color: #aaa;">Dirección: ${user.Calle || 'No registrada'}</div>
-                        <div style="color: #aaa;">${user.Parroquia || ''}${user.Parroquia && user.Municipio ? ', ' : ''}${user.Municipio || ''}</div>
-                        <a href="/dashboard" style="font-size: 0.7rem; color: #18b2af; text-decoration: none;">Editar dirección</a>
+                    el.innerHTML = `
+                        <div style="font-weight:bold;color:var(--text-primary);">${user.Nombre} ${user.Apellido}</div>
+                        <div style="color:var(--text-muted);">Dirección: ${user.Calle || 'No registrada'}</div>
+                        <div style="color:var(--text-muted);">${user.Parroquia || ''}${user.Parroquia && user.Municipio ? ', ' : ''}${user.Municipio || ''}</div>
+                        <a href="/dashboard" style="font-size:0.7rem;color:var(--accent);">Editar dirección</a>
                     `;
                 }
-            } catch (error) {
-                console.error("Error al obtener datos de envío:", error);
-                const datosEnvio = document.getElementById('datos-envio');
-                if (datosEnvio) datosEnvio.innerHTML = `<div style="color: #ff4444;">Error al cargar datos de envío.</div>`;
+            } catch (err) {
+                console.error("Error cargando datos de envío:", err);
+                document.getElementById('datos-envio').innerHTML = '<div style="color:#ff4444;">Error al cargar datos de envío.</div>';
             }
-        };
 
-        // --- 2. FORMATEO EN VIVO DE CAMPOS (como en register.html) ---
-        document.getElementById('card-number').addEventListener('input', (e) => {
-            let value = e.target.value.replace(/\D/g, '');
-            e.target.value = value.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
-        });
-
-        document.getElementById('expiry-date').addEventListener('input', (e) => {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value.length >= 2) e.target.value = value.slice(0, 2) + '/' + value.slice(2, 4);
-            else e.target.value = value;
-        });
-
-        document.getElementById('cvv').addEventListener('input', (e) => {
-            e.target.value = e.target.value.replace(/\D/g, '');
-        });
+            try {
+                const card = await CheckoutController.getCard();
+                const el = document.getElementById('checkout-card-display');
+                if (card && card.numero) {
+                    const last4 = card.numero.replace(/\s/g, '').slice(-4);
+                    el.innerHTML = `
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                        <span>**** **** **** ${last4}</span>
+                        <span class="checkout-card-expiry">${card.expiracion || ''}</span>
+                    `;
+                } else {
+                    el.innerHTML = '<span style="color:var(--text-dim);">No hay tarjeta registrada. A\u00f1ade una en Tu Tarjeta del panel.</span>';
+                }
+            } catch (err) { console.error("Error cargando tarjeta:", err); }
+        }
 
         document.getElementById('codigo-membresia').addEventListener('input', (e) => {
             e.target.value = e.target.value.replace(/\D/g, '');
         });
 
-        // --- 3. VALIDAR CAMPOS DEL FORMULARIO ---
         function mostrarError(msg) {
             const el = document.getElementById('error-msg');
-            el.innerText = msg;
-            el.style.display = 'block';
+            el.innerText = msg; el.style.display = 'block';
         }
 
-        function ocultarError() {
-            document.getElementById('error-msg').style.display = 'none';
-        }
-
-        function validarFormulario() {
-            ocultarError();
-            const card = document.getElementById('card-number').value.replace(/\s/g, '');
-            const expiry = document.getElementById('expiry-date').value;
-            const cvv = document.getElementById('cvv').value;
-            const codigo = document.getElementById('codigo-membresia').value;
-
-            if (!/^\d{16,19}$/.test(card)) {
-                mostrarError("El número de tarjeta debe tener entre 16 y 19 dígitos.");
-                return false;
-            }
-            if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry)) {
-                mostrarError("La fecha de expiración debe tener formato MM/AA (ej: 12/28).");
-                return false;
-            }
-            const [mes, anio] = expiry.split('/');
-            const ahora = new Date();
-            const mesActual = ahora.getMonth() + 1;
-            const anioActual = parseInt(ahora.getFullYear().toString().slice(2));
-            if (parseInt(anio) < anioActual || (parseInt(anio) === anioActual && parseInt(mes) < mesActual)) {
-                mostrarError("La tarjeta está vencida.");
-                return false;
-            }
-            if (!/^\d{3,4}$/.test(cvv)) {
-                mostrarError("El CVC debe tener 3 o 4 dígitos.");
-                return false;
-            }
-            if (!/^\d{6}$/.test(codigo)) {
-                mostrarError("El código de seguridad de membresía debe tener 6 dígitos.");
-                return false;
-            }
-            return true;
-        }
-
-        // --- 4. PROCESAR EL FORMULARIO DE PAGO ---
         document.getElementById('form-pago').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            if (!validarFormulario()) return;
+            document.getElementById('error-msg').style.display = 'none';
+            const codigo = document.getElementById('codigo-membresia').value;
 
-            const btnPagar = e.target.querySelector('.btn-pagar');
-            const obraData = JSON.parse(localStorage.getItem('obraSeleccionada'));
+            if (!/^\d{6}$/.test(codigo)) { mostrarError("El c\u00f3digo de seguridad de membres\u00eda debe tener 6 d\u00edgitos."); return; }
 
-            if (!obraData || !obraData.id_Obra) {
-                alert("Error: No se seleccionó ninguna obra válida.");
-                return;
-            }
+            const btn = e.target.querySelector('.btn-pagar');
+            if (!obra || !obra.id_Obra) { mostrarError("Error: No se seleccion\u00f3 ninguna obra v\u00e1lida."); return; }
 
-            const idObra = Number(obraData.id_Obra);
-            if (!Number.isInteger(idObra) || idObra <= 0) {
-                mostrarError("ID de obra inválido.");
-                return;
-            }
-
-            btnPagar.innerText = "PROCESANDO...";
-            btnPagar.disabled = true;
-
+            btn.innerText = "PROCESANDO..."; btn.disabled = true;
             try {
-                const resultado = await CheckoutController.confirmReservation({ id_obra: idObra });
-
+                const resultado = await CheckoutController.confirmReservation({ id_obra: String(obra.id_Obra) });
                 if (resultado && resultado.success !== false) {
-                    alert("¡Pago procesado y reserva guardada!");
+                    alert("\u00a1Pago procesado y reserva guardada!");
                     localStorage.removeItem('obraSeleccionada');
                     window.location.href = "/catalog/artwork";
                 } else {
                     mostrarError(resultado?.error || "No se pudo procesar el pago");
-                    btnPagar.innerText = "PAGAR AHORA";
-                    btnPagar.disabled = false;
+                    btn.innerText = "Pagar Ahora"; btn.disabled = false;
                 }
-            } catch (error) {
-                console.error("Error en la petición:", error);
-                mostrarError("Error de conexión con el servidor.");
-                btnPagar.innerText = "PAGAR AHORA";
-                btnPagar.disabled = false;
+            } catch (err) {
+                console.error("Error en pago:", err);
+                mostrarError("Error de conexi\u00f3n con el servidor.");
+                btn.innerText = "Pagar Ahora"; btn.disabled = false;
             }
         });
 
-        cargarObraSeleccionada();
-        cargarUsuarioSesion();
+        cargarUsuario();
     });
 </script>
-
 </body>
 </html>

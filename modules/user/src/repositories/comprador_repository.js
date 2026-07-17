@@ -1,41 +1,44 @@
 const { query } = require('../config/database');
 
 async function findByUserId(idUsuario) {
-    return query("SELECT * FROM Comprador WHERE id_usuario = ?", [idUsuario]);
+    return query("SELECT * FROM comprador WHERE id_usuario = $1", [idUsuario]);
 }
 
 async function findShippingData(idUsuario) {
     return query(`
-        SELECT u.Nombre, u.Apellido, c.Calle, p.nombre AS Parroquia, m.nombre AS Municipio
-        FROM Comprador c
-        INNER JOIN Usuario u ON c.id_usuario = u.id_usuario
-        LEFT JOIN Parroquia p ON c.id_parroquia = p.id_parroquia
-        LEFT JOIN Municipio m ON p.id_municipio = m.id_municipio
-        WHERE c.id_usuario = ?
+        SELECT u.nombre AS "Nombre", u.apellido AS "Apellido", c.calle AS "Calle",
+               p.nombre AS "Parroquia", m.nombre AS "Municipio"
+        FROM comprador c
+        INNER JOIN usuario u ON c.id_usuario = u.id_usuario
+        LEFT JOIN parroquia p ON c.id_parroquia = p.id_parroquia
+        LEFT JOIN municipio m ON p.id_municipio = m.id_municipio
+        WHERE c.id_usuario = $1
     `, [idUsuario]);
 }
 
 async function findPurchaseHistory(idUsuario) {
     return query(`
-        SELECT o.Nombre, o.Precio, f.Fecha_Venta AS Fecha_emision, g.Nombre AS Genero, 'Pagado' AS Estado
-        FROM Factura f
-        INNER JOIN Obra o ON f.id_obra = o.id_Obra
-        INNER JOIN Comprador c ON f.id_comprador = c.id_usuario
-        LEFT JOIN Genero g ON o.id_Genero = g.id_Genero
-        WHERE c.id_usuario = ?
+        SELECT o.nombre AS "Nombre", o.precio AS "Precio", f.fecha_venta AS "Fecha_emision",
+               g.nombre AS "Genero", 'Pagado' AS "Estado"
+        FROM factura f
+        LEFT JOIN obra o ON f.id_obra = o.id_obra
+        INNER JOIN comprador c ON f.id_comprador = c.id_usuario
+        LEFT JOIN genero g ON o.id_genero = g.id_genero
+        WHERE c.id_usuario = $1
         UNION
-        SELECT o.Nombre, o.Precio, r.Fecha_Reserva AS Fecha_emision, g.Nombre AS Genero, 'Reservado' AS Estado
-        FROM Reserva r
-        INNER JOIN Obra o ON r.id_obra = o.id_Obra
-        LEFT JOIN Genero g ON o.id_Genero = g.id_Genero
-        WHERE r.id_usuario = ?
-        ORDER BY Fecha_emision DESC
+        SELECT o.nombre AS "Nombre", o.precio AS "Precio", r.fecha_reserva AS "Fecha_emision",
+               g.nombre AS "Genero", 'Reservado' AS "Estado"
+        FROM reserva r
+        LEFT JOIN obra o ON r.id_obra = o.id_obra
+        LEFT JOIN genero g ON o.id_genero = g.id_genero
+        WHERE r.id_usuario = $2
+        ORDER BY "Fecha_emision" DESC
     `, [idUsuario, idUsuario]);
 }
 
 async function create(data) {
     return query(
-        "INSERT INTO Comprador (id_usuario, Cedula, Telefono, CodigoVerificacion, id_parroquia, Calle) VALUES (?, ?, ?, ?, ?, ?)",
+        "INSERT INTO comprador (id_usuario, cedula, telefono, codigo_verificacion, id_parroquia, calle) VALUES ($1, $2, $3, $4, $5, $6)",
         [data.id_usuario, data.Cedula, data.Telefono, data.CodigoVerificacion, data.id_parroquia, data.Calle]
     );
 }

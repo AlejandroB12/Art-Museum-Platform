@@ -16,15 +16,14 @@ dns.setServers(['1.1.1.1','8.8.8.8']);
 const results = [];
 
 (async () => {
-    // MySQL
+    // PostgreSQL (Supabase)
     try {
-        const mysql = require('mysql2');
-        const isRemote = process.env.DB_PORT_MYSQL && process.env.DB_PORT_MYSQL !== '3306';
-        const db = mysql.createConnection({host:process.env.DB_HOST_MYSQL,port:process.env.DB_PORT_MYSQL||3306,user:process.env.DB_USER_MYSQL,password:process.env.DB_PASSWORD_MYSQL,database:process.env.DB_NAME_MYSQL,ssl:isRemote?{rejectUnauthorized:false}:undefined});
-        await new Promise((resolve,reject) => db.connect(err=>err?reject(err):resolve()));
-        db.end();
-        results.push('  [MySQL]     OK');
-    } catch(e) { results.push('  [MySQL]     FAIL - ' + (e.sqlMessage||e.code)); }
+        const { Client } = require('pg');
+        const client = new Client({ connectionString: process.env.SUPABASE_URL, ssl: { rejectUnauthorized: false } });
+        await client.connect();
+        await client.end();
+        results.push('  [Postgres]  OK');
+    } catch(e) { results.push('  [Postgres]  FAIL - ' + e.message.split('\n')[0]); }
 
     // MongoDB
     try {
@@ -66,7 +65,7 @@ $allOk = $true
 foreach ($line in $dbLines) {
     if ($line -match 'FAIL') { Write-Host $line -ForegroundColor Red; $allOk = $false }
     elseif ($line -match 'OK') { Write-Host $line -ForegroundColor Green }
-    elseif ($line -match '\[MySQL\]|\[MongoDB\]|\[Cassandra\]|\[Neo4j\]') { Write-Host $line -ForegroundColor Yellow }
+    elseif ($line -match '\[Postgres\]|\[MongoDB\]|\[Cassandra\]|\[Neo4j\]') { Write-Host $line -ForegroundColor Yellow }
 }
 
 if (-not $allOk) {

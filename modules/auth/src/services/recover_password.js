@@ -1,10 +1,10 @@
 const userRepo = require('../repositories/user_repository');
 const auditRepo = require('../repositories/audit_repository');
 const emailUtils = require('../../../../shared/utils/email');
-const { recoverySchema } = require('../schemas/recovery');
+const { PasswordRecoveryRequest } = require('../schemas/recovery');
 
 async function recoverPassword(correo, req) {
-    const { correo: validatedCorreo } = recoverySchema.parse({ correo });
+    const { correo: validatedCorreo } = PasswordRecoveryRequest.parse({ correo });
 
     const results = await userRepo.findByEmail(validatedCorreo);
     if (results.length === 0) throw new Error("Correo no encontrado");

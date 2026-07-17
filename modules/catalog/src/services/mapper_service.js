@@ -19,6 +19,7 @@ function mapObraToFrontend(obra)
         id_obra: obra._id,
         nombre: obra.nombre,
         fecha_creacion: obra.fecha_creacion ? obra.fecha_creacion.toISOString().split('T')[0] : null,
+        precio: obra.precio,
         precio_formateado: formatPrice(obra.precio),
         estatus: obra.estatus,
         fotografia: obra.fotografia,
@@ -45,6 +46,7 @@ function mapObraDetailToFrontend(obra)
         id_obra: obra._id,
         nombre: obra.nombre,
         fecha_creacion: obra.fecha_creacion ? obra.fecha_creacion.toISOString().split('T')[0] : null,
+        precio: obra.precio,
         precio_formateado: formatPrice(obra.precio),
         estatus: obra.estatus,
         fotografia: obra.fotografia || null,
@@ -59,9 +61,9 @@ function mapObraDetailToFrontend(obra)
 function mapSearchResult(obra, nombreArtista) 
 {
     return {
-
         id_obra: obra._id,
         nombre: obra.nombre,
+        precio: obra.precio,
         precio_formateado: formatPrice(obra.precio),
         fotografia: obra.fotografia || '',
         artista_nombre: nombreArtista || '',

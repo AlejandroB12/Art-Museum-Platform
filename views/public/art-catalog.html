@@ -363,7 +363,7 @@
                         <h3 class="art-title" style="margin: 10px 0;">${obra.nombre || obra.Nombre || ''}</h3>
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <span class="price">${obra.precio_formateado || obra.PrecioFormateado || ''}</span>
-                            <button class="btn-buy" onclick="adquirirObra('${obra.id_obra || obra.id_Obra}', '${(obra.nombre || obra.Nombre || '').replace(/'/g, "\\'")}', '${artistaNombreCompleto.replace(/'/g, "\\'")}', '${obra.precio_formateado || obra.PrecioFormateado || ''}', '${imgSource}')">Adquirir</button>
+                            <button class="btn-buy" onclick="adquirirObra('${obra.id_obra || obra.id_Obra}', '${(obra.nombre || obra.Nombre || '').replace(/'/g, "\\'")}', '${artistaNombreCompleto.replace(/'/g, "\\'")}', ${obra.precio || 0}, '${imgSource}')">Adquirir</button>
                         </div>
                     </div>
                 `;
@@ -459,14 +459,13 @@
                 window.location.href = "/login";
                 return;
             }
-            const obra = {
+            localStorage.setItem('obraSeleccionada', JSON.stringify({
                 id_Obra: id,
                 nombre: nombre,
                 artista: artista,
                 precio: precio,
                 imagen: imagen
-            };
-            localStorage.setItem('obraSeleccionada', JSON.stringify(obra));
+            }));
             window.location.href = "/checkout";
         }
 
@@ -545,7 +544,7 @@
                                 <div class="user-dropdown-header"> Hola, ${user.Nombre || ''} ${user.Apellido || ''}</div>
                                 <a href="${panelLink}">${panelLabel}</a>
                                 <div class="user-dropdown-divider"></div>
-                                <a href="/logout">Cerrar sesión</a>
+                                <a href="#" onclick="AuthController.logoutUser(event)">Cerrar sesión</a>
                             </div>
                         `;
                                 const avatar = userDiv.querySelector('.user-avatar');

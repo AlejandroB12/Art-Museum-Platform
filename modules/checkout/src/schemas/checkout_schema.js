@@ -4,4 +4,8 @@ const reservaSchema = z.object({
     id_obra: z.number().int().positive("ID de obra inválido")
 });
 
-module.exports = { reservaSchema };
+const cancelarReservaSchema = z.object({
+    id_obra: z.number().int().positive("ID de obra inválido")
+});
+
+module.exports = { reservaSchema, cancelarReservaSchema };

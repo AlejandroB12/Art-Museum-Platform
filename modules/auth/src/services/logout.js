@@ -1,5 +1,12 @@
 const auditRepo = require('../repositories/audit_repository');
 
+class LogoutError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = 'LogoutError';
+    }
+}
+
 async function logout(req) {
     const idUsuario = req.session?.id_usuario;
     if (idUsuario) {
@@ -7,10 +14,10 @@ async function logout(req) {
     }
     return new Promise((resolve, reject) => {
         req.session.destroy((err) => {
-            if (err) reject(err);
+            if (err) reject(new LogoutError('No se pudo cerrar la sesión'));
             else resolve();
         });
     });
 }
 
-module.exports = { logout };
+module.exports = { logout, LogoutError };

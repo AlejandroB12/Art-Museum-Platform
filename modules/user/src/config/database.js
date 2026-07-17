@@ -1,4 +1,4 @@
-const { db, query, queryRaw } = require('../../../../shared/database/mysql');
+const { query, queryRaw } = require('../../../../shared/database/postgres');
 const { client } = require('../../../../shared/database/cassandra');
 
-module.exports = { db, query, queryRaw, client };
+module.exports = { query, queryRaw, client };

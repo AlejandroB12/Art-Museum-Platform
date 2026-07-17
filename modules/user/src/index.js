@@ -29,6 +29,53 @@ const PORT = process.env.USER_SERVICE_PORT || 3003;
 
 const start = async () => {
     await connectCassandra();
+
+    try {
+        const { queryRaw } = require('../../../shared/database/postgres');
+        await queryRaw(`
+            CREATE TABLE IF NOT EXISTS obra (
+                id_obra VARCHAR(24) PRIMARY KEY,
+                nombre VARCHAR(255) NOT NULL,
+                fecha_creacion DATE,
+                precio NUMERIC(10,2),
+                estado_obra VARCHAR(50) DEFAULT 'Disponible',
+                id_genero INTEGER,
+                fotografia TEXT
+            )
+        `);
+        await queryRaw(`
+            CREATE TABLE IF NOT EXISTS genero (
+                id_genero SERIAL PRIMARY KEY,
+                nombre VARCHAR(100) NOT NULL
+            )
+        `);
+        console.log('Tablas obra/genero sincronizadas en Supabase');
+        await queryRaw(`
+            CREATE TABLE IF NOT EXISTS tarjeta (
+                id_tarjeta SERIAL PRIMARY KEY,
+                id_usuario INTEGER NOT NULL REFERENCES usuario(id_usuario),
+                numero_tarjeta VARCHAR(19) NOT NULL,
+                fecha_expiracion VARCHAR(5) NOT NULL,
+                titular VARCHAR(100) NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW(),
+                UNIQUE(id_usuario)
+            )
+        `);
+        console.log('Tabla tarjeta sincronizada en Supabase');
+        await queryRaw(`
+            CREATE TABLE IF NOT EXISTS favorito (
+                id_favorito SERIAL PRIMARY KEY,
+                id_usuario INTEGER NOT NULL REFERENCES usuario(id_usuario),
+                id_obra INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW(),
+                UNIQUE(id_usuario, id_obra)
+            )
+        `);
+        console.log('Tabla favorito sincronizada en Supabase');
+    } catch (err) {
+        console.error('Error creando tablas en Supabase:', err.message);
+    }
+
     app.listen(PORT, () => {
         console.log(`User service corriendo en puerto ${PORT}`);
     });

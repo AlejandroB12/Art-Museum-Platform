@@ -365,7 +365,7 @@
                                     <div class="user-dropdown-header"> Hola, ${user.Nombre || ''} ${user.Apellido || ''}</div>
                                     <a href="${panelLink}">${panelLabel}</a>
                                     <div class="user-dropdown-divider"></div>
-                                    <a href="/logout">Cerrar sesión</a>
+                                    <a href="#" onclick="AuthController.logoutUser(event)">Cerrar sesión</a>
                                 </div>
                             `;
                             const avatar = userDiv.querySelector('.user-avatar');

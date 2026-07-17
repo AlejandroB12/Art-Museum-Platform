@@ -1,13 +1,20 @@
 const auditRepo = require('../repositories/audit_repository');
-const { securityQuestionsSchema } = require('../schemas/security_questions');
-const { queryRaw } = require('../config/database');
+const { SecurityQuestionsRequest } = require('../schemas/security_questions');
+const { PreguntaSeguridad } = require('../models');
 
 async function saveSecurityQuestions(userId, datos, req) {
-    const validated = securityQuestionsSchema.parse(datos);
+    const validated = SecurityQuestionsRequest.parse(datos);
 
-    await queryRaw("DELETE FROM CodigoSeguridad WHERE id_usuario = ?", [userId]);
-    const valores = validated.map(p => [p.pregunta, p.resp, userId]);
-    await queryRaw("INSERT INTO CodigoSeguridad (Pregunta, Respuesta, id_usuario) VALUES ?", [valores]);
+    await PreguntaSeguridad.destroy({ where: { id_usuario: Number(userId) } });
+
+    for (const p of validated) {
+        await PreguntaSeguridad.create({
+            pregunta: p.pregunta,
+            respuesta: p.resp,
+            id_usuario: Number(userId)
+        });
+    }
+
     await auditRepo.registrarEvento(userId, 'GUARDAR_SEGURIDAD', 'Preguntas de seguridad guardadas', req);
 }
 

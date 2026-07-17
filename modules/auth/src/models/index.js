@@ -1,1 +1,3 @@
-module.exports = require('./auth_models');
+const dbModels = require('../config/database');
+
+module.exports = dbModels;

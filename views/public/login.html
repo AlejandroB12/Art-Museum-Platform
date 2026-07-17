@@ -51,7 +51,7 @@
                 <a href="/home"><img src="/images/DoArt_Magic_Logo.png" alt="DoArt Magic"></a>
             </div>
 
-            <form class="login-form" action="/login-auth" method="POST">
+            <form class="login-form" id="loginForm">
                 <div>
                     <h2 class="welcome-title">INGRESE SUS CREDENCIALES</h2>
                     <p class="welcome-sub">
@@ -96,35 +96,47 @@
     </div>
 
     <script>
-        const params = new URLSearchParams(window.location.search);
-        const error = params.get('error');
+        document.getElementById('loginForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
 
-        if (error) {
             const msg = document.getElementById('error-message');
             const groups = document.querySelectorAll('.form-group');
+            groups.forEach(g => g.classList.remove('error'));
+            msg.style.display = 'none';
 
-            groups.forEach(g => g.classList.add('error'));
+            const body = {
+                email: document.getElementById('username').value,
+                password: document.getElementById('password').value
+            };
 
-            if (error === 'credenciales') {
-                msg.textContent = 'Credenciales erróneas, vuelva a intentar.';
-            } else if (error === 'vencida') {
-                msg.textContent = 'Tu membresía ha vencido. Contacta al administrador.';
-            } else if (error === 'pago') {
-                msg.textContent = 'No se encontró registro de pago.';
+            try {
+                const res = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    window.location.href = '/dashboard';
+                    return;
+                }
+                const errMsg = typeof data.error === 'string' ? data.error : (data.error?.[0]?.message || 'Credenciales erróneas, vuelva a intentar.');
+                msg.textContent = errMsg;
+            } catch {
+                msg.textContent = 'Error de conexión con el servidor';
             }
 
+            groups.forEach(g => g.classList.add('error'));
             msg.style.display = 'block';
 
-            groups.forEach(g => {
-                const input = g.querySelector('input');
-                if (input) {
-                    input.addEventListener('input', () => {
-                        groups.forEach(gr => gr.classList.remove('error'));
-                        msg.style.display = 'none';
-                    }, { once: true });
-                }
+            const inputs = document.querySelectorAll('.form-group input');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    groups.forEach(gr => gr.classList.remove('error'));
+                    msg.style.display = 'none';
+                }, { once: true });
             });
-        }
+        });
 
         const text = "Donde el arte \ncobra vida.";
         const el = document.getElementById('typewriter-text');

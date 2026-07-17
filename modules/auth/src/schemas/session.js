@@ -1,29 +1,40 @@
 const { z } = require('zod');
 
-const usuarioActualSchema = z.object({});
+const ROLES_VALIDOS = ['comprador', 'administrador', 'vendedor'];
 
-const estadoUsuarioSchema = z.object({});
+const UsuarioActualRequest = z.object({}).strict();
 
-const logoutSchema = z.object({});
+const EstadoUsuarioRequest = z.object({}).strict();
 
-const sessionUserSchema = z.object({
-    id_usuario: z.number().int().positive(),
-    Nombre: z.string(),
-    Email: z.string().email(),
-    Rol: z.string()
-});
+const LogoutRequest = z.object({}).strict();
 
-const estadoUsuarioResponseSchema = z.object({
+const SessionUserSchema = z.object({
+    id_usuario: z.number().int().positive('ID de usuario inválido'),
+    nombre: z.string()
+        .trim()
+        .min(1, 'El nombre es requerido')
+        .max(80, 'El nombre no puede exceder 80 caracteres'),
+    email: z.string()
+        .trim()
+        .toLowerCase()
+        .email('Debe ser un correo electrónico válido'),
+    rol: z.enum(ROLES_VALIDOS, {
+        errorMap: () => ({ message: `El rol debe ser uno de: ${ROLES_VALIDOS.join(', ')}` })
+    })
+}).strict();
+
+const EstadoUsuarioResponse = z.object({
     autenticado: z.boolean(),
     puedeAdquirir: z.boolean().optional(),
     id_usuario: z.number().int().positive().optional(),
-    rol: z.string().optional()
-});
+    rol: z.enum(ROLES_VALIDOS).optional()
+}).strict();
 
 module.exports = {
-    usuarioActualSchema,
-    estadoUsuarioSchema,
-    logoutSchema,
-    sessionUserSchema,
-    estadoUsuarioResponseSchema
+    UsuarioActualRequest,
+    EstadoUsuarioRequest,
+    LogoutRequest,
+    SessionUserSchema,
+    EstadoUsuarioResponse,
+    ROLES_VALIDOS
 };

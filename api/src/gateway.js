@@ -27,15 +27,16 @@ const apiProxy = createProxyMiddleware({
         const { path } = req;
 
         if (
-            path === '/login-auth' ||
+            path === '/login' ||
+            path === '/register' ||
             path === '/recuperar-pw' ||
             path === '/update-password' ||
-            path === '/registrar' ||
             path === '/guardar-seguridad' ||
             path === '/verificar-preguntas' ||
             path === '/logout' ||
             path === '/api/usuario-actual' ||
-            path === '/api/estado-usuario'
+            path === '/api/estado-usuario' ||
+            path === '/api/preguntas-seguridad'
 
         ) return AUTH_URL;
 
@@ -45,7 +46,12 @@ const apiProxy = createProxyMiddleware({
             path === '/solicitar-pago' ||
             path === '/api/solicitar-pago' ||
             path === '/mis-compras' ||
-            path === '/api/datos-envio-pago'
+            path === '/api/mis-compras' ||
+            path === '/api/datos-envio-pago' ||
+            path === '/api/tarjeta' ||
+            path === '/api/guardar-tarjeta' ||
+            path === '/api/favoritos' ||
+            path === '/api/perfil'
 
         ) return USER_URL;
 
@@ -65,10 +71,12 @@ const apiProxy = createProxyMiddleware({
 
         if (
             path === '/confirmar-reserva' ||
+            path === '/cancelar-reserva' ||
             path.startsWith('/api/estados') ||
             path.startsWith('/api/municipios') ||
             path.startsWith('/api/parroquias') ||
-            path.startsWith('/api/direcciones')
+            path.startsWith('/api/direcciones') ||
+            path.startsWith('/api/estados-obra')
 
         ) return CHECKOUT_URL;
 
@@ -86,7 +94,9 @@ const shouldProxy = (pathname) => {
 
     return (
         pathname.startsWith('/api/') ||
+        pathname === '/login' ||
         pathname.startsWith('/login-') ||
+        pathname === '/register' ||
         pathname.startsWith('/registrar') ||
         pathname.startsWith('/logout') ||
         pathname.startsWith('/recuperar-') ||
@@ -96,6 +106,7 @@ const shouldProxy = (pathname) => {
         pathname.startsWith('/solicitar-') ||
         pathname.startsWith('/mis-') ||
         pathname.startsWith('/confirmar-') ||
+        pathname.startsWith('/cancelar-') ||
         pathname.startsWith('/consultas/') ||
         pathname.startsWith('/generar-') ||
         pathname.startsWith('/cassandra/') ||

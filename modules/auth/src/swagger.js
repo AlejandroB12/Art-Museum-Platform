@@ -25,53 +25,7 @@
 
 /**
  * @swagger
- * /login-auth:
- *   post:
- *     summary: Inicia sesión con correo y contraseña
- *     tags: [Auth - Login]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - username
- *               - password
- *             properties:
- *               username:
- *                 type: string
- *                 format: email
- *                 description: Correo electrónico del usuario
- *                 example: usuario@ejemplo.com
- *               password:
- *                 type: string
- *                 description: Contraseña del usuario
- *                 example: miClave123
- *     responses:
- *       302:
- *         description: Redirecciona al dashboard correspondiente según el rol
- *         headers:
- *           Location:
- *             schema:
- *               type: string
- *             examples:
- *               admin:
- *                 value: /admin/admin-dashboard.html
- *               comprador:
- *                 value: /private/user-dashboard.html?email=usuario@ejemplo.com
- *       500:
- *         description: Error en el servidor
- *         content:
- *           text/plain:
- *             schema:
- *               type: string
- *               example: Error en el servidor
- */
-
-/**
- * @swagger
- * /registrar:
+ * /register:
  *   post:
  *     summary: Registra un nuevo comprador
  *     tags: [Auth - Registro]
@@ -86,20 +40,21 @@
  *               - apellido
  *               - correo
  *               - password
+ *               - confirmPassword
  *               - cedula
  *             properties:
  *               nombre:
  *                 type: string
- *                 description: Nombre del usuario
+ *                 description: Nombre del usuario (solo letras y espacios)
+ *                 minLength: 2
+ *                 maxLength: 80
  *                 example: Juan
  *               apellido:
  *                 type: string
- *                 description: Apellido del usuario
+ *                 description: Apellido del usuario (solo letras y espacios)
+ *                 minLength: 2
+ *                 maxLength: 80
  *                 example: Pérez
- *               telefono:
- *                 type: string
- *                 description: Teléfono del usuario
- *                 example: +584141234567
  *               correo:
  *                 type: string
  *                 format: email
@@ -107,35 +62,180 @@
  *                 example: juan@ejemplo.com
  *               password:
  *                 type: string
- *                 description: Contraseña (mínimo 4 caracteres)
- *                 example: claveSegura
+ *                 description: Contraseña (mínimo 12 caracteres, máximo 64)
+ *                 minLength: 12
+ *                 maxLength: 64
+ *                 example: MiClaveSegura2024
+ *               confirmPassword:
+ *                 type: string
+ *                 description: Confirmación de la contraseña
+ *                 example: MiClaveSegura2024
  *               cedula:
  *                 type: string
- *                 description: Cédula de identidad
+ *                 description: Cédula de identidad (solo dígitos, opcional prefijo V/E)
  *                 example: V12345678
+ *               telefono:
+ *                 type: string
+ *                 description: Teléfono venezolano (opcional)
+ *                 example: 04121234567
  *               parroquia:
  *                 type: string
- *                 description: ID de la parroquia
+ *                 description: ID de la parroquia (opcional)
  *                 example: 1
  *               calle:
  *                 type: string
- *                 description: Dirección de la calle
+ *                 description: Dirección de la calle (opcional)
  *                 example: Av. Principal
  *     responses:
- *       302:
- *         description: Redirecciona a la página de registro exitoso
- *         headers:
- *           Location:
- *             schema:
- *               type: string
- *               example: /public/register.html?success=1&nombre=Juan&correo=juan@ejemplo.com
- *       500:
- *         description: Error al crear usuario
+ *       201:
+ *         description: Usuario creado exitosamente
  *         content:
- *           text/plain:
+ *           application/json:
  *             schema:
- *               type: string
- *               example: "Error al crear usuario: La cédula es obligatoria para compradores."
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 id_usuario:
+ *                   type: integer
+ *                   example: 1
+ *                 nombre:
+ *                   type: string
+ *                   example: Juan
+ *                 correo:
+ *                   type: string
+ *                   example: juan@ejemplo.com
+ *       400:
+ *         description: Error de validación (Zod)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       message:
+ *                         type: string
+ *                         example: Las contraseñas no coinciden
+ *                       path:
+ *                         type: array
+ *                         items:
+ *                           type: string
+ *                           example: confirmPassword
+ *       409:
+ *         description: Conflicto (correo o cédula ya existen)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: El correo electrónico ya está registrado
+ */
+
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Inicia sesión con correo y contraseña
+ *     tags: [Auth - Login]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Correo electrónico del usuario
+ *                 example: usuario@ejemplo.com
+ *               password:
+ *                 type: string
+ *                 description: Contraseña del usuario
+ *                 example: MiClaveSegura2024
+ *     responses:
+ *       200:
+ *         description: Inicio de sesión exitoso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 id_usuario:
+ *                   type: integer
+ *                   example: 1
+ *                 nombre:
+ *                   type: string
+ *                   example: Juan
+ *                 email:
+ *                   type: string
+ *                   example: juan@ejemplo.com
+ *                 rol:
+ *                   type: string
+ *                   example: comprador
+ *       400:
+ *         description: Error de validación
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       message:
+ *                         type: string
+ *                         example: El correo es requerido
+ *       401:
+ *         description: Credenciales inválidas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: Credenciales inválidas
+ *       403:
+ *         description: Cuenta inactiva
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: La cuenta no está activa
  */
 
 /**
@@ -179,7 +279,7 @@
  * @swagger
  * /update-password:
  *   post:
- *     summary: Actualiza la contraseña del usuario
+ *     summary: Actualiza la contraseña del usuario autenticado
  *     tags: [Auth - Recuperación]
  *     requestBody:
  *       required: true
@@ -189,7 +289,9 @@
  *             type: object
  *             required:
  *               - userId
+ *               - currentPassword
  *               - newPassword
+ *               - confirmNewPassword
  *             properties:
  *               userId:
  *                 oneOf:
@@ -197,25 +299,68 @@
  *                   - type: integer
  *                 description: ID del usuario
  *                 example: 1
+ *               currentPassword:
+ *                 type: string
+ *                 description: Contraseña actual del usuario
+ *                 example: MiViejaClave123
  *               newPassword:
  *                 type: string
- *                 description: Nueva contraseña (mínimo 4 caracteres)
- *                 example: nuevaClave123
+ *                 description: Nueva contraseña (mínimo 12 caracteres, máximo 64)
+ *                 minLength: 12
+ *                 maxLength: 64
+ *                 example: MiNuevaClave456
+ *               confirmNewPassword:
+ *                 type: string
+ *                 description: Confirmación de la nueva contraseña
+ *                 example: MiNuevaClave456
  *     responses:
- *       302:
- *         description: Redirecciona a la página de recuperación
- *         headers:
- *           Location:
- *             schema:
- *               type: string
- *               example: /private/password-recovery.html
- *       500:
- *         description: Error al actualizar
+ *       200:
+ *         description: Contraseña actualizada exitosamente
  *         content:
- *           text/plain:
+ *           application/json:
  *             schema:
- *               type: string
- *               example: Error al actualizar
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Contraseña actualizada exitosamente
+ *       400:
+ *         description: Error de validación o contraseña actual incorrecta
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   oneOf:
+ *                     - type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           message:
+ *                             type: string
+ *                             example: Las contraseñas nuevas no coinciden
+ *                     - type: string
+ *                       example: La contraseña actual no es correcta
+ *       404:
+ *         description: Usuario no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: Usuario no encontrado
  */
 
 /**
@@ -338,22 +483,31 @@
 /**
  * @swagger
  * /logout:
- *   get:
+ *   post:
  *     summary: Cierra la sesión del usuario
  *     tags: [Auth - Sesión]
  *     responses:
- *       302:
- *         description: Redirecciona a la página principal
- *         headers:
- *           Location:
+ *       200:
+ *         description: Sesión cerrada exitosamente
+ *         content:
+ *           application/json:
  *             schema:
- *               type: string
- *               example: /
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
  *       500:
  *         description: Error al cerrar sesión
  *         content:
- *           text/plain:
+ *           application/json:
  *             schema:
- *               type: string
- *               example: No se pudo cerrar la sesión
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: No se pudo cerrar la sesión
  */

@@ -3,7 +3,7 @@ const path = require('path');
 const app = express();
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '..', '.env') });
 
-const { connectCassandra } = require('../../../shared/database/cassandra');
+const { sequelize, connectCassandra } = require('./config/database');
 const getSessionConfig = require('../../../shared/middlewares/session_config');
 
 app.use(express.json({ limit: '10mb' }));
@@ -29,6 +29,12 @@ const PORT = process.env.AUTH_SERVICE_PORT || 3001;
 
 const start = async () => {
 
+    try {
+        await sequelize.authenticate();
+        console.log('Supabase (PostgreSQL) conectado via Sequelize');
+    } catch (err) {
+        console.error('Error conectando a Supabase:', err.message);
+    }
     await connectCassandra();
 
     app.listen(PORT, () => {
