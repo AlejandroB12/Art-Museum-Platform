@@ -57,3 +57,7 @@ secure-connect-*.zip
 # === Prisma (auth module) - generated files ===
 modules/auth/src/prisma/schema.prisma
 modules/auth/src/models/generated/
+
+# === Python Environment ===
+
+venv/

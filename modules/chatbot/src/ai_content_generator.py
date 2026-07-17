@@ -28,11 +28,16 @@ logger = logging.getLogger("ai_content_generator")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
+
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "google/gemma-2-9b-it:free")
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+
 MONGO_URI = os.getenv("MONGO_URI") or os.getenv("MONGO_URI_FALLBACK")
 DB_NAME = "museodb"
 
-if not GEMINI_API_KEY:
-    logger.error("GEMINI_API_KEY no está definida en el .env")
+if not GEMINI_API_KEY and not OPENROUTER_API_KEY:
+    logger.error("No hay API key — define GEMINI_API_KEY u OPENROUTER_API_KEY en el .env")
     sys.exit(1)
 
 if not MONGO_URI:
@@ -65,6 +70,40 @@ def _call_gemini(prompt: str, system: str | None = None, retries: int = 2) -> st
     return ""
 
 
+def _call_openrouter(prompt: str, system: str | None = None, retries: int = 2) -> str:
+    for attempt in range(retries + 1):
+        try:
+            messages = []
+            if system:
+                messages.append({"role": "system", "content": system})
+            messages.append({"role": "user", "content": prompt})
+            resp = httpx.post(
+                f"{OPENROUTER_BASE_URL}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": "https://github.com/Art-Museum-Platform",
+                    "X-Title": "DoArt Magic Museum Chatbot",
+                },
+                json={
+                    "model": OPENROUTER_MODEL,
+                    "messages": messages,
+                    "max_tokens": 500,
+                    "temperature": 0.7,
+                    "safe_prompt": False,
+                },
+                timeout=60,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            return data["choices"][0]["message"]["content"].strip()
+        except Exception as e:
+            logger.warning("Intento %d (OpenRouter) falló: %s", attempt + 1, e)
+            if attempt < retries:
+                time.sleep(2 ** attempt)
+    return ""
+
+
 # ---------------------------------------------------------------------------
 #  Biografías de artistas
 # ---------------------------------------------------------------------------
@@ -91,6 +130,10 @@ def generar_biografia(artista: dict) -> str:
         nacionalidad=artista.get("nacionalidad", "Desconocida"),
         fecha=artista.get("fecha_nacimiento", "No disponible"),
     )
+    if OPENROUTER_API_KEY:
+        resultado = _call_openrouter(prompt, system=BIO_SYSTEM)
+        if resultado:
+            return resultado
     return _call_gemini(prompt, system=BIO_SYSTEM)
 
 
@@ -128,6 +171,10 @@ def generar_descripcion(obra: dict) -> str:
         artista_id=obra.get("artista", "?"),
         ano=ano,
     )
+    if OPENROUTER_API_KEY:
+        resultado = _call_openrouter(prompt, system=DESC_SYSTEM)
+        if resultado:
+            return resultado
     return _call_gemini(prompt, system=DESC_SYSTEM)
 
 

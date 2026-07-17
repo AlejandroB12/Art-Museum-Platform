@@ -18,6 +18,12 @@ logger = logging.getLogger("chatbot")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
 GEMINI_DISPONIBLE = False
+
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "google/gemma-2-9b-it:free")
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+OPENROUTER_DISPONIBLE = False
+
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 OLLAMA_MODEL = "minimax-m3:cloud"
 
@@ -72,8 +78,26 @@ app = FastAPI(title="Chatbot - Museo (Gemini + Cypher)")
 
 
 @app.on_event("startup")
-async def verificar_gemini():
-    global GEMINI_DISPONIBLE
+async def verificar_proveedores():
+    global GEMINI_DISPONIBLE, OPENROUTER_DISPONIBLE
+
+    if OPENROUTER_API_KEY:
+        try:
+            async with httpx.AsyncClient(timeout=5, http2=False) as c:
+                r = await c.get(
+                    f"{OPENROUTER_BASE_URL}/auth/key",
+                    headers={"Authorization": f"Bearer {OPENROUTER_API_KEY}"},
+                )
+            if r.is_success:
+                OPENROUTER_DISPONIBLE = True
+                logger.info("OpenRouter disponible con modelo %s", OPENROUTER_MODEL)
+            else:
+                logger.warning("OpenRouter no disponible (status=%s): %s", r.status_code, r.text[:120])
+        except Exception as e:
+            logger.warning("OpenRouter no disponible: %s", e)
+    else:
+        logger.info("OpenRouter no disponible — no hay OPENROUTER_API_KEY")
+
     if not GEMINI_API_KEY:
         logger.info("Gemini no disponible — no hay GEMINI_API_KEY")
         return
@@ -147,6 +171,34 @@ def _limpiar_respuesta(texto: str) -> str:
     return texto
 
 
+async def _openrouter_generate(prompt: str, system: str | None = None) -> str:
+    messages = []
+    if system:
+        messages.append({"role": "system", "content": system})
+    messages.append({"role": "user", "content": prompt})
+
+    async with httpx.AsyncClient(timeout=30) as client:
+        resp = await client.post(
+            f"{OPENROUTER_BASE_URL}/chat/completions",
+            headers={
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://github.com/Art-Museum-Platform",
+                "X-Title": "DoArt Magic Museum Chatbot",
+            },
+            json={
+                "model": OPENROUTER_MODEL,
+                "messages": messages,
+                "max_tokens": 500,
+                "temperature": 0.7,
+                "safe_prompt": False,
+            },
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        return data["choices"][0]["message"]["content"]
+
+
 async def _ollama_generate(prompt: str, system: str | None = None) -> str:
     messages = []
     if system:
@@ -186,7 +238,13 @@ def _neo4j_run(cypher: str, params: dict | None = None) -> list:
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "service": "chatbot", "backend": "ollama", "gemini": GEMINI_DISPONIBLE}
+    return {
+        "status": "ok",
+        "service": "chatbot",
+        "openrouter": OPENROUTER_DISPONIBLE,
+        "gemini": GEMINI_DISPONIBLE,
+        "ollama": bool(OLLAMA_HOST),
+    }
 
 
 @app.post("/api/chat")
@@ -195,6 +253,15 @@ async def chat(req: ChatRequest):
         raise HTTPException(status_code=400, detail="El mensaje es requerido")
 
     errores = []
+
+    if OPENROUTER_DISPONIBLE:
+        try:
+            respuesta = await _openrouter_generate(req.mensaje, system=SYSTEM_PROMPT)
+            if respuesta:
+                return {"respuesta": _limpiar_respuesta(respuesta)}
+        except Exception as e:
+            logger.warning("OpenRouter falló: %s", e)
+            errores.append(f"OpenRouter: {e}")
 
     if GEMINI_DISPONIBLE:
         try:
@@ -236,6 +303,22 @@ async def nl2cypher(req: CypherRequest):
 
     errores = []
 
+    if OPENROUTER_DISPONIBLE:
+        try:
+            cypher_raw = await _openrouter_generate(prompt, system=system)
+            cypher_raw = cypher_raw.strip()
+            if cypher_raw.startswith("//NO_TRADUCIBLE"):
+                return CypherResponse(consulta=req.consulta, cypher="", error="Consulta no traducible")
+            cypher_raw = re.sub(r"^```(?:cypher)?\s*", "", cypher_raw)
+            cypher_raw = re.sub(r"\s*```$", "", cypher_raw)
+            cypher_raw = cypher_raw.strip()
+            if cypher_raw:
+                resultados = _neo4j_run(cypher_raw)
+                return CypherResponse(consulta=req.consulta, cypher=cypher_raw, resultados=resultados)
+        except Exception as e:
+            logger.warning("OpenRouter (nl2cypher) falló: %s", e)
+            errores.append(str(e))
+
     if GEMINI_DISPONIBLE:
         try:
             cypher_raw = await _gemini_generate(prompt, system=system)
@@ -252,7 +335,6 @@ async def nl2cypher(req: CypherRequest):
             logger.warning("Gemini (nl2cypher) falló: %s", e)
             errores.append(str(e))
 
-    # Fallback a Ollama para generar Cypher
     try:
         cypher_raw = await _ollama_generate(prompt, system=system)
         cypher_raw = cypher_raw.strip()

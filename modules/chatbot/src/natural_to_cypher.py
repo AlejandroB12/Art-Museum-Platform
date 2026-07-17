@@ -30,6 +30,11 @@ logger = logging.getLogger("natural_to_cypher")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
+
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "google/gemma-2-9b-it:free")
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+
 NEO4J_URI = os.getenv("NEO4J_URI")
 NEO4J_USER = os.getenv("NEO4J_USERNAME")
 NEO4J_PASS = os.getenv("NEO4J_PASSWORD")
@@ -68,8 +73,8 @@ SYSTEM_PROMPT = (
     "6. Limita resultados a 25 con LIMIT 25."
 )
 
-if not GEMINI_API_KEY:
-    logger.error("GEMINI_API_KEY no está definida en el .env")
+if not GEMINI_API_KEY and not OPENROUTER_API_KEY:
+    logger.error("No hay API key — define GEMINI_API_KEY u OPENROUTER_API_KEY en el .env")
     sys.exit(1)
 
 if not NEO4J_URI or not NEO4J_USER or not NEO4J_PASS:
@@ -77,9 +82,37 @@ if not NEO4J_URI or not NEO4J_USER or not NEO4J_PASS:
     sys.exit(1)
 
 
-def traducir_a_cypher(consulta: str) -> str:
-    contents = {"contents": [{"parts": [{"text": f"Traduce a Cypher: \"{consulta}\""}]}]}
-    contents["system_instruction"] = {"parts": [{"text": SYSTEM_PROMPT}]}
+def _call_openrouter(prompt: str, system: str | None = None) -> str:
+    messages = []
+    if system:
+        messages.append({"role": "system", "content": system})
+    messages.append({"role": "user", "content": prompt})
+    resp = httpx.post(
+        f"{OPENROUTER_BASE_URL}/chat/completions",
+        headers={
+            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://github.com/Art-Museum-Platform",
+            "X-Title": "DoArt Magic Museum Chatbot",
+        },
+        json={
+            "model": OPENROUTER_MODEL,
+            "messages": messages,
+            "max_tokens": 500,
+            "temperature": 0.7,
+            "safe_prompt": False,
+        },
+        timeout=60,
+    )
+    resp.raise_for_status()
+    data = resp.json()
+    return data["choices"][0]["message"]["content"]
+
+
+def _call_gemini(prompt: str, system: str | None = None) -> str:
+    contents = {"contents": [{"parts": [{"text": prompt}]}]}
+    if system:
+        contents["system_instruction"] = {"parts": [{"text": system}]}
     resp = httpx.post(
         GEMINI_API_URL,
         params={"key": GEMINI_API_KEY},
@@ -90,9 +123,29 @@ def traducir_a_cypher(consulta: str) -> str:
     data = resp.json()
     candidates = data.get("candidates", [])
     cypher = candidates[0]["content"]["parts"][0]["text"] if candidates else ""
-    cypher = re.sub(r"^```(?:cypher)?\s*", "", cypher)
-    cypher = re.sub(r"\s*```$", "", cypher)
-    return cypher.strip()
+    return cypher
+
+
+def traducir_a_cypher(consulta: str) -> str:
+    prompt = f"Traduce a Cypher: \"{consulta}\""
+
+    if OPENROUTER_API_KEY:
+        try:
+            cypher = _call_openrouter(prompt, system=SYSTEM_PROMPT)
+            cypher = re.sub(r"^```(?:cypher)?\s*", "", cypher)
+            cypher = re.sub(r"\s*```$", "", cypher)
+            return cypher.strip()
+        except Exception as e:
+            logger.warning("OpenRouter falló: %s", e)
+
+    try:
+        cypher = _call_gemini(prompt, system=SYSTEM_PROMPT)
+        cypher = re.sub(r"^```(?:cypher)?\s*", "", cypher)
+        cypher = re.sub(r"\s*```$", "", cypher)
+        return cypher.strip()
+    except Exception as e:
+        logger.error("Todos los proveedores fallaron: %s", e)
+        return "//NO_TRADUCIBLE"
 
 
 def ejecutar_cypher(cypher: str) -> list:
