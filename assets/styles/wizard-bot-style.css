@@ -165,8 +165,28 @@
 .message-row {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
     max-width: 85%;
+}
+
+.bot-message {
+    align-items: flex-start;
+}
+
+.user-message {
+    align-items: flex-end;
+    align-self: flex-end;
+    margin-left: auto;
+}
+
+.user-message .message-bubble {
+    background-color: var(--accent);
+    color: #fff;
+    border-radius: 16px 4px 16px 16px;
+}
+
+.user-message .message-time {
+    text-align: right;
+    padding-right: 5px;
 }
 
 .message-bubble {
@@ -175,6 +195,17 @@
     padding: 10px 14px;
     border-radius: 4px 16px 16px 16px;
     font-size: 13px;
+    line-height: 1.6;
+    word-break: break-word;
+}
+
+.message-bubble br {
+    display: block;
+    content: '';
+    margin: 4px 0;
+}
+
+.user-message .message-bubble {
     line-height: 1.5;
 }
 
@@ -188,33 +219,37 @@
 /* --- BOTONES DE SUGERENCIA (CHIPS) --- */
 .chat-chips {
     display: flex;
-    justify-content: center;
-    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 4px;
     padding: 6px 16px;
-    overflow-x: auto;
-    white-space: nowrap;
-}
-
-.chat-chips::-webkit-scrollbar {
-    display: none;
 }
 
 .chip {
-    background-color: var(--bg-hover);
+    background: none;
     color: var(--text-muted);
-    border: 1px solid var(--border-color);
-    padding: 4px 10px;
-    border-radius: 20px;
+    border: none;
+    padding: 3px 0;
+    border-radius: 0;
     font-size: 11px;
     cursor: pointer;
-    transition: all 0.2s ease;
-    white-space: nowrap;
+    transition: color 0.2s ease;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--border-color);
 }
 
 .chip:hover {
-    background-color: var(--accent);
-    border-color: var(--accent);
-    color: #fff;
+    color: var(--accent);
+    text-decoration-color: var(--accent);
+}
+
+.chip:not(:last-child)::after {
+    content: "·";
+    color: var(--border-color);
+    margin: 0 4px;
+    text-decoration: none;
 }
 
 /* --- INPUT / ENTRADA DE TEXTO --- */
@@ -268,4 +303,28 @@
 
 .send-btn:hover {
     background-color: var(--accent-hover);
+}
+
+/* --- TYPING INDICATOR --- */
+.typing {
+    display: flex;
+    gap: 4px;
+    padding: 12px 18px !important;
+}
+
+.typing .dot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--text-muted);
+    border-radius: 50%;
+    animation: typing-bounce 1.4s infinite ease-in-out;
+}
+
+.typing .dot:nth-child(1) { animation-delay: 0s; }
+.typing .dot:nth-child(2) { animation-delay: 0.2s; }
+.typing .dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing-bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-6px); opacity: 1; }
 }
