@@ -39,7 +39,7 @@ async function findWithMembresiaStatus(id) {
                    AND CURRENT_DATE BETWEEN m.fecha_inicio AND m.fecha_expiracion
                ) AS membresia_activa
         FROM usuario u
-        WHERE u.id_usuario = ?
+        WHERE u.id_usuario = $1
     `, { bind: [Number(id)], type: sequelize.QueryTypes.SELECT });
     return result ? [result] : [];
 }

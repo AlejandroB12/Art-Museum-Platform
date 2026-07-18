@@ -46,12 +46,12 @@ const results = [];
 
 (async () => {
     try {
-        const mysql = require('mysql2');
-        const db = mysql.createConnection({host:'localhost',user:process.env.DB_USER_MYSQL,password:process.env.DB_PASSWORD_MYSQL,database:process.env.DB_NAME_MYSQL});
-        await new Promise((resolve,reject) => db.connect(err=>err?reject(err):resolve()));
-        db.end();
-        results.push('  [MySQL]     OK');
-    } catch(e) { results.push('  [MySQL]     FAIL - ' + (e.sqlMessage||e.code)); }
+        const { Client } = require('pg');
+        const client = new Client({ connectionString: process.env.SUPABASE_URL, ssl: { rejectUnauthorized: false } });
+        await client.connect();
+        await client.end();
+        results.push('  [Postgres]  OK');
+    } catch(e) { results.push('  [Postgres]  FAIL - ' + e.message.split('\n')[0]); }
 
     try {
         const mongoose = require('mongoose');
@@ -92,7 +92,7 @@ while IFS= read -r line; do
         ALL_OK=false
     elif [[ "$line" =~ OK ]]; then
         echo -e "\e[32m$line\e[0m"
-    elif echo "$line" | grep -qE '\[MySQL\]|\[MongoDB\]|\[Cassandra\]|\[Neo4j\]'; then
+    elif echo "$line" | grep -qE '\[Postgres\]|\[MongoDB\]|\[Cassandra\]|\[Neo4j\]'; then
         echo -e "\e[33m$line\e[0m"
     fi
 done <<< "$DB_OUTPUT"

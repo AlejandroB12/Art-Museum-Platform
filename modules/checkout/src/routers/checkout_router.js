@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const checkoutService = require('../services/checkout_service');
-const { validate } = require('../../../shared/middlewares/validate_middleware');
+const { validate } = require('../../../../shared/middlewares/validate_middleware');
 const { reservaSchema, cancelarReservaSchema } = require('../schemas/checkout_schema');
 
 router.post('/confirmar-reserva', validate(reservaSchema), async (req, res) => {

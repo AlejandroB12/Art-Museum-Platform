@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const geoService = require('../services/geography_service');
-const { validateParams } = require('../../../shared/middlewares/validate_middleware');
+const { validateParams } = require('../../../../shared/middlewares/validate_middleware');
 const { idEstadoParamSchema, idMunicipioParamSchema } = require('../schemas/geography_schema');
 
 router.get('/estados', async (req, res) => {

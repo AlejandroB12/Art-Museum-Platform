@@ -24,21 +24,23 @@ async function insert(userId, fecha, monto = 10.00) {
 
 async function findMembershipDetails(userId) {
     return query(`
-        SELECT CONCAT('Pago $', monto_pagado) AS "Concepto",
-               fecha_inicio AS "FechaInicio", monto_pagado AS "TotalPagado",
-               fecha_expiracion AS "FechaVencimiento",
-               'Aprobado' AS "EstadoPago",
-               FLOOR(monto_pagado / 10.0 * 30)::INTEGER AS "DiasRestantes",
-               'detalle' AS "Tipo"
-        FROM membresia WHERE id_usuario = $1
-        UNION ALL
-        SELECT 'Total Acumulado' AS "Concepto",
-               MIN(fecha_inicio) AS "FechaInicio", SUM(monto_pagado) AS "TotalPagado",
-               MAX(fecha_expiracion) AS "FechaVencimiento",
-               CASE WHEN CURRENT_DATE <= MAX(fecha_expiracion) THEN 'Activa' ELSE 'Vencida' END AS "EstadoPago",
-               GREATEST(0, FLOOR(EXTRACT(EPOCH FROM (MAX(fecha_expiracion) - CURRENT_DATE)) / 86400))::INTEGER AS "DiasRestantes",
-               'total' AS "Tipo"
-        FROM membresia WHERE id_usuario = $2
+        SELECT * FROM (
+            SELECT CONCAT('Pago $', monto_pagado) AS "Concepto",
+                   fecha_inicio AS "FechaInicio", monto_pagado AS "TotalPagado",
+                   fecha_expiracion AS "FechaVencimiento",
+                   'Aprobado' AS "EstadoPago",
+                   FLOOR(monto_pagado / 10.0 * 30)::INTEGER AS "DiasRestantes",
+                   'detalle' AS "Tipo"
+            FROM membresia WHERE id_usuario = $1
+            UNION ALL
+            SELECT 'Total Acumulado' AS "Concepto",
+                   MIN(fecha_inicio) AS "FechaInicio", SUM(monto_pagado) AS "TotalPagado",
+                   MAX(fecha_expiracion) AS "FechaVencimiento",
+                   CASE WHEN CURRENT_DATE <= MAX(fecha_expiracion) THEN 'Activa' ELSE 'Vencida' END AS "EstadoPago",
+                   GREATEST(0, (MAX(fecha_expiracion) - CURRENT_DATE))::INTEGER AS "DiasRestantes",
+                   'total' AS "Tipo"
+            FROM membresia WHERE id_usuario = $2
+        ) sub
         ORDER BY CASE "Tipo" WHEN 'total' THEN 2 WHEN 'detalle' THEN 1 ELSE 0 END, "FechaInicio" ASC
     `, [userId, userId]);
 }

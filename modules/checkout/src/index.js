@@ -3,12 +3,12 @@ const path = require('path');
 const app = express();
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '..', '.env') });
 
-const { connectMongoDB } = require('../../shared/database/mongodb');
-const { client } = require('../../shared/database/cassandra');
-const { connectNeo4j } = require('../../shared/database/neo4j');
+const { connectMongoDB } = require('../../../shared/database/mongodb');
+const { client } = require('../../../shared/database/cassandra');
+const { connectNeo4j } = require('../../../shared/database/neo4j');
 const { sequelize } = require('./config/database');
-const getSessionConfig = require('../../shared/middlewares/session_config');
-const { sessionFromToken } = require('../../shared/middlewares/auth_jwt');
+const getSessionConfig = require('../../../shared/middlewares/session_config');
+const { sessionFromToken } = require('../../../shared/middlewares/auth_jwt');
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -24,7 +24,7 @@ app.use(checkoutRouter);
 app.use('/api', geographyRouter);
 app.use('/api', statusRouter);
 
-const { errorHandler, notFoundHandler } = require('../../shared/middlewares/error_middleware');
+const { errorHandler, notFoundHandler } = require('../../../shared/middlewares/error_middleware');
 app.use(notFoundHandler);
 app.use(errorHandler);
 
