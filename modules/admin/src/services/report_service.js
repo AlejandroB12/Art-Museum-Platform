@@ -1,4 +1,4 @@
-const userRepo = require('../repositories/user_repository');
+const { query } = require('../config/database');
 const invoiceRepo = require('../repositories/invoice_repository');
 const obraRepo = require('../repositories/obra_repository');
 const auditRepo = require('../repositories/audit_repository');
@@ -26,23 +26,22 @@ async function generarFactura(data, req) {
 
             const obtenerDatosYFacturar = (comprador) => {
                 const nombreCompradorFinal = buyerManual ? nombreComprador :
-                    (comprador.Nombre && comprador.Apellido ? `${comprador.Nombre} ${comprador.Apellido}` : 'No disponible');
-                const emailFinal = buyerManual ? compradorEmail : (comprador.Email || 'No disponible');
-                const cedulaFinal = buyerManual ? compradorCedula : (comprador.Cedula || null);
-                const nombreFinal = buyerManual ? nombre : (comprador.Nombre || '');
-                const apellidoFinal = buyerManual ? apellido : (comprador.Apellido || '');
+                    (comprador.nombre && comprador.apellido ? `${comprador.nombre} ${comprador.apellido}` : 'No disponible');
+                const emailFinal = buyerManual ? compradorEmail : (comprador.email || 'No disponible');
+                const cedulaFinal = buyerManual ? compradorCedula : (comprador.cedula ? String(comprador.cedula) : null);
+                const nombreFinal = buyerManual ? nombre : (comprador.nombre || '');
+                const apellidoFinal = buyerManual ? apellido : (comprador.apellido || '');
 
                 const iva = parseFloat(precio_neto) * 0.12;
                 const gananciaMuseo = parseFloat(precio_neto) * (parseFloat(porcentaje_comision) / 100);
                 const total = parseFloat(precio_neto) + iva;
-                const ahora = new Date();
-                const fechaStr = ahora.getFullYear() + '-' + String(ahora.getMonth() + 1).padStart(2, '0') + '-' + String(ahora.getDate()).padStart(2, '0') + ' ' + String(ahora.getHours()).padStart(2, '0') + ':' + String(ahora.getMinutes()).padStart(2, '0') + ':' + String(ahora.getSeconds()).padStart(2, '0');
+                const fechaStr = new Date().toISOString();
 
-                userRepo.queryRaw(
-                    `INSERT INTO Factura (Monto_Neto, IVA, Total_Pagado, Ganancia_Museo_USD, Porcentaje_Comision, id_obra, id_comprador, id_admin, NombreComprador, EmailComprador, CedulaComprador, Fecha_Venta) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                    [precio_neto, iva, total, gananciaMuseo, porcentaje_comision, id_obra, id_comp, adminId, nombreCompradorFinal || null, emailFinal || null, cedulaFinal || null, fechaStr]
+                query(
+                    `INSERT INTO factura (monto_neto, iva, total_pagado, ganancia_usd, porcentaje_comision, id_obra, id_comprador, id_admin, nombre_comprador, email_comprador, cedula_comprador, fecha_venta) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id_factura`,
+                    [precio_neto, iva, total, gananciaMuseo, porcentaje_comision, String(id_obra), id_comp, adminId, nombreCompradorFinal || null, emailFinal || null, cedulaFinal || null, fechaStr]
                 ).then(result => {
-                    const idFactura = result.insertId;
+                    const idFactura = result[0].id_factura;
                     invoiceRepo.updateObraStatus(id_obra, 'Vendida').catch(() => {});
                     invoiceRepo.deleteReserva(id_obra).catch(() => {});
 
@@ -75,8 +74,8 @@ async function generarFactura(data, req) {
             if (buyerManual) {
                 obtenerDatosYFacturar({});
             } else {
-                userRepo.queryRaw(
-                    `SELECT u.Email, u.Nombre, u.Apellido, c.Cedula FROM Usuario u LEFT JOIN Comprador c ON u.id_usuario = c.id_usuario WHERE u.id_usuario = ?`,
+                query(
+                    `SELECT u.email, u.nombre, u.apellido, c.cedula FROM usuario u LEFT JOIN comprador c ON u.id_usuario = c.id_usuario WHERE u.id_usuario = $1`,
                     [id_comp]
                 ).then(compradorDatos => {
                     obtenerDatosYFacturar(compradorDatos[0] || {});
@@ -93,7 +92,7 @@ async function generarFactura(data, req) {
                 return;
             }
 
-            userRepo.queryRaw("SELECT id_usuario FROM Reserva WHERE id_obra = ?", [id_obra]).then(compradorResults => {
+            query("SELECT id_usuario FROM reserva WHERE id_obra = $1", [id_obra]).then(compradorResults => {
                 if (compradorResults.length === 0) {
                     resolve({ success: false, needsBuyerData: true, message: "La obra no fue reservada por un comprador. Ingrese los datos manualmente." });
                     return;
@@ -105,28 +104,24 @@ async function generarFactura(data, req) {
             }).catch(err => reject(err));
         };
 
-        userRepo.queryRaw("ALTER TABLE Factura ADD COLUMN IF NOT EXISTS NombreComprador varchar(90) DEFAULT NULL, ADD COLUMN IF NOT EXISTS EmailComprador varchar(90) DEFAULT NULL, ADD COLUMN IF NOT EXISTS CedulaComprador varchar(45) DEFAULT NULL").catch(() => {});
-
-        userRepo.queryRaw("SELECT Estado_obra FROM Obra WHERE id_Obra = ?", [id_obra]).then(obraResults => {
+        query("SELECT estado_obra FROM obra WHERE id_obra = $1", [id_obra]).then(obraResults => {
             if (obraResults.length === 0) {
                 obraRepo.findById(id_obra).then(obraMongo => {
                     if (!obraMongo || obraMongo.estado_obra !== 'Reservado') {
                         return reject(Object.assign(new Error("La obra no existe o no está reservada"), { statusCode: 404 }));
                     }
                     const idGenero = generoMap[obraMongo.genero?.nombre] || null;
-                    userRepo.queryRaw("SET FOREIGN_KEY_CHECKS = 0");
                     invoiceRepo.upsertObra(id_obra, obraMongo.nombre, obraMongo.fecha_creacion || null, obraMongo.precio, idGenero, obraMongo.fotografia || '').then(() => {
-                        userRepo.queryRaw("SET FOREIGN_KEY_CHECKS = 1");
                         continuarFacturacion(obraMongo.nombre || '');
                     }).catch(err => reject(err));
                 }).catch(() => reject(Object.assign(new Error("Error al verificar obra"), { statusCode: 500 })));
                 return;
             }
-            if (obraResults[0].Estado_obra !== 'Reservado') {
+            if (obraResults[0].estado_obra !== 'Reservado') {
                 return reject(Object.assign(new Error("La obra no está en estado Reservado"), { statusCode: 400 }));
             }
-            userRepo.queryRaw("SELECT Nombre FROM Obra WHERE id_Obra = ?", [id_obra]).then(obraDatos => {
-                continuarFacturacion(obraDatos[0]?.Nombre || '');
+            query("SELECT nombre FROM obra WHERE id_obra = $1", [id_obra]).then(obraDatos => {
+                continuarFacturacion(obraDatos[0]?.nombre || '');
             }).catch(err => reject(err));
         }).catch(err => reject(err));
     });
@@ -149,13 +144,13 @@ async function getFactura(id) {
 }
 
 async function listDireccionesEnvio(idFactura) {
-    const results = await userRepo.queryRaw("SELECT * FROM Envio WHERE Factura_id_Factura = ? ORDER BY id_Envio DESC LIMIT 1", [idFactura]);
+    const results = await query("SELECT * FROM envio WHERE id_factura = $1 ORDER BY id_envio DESC LIMIT 1", [idFactura]);
     if (results.length > 0) {
         const envio = results[0];
         return {
-            municipio: envio.Municipio || '',
-            parroquia: envio.Parroquia || '',
-            direccion: envio.Calle || ''
+            municipio: envio.municipio || '',
+            parroquia: envio.parroquia || '',
+            direccion: envio.calle || ''
         };
     }
     return null;
@@ -189,9 +184,9 @@ async function consultarCassandraBitacora(id_usuario, tipo_evento) {
 async function consultarLogsSeguridad() {
     const rows = await auditRepo.findAllLogs();
     const idsUnicos = [...new Set(rows.map(r => r.id_usuario))];
-    const usuarios = idsUnicos.length > 0 ? await userRepo.findUserNamesByIds(idsUnicos) : [];
+    const usuarios = idsUnicos.length > 0 ? await require('../repositories/user_repository').findUserNamesByIds(idsUnicos) : [];
     const nombreMap = {};
-    usuarios.forEach(u => { nombreMap[u.id_usuario] = `${u.Nombre} ${u.Apellido}`; });
+    usuarios.forEach(u => { nombreMap[u.id_usuario] = `${u.nombre} ${u.apellido}`; });
     const logs = rows.map(r => ({
         id_usuario: r.id_usuario,
         nombre_usuario: nombreMap[r.id_usuario] || `Usuario #${r.id_usuario}`,
@@ -205,12 +200,12 @@ async function consultarLogsSeguridad() {
 async function consultarObrasConHistorial() {
     const ids = await auditRepo.findObrasConHistorial();
     if (ids.length === 0) return [];
-    const placeholders = ids.map(() => '?').join(',');
-    const obraRows = await userRepo.queryRaw(
-        `SELECT id_Obra, Nombre, Estado_obra FROM Obra WHERE id_Obra IN (${placeholders})`, ids
+    const placeholders = ids.map((_, i) => '$' + (i + 1)).join(',');
+    const obraRows = await query(
+        `SELECT id_obra, nombre, estado_obra FROM obra WHERE id_obra IN (${placeholders})`, ids
     );
     const obraMap = {};
-    obraRows.forEach(o => obraMap[o.id_Obra] = { nombre: o.Nombre, estado_actual: o.Estado_obra });
+    obraRows.forEach(o => obraMap[o.id_obra] = { nombre: o.nombre, estado_actual: o.estado_obra });
     return ids.map(id => ({
         id_obra: id, nombre_obra: obraMap[id]?.nombre || `Obra #${id}`,
         estado_actual: obraMap[id]?.estado_actual || 'Desconocido'
@@ -222,8 +217,8 @@ async function consultarHistorialEstatusObra(id_obra) {
     return Promise.all(rows.map(async (row) => {
         let nombreObra = `Obra #${row.id_obra}`;
         try {
-            const obraRows = await userRepo.queryRaw('SELECT Nombre FROM Obra WHERE id_Obra = ?', [row.id_obra]);
-            if (obraRows.length > 0) nombreObra = obraRows[0].Nombre;
+            const obraRows = await query('SELECT nombre FROM obra WHERE id_obra = $1', [row.id_obra]);
+            if (obraRows.length > 0) nombreObra = obraRows[0].nombre;
         } catch { }
         return {
             id_obra: row.id_obra, nombre_obra: nombreObra,

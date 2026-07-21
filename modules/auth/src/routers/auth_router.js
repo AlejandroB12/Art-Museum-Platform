@@ -32,6 +32,7 @@ router.post('/login', async (req, res) => {
     try {
         const credentials = LoginRequest.parse(req.body);
         const result = await login(credentials, req);
+        result.redirectTo = result.rol === 'administrador' ? '/admin' : '/dashboard';
         const response = LoginResponse.parse(result);
         res.json({ success: true, ...response });
     } catch (err) {

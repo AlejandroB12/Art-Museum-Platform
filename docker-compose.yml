@@ -1,7 +1,18 @@
+networks:
+  museo-network:
+    driver: bridge
+
+volumes:
+  cassandra-bundle:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./
+      o: bind
+
 services:
 
   gateway:
-  
     build:
       context: .
       dockerfile: api/Dockerfile
@@ -30,88 +41,157 @@ services:
       - recommendations
       - chatbot
       - admin
+
+    networks:
+      - museo-network
+
     restart: unless-stopped
 
   auth:
     build:
       context: .
       dockerfile: modules/auth/Dockerfile
+
     ports:
       - "3001:3001"
+
     environment:
       - AUTH_SERVICE_PORT=3001
+      - CASSANDRA_SECURE_BUNDLE_PATH=./secure-connect-museo-db.zip
+
     env_file:
       - .env
+
+    volumes:
+      - ./secure-connect-museo-db.zip:/app/secure-connect-museo-db.zip
+
+    networks:
+      - museo-network
+
     restart: unless-stopped
 
   catalog:
     build:
       context: .
       dockerfile: modules/catalog/Dockerfile
+
     ports:
       - "3002:3002"
+
     environment:
       - CATALOG_SERVICE_PORT=3002
+
     env_file:
       - .env
+
+    networks:
+      - museo-network
+
     restart: unless-stopped
 
   user:
     build:
       context: .
       dockerfile: modules/user/Dockerfile
+
     ports:
       - "3003:3003"
+
     environment:
       - USER_SERVICE_PORT=3003
+      - CASSANDRA_SECURE_BUNDLE_PATH=./secure-connect-museo-db.zip
+
     env_file:
       - .env
+
+    volumes:
+      - ./secure-connect-museo-db.zip:/app/secure-connect-museo-db.zip
+
+    networks:
+      - museo-network
+
     restart: unless-stopped
 
   checkout:
     build:
       context: .
       dockerfile: modules/checkout/Dockerfile
+
     ports:
       - "3004:3004"
+
     environment:
       - CHECKOUT_SERVICE_PORT=3004
+      - CASSANDRA_SECURE_BUNDLE_PATH=./secure-connect-museo-db.zip
+
     env_file:
       - .env
+
+    volumes:
+      - ./secure-connect-museo-db.zip:/app/secure-connect-museo-db.zip
+
+    networks:
+      - museo-network
+
     restart: unless-stopped
 
   recommendations:
     build:
       context: .
       dockerfile: modules/recommendations/Dockerfile
+
     ports:
       - "3005:3005"
+
     environment:
       - RECOMMENDATIONS_SERVICE_PORT=3005
+
     env_file:
       - .env
+
+    networks:
+      - museo-network
+
     restart: unless-stopped
 
   chatbot:
     build:
       context: .
       dockerfile: modules/chatbot/Dockerfile
+
     ports:
       - "3006:3006"
+
     environment:
       - CHATBOT_SERVICE_PORT=3006
+
     env_file:
       - .env
+
+    networks:
+      - museo-network
+
     restart: unless-stopped
 
   admin:
     build:
       context: .
       dockerfile: modules/admin/Dockerfile
+
     ports:
       - "3007:3007"
+
     environment:
       - ADMIN_SERVICE_PORT=3007
+      - CASSANDRA_SECURE_BUNDLE_PATH=./secure-connect-museo-db.zip
+
     env_file:
       - .env
+
+    volumes:
+      - ./secure-connect-museo-db.zip:/app/secure-connect-museo-db.zip
+
+    networks:
+      - museo-network
+
     restart: unless-stopped

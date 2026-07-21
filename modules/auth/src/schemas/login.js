@@ -9,7 +9,8 @@ const LoginResponse = z.object({
     id_usuario: z.number().int().positive(),
     nombre: z.string(),
     email: z.string().email(),
-    rol: z.string()
+    rol: z.string(),
+    redirectTo: z.string()
 });
 
 module.exports = { LoginRequest, LoginResponse };

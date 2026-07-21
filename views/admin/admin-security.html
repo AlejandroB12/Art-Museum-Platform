@@ -73,6 +73,7 @@
                     </tr>
                 </tbody>
             </table>
+            <div id="pag-logs"></div>
         </div>
     </div>
 </div>
@@ -136,6 +137,30 @@ function cargarHistorialEstatus() {
 }
 
 // === LOGS SEGURIDAD ===
+function renderizarLogs(lista) {
+    const tbody = document.getElementById('tabla-logs-seguridad');
+    if (lista.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#718096;">Sin resultados</td></tr>';
+        return;
+    }
+    tbody.innerHTML = lista.map(l => {
+        const f = new Date(l.fecha_evento);
+        const fechaStr = f.toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }) + ' ' +
+            f.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        let tipoClase = '';
+        if (l.tipo_evento === 'INICIO_SESION' || l.tipo_evento === 'APROBACION_USUARIO' || l.tipo_evento === 'APROBACION_PAGO') tipoClase = 'color: #18b2af;';
+        else if (l.tipo_evento === 'CIERRE_SESION' || l.tipo_evento === 'CAMBIO_CONTRASENA') tipoClase = 'color: #e53e3e;';
+        return `<tr>
+            <td style="white-space:nowrap;">${fechaStr}</td>
+            <td><strong>${l.nombre_usuario}</strong></td>
+            <td style="${tipoClase} font-weight:600;">${l.tipo_evento}</td>
+            <td>${l.descripcion || '-'}</td>
+            <td style="font-family:monospace; font-size:0.85rem;">${l.ip_origen || '-'}</td>
+            <td style="font-size:0.8rem; color:#718096; max-width:200px; overflow:hidden; text-overflow:ellipsis;">${l.dispositivo || '-'}</td>
+        </tr>`;
+    }).join('');
+}
+
 function cargarLogsSeguridad() {
     const tbody = document.getElementById('tabla-logs-seguridad');
     const filtro = document.getElementById('log-filtro-tipo').value;
@@ -145,36 +170,20 @@ function cargarLogsSeguridad() {
         .then(res => {
             if (!res.success || !res.data || res.data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#718096;">No hay registros de seguridad en Cassandra</td></tr>';
+                document.getElementById('pag-logs').innerHTML = '';
                 return;
             }
 
             let logs = res.data;
             if (filtro) logs = logs.filter(l => l.tipo_evento === filtro);
-
-            tbody.innerHTML = '';
             if (logs.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#718096;">Sin resultados para el filtro seleccionado</td></tr>';
+                document.getElementById('pag-logs').innerHTML = '';
                 return;
             }
 
-            logs.forEach(l => {
-                const f = new Date(l.fecha_evento);
-                const fechaStr = f.toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }) + ' ' +
-                    f.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-                let tipoClase = '';
-                if (l.tipo_evento === 'INICIO_SESION' || l.tipo_evento === 'APROBACION_USUARIO' || l.tipo_evento === 'APROBACION_PAGO') tipoClase = 'color: #18b2af;';
-                else if (l.tipo_evento === 'CIERRE_SESION' || l.tipo_evento === 'CAMBIO_CONTRASENA') tipoClase = 'color: #e53e3e;';
-
-                tbody.innerHTML += `<tr>
-                    <td style="white-space:nowrap;">${fechaStr}</td>
-                    <td><strong>${l.nombre_usuario}</strong></td>
-                    <td style="${tipoClase} font-weight:600;">${l.tipo_evento}</td>
-                    <td>${l.descripcion || '-'}</td>
-                    <td style="font-family:monospace; font-size:0.85rem;">${l.ip_origen || '-'}</td>
-                    <td style="font-size:0.8rem; color:#718096; max-width:200px; overflow:hidden; text-overflow:ellipsis;">${l.dispositivo || '-'}</td>
-                </tr>`;
-            });
+            PAG['logs'] = { page: 1, fullData: logs };
+            pagRender('pag-logs','logs',renderizarLogs);
         })
         .catch(err => {
             console.error('Error cargando logs:', err);
