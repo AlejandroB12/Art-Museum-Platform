@@ -105,7 +105,7 @@
 
         const pathParts = window.location.pathname.split('/');
         const profileIdx = pathParts.indexOf('profile');
-        const artistaName = profileIdx !== -1 ? pathParts[profileIdx + 1] : '';
+        const artistaName = profileIdx !== -1 ? decodeURIComponent(pathParts[profileIdx + 1]) : '';
 
         async function cargarPerfil() {
             if (!artistaName) {
@@ -204,7 +204,7 @@
                             abrirModal(imgPath, obra.nombre || 'Sin título', nombreAutor, fichaTecnica);
                         });
                         const heart = card.querySelector('.heart-icon');
-                        if (heart) heart.addEventListener('click', (e) => { e.stopPropagation(); const id = parseInt(heart.dataset.idObra); FavoritosUtils.toggle(id, !heart.classList.contains('liked')); heart.classList.toggle('liked'); });
+                        if (heart) heart.addEventListener('click', (e) => { e.stopPropagation(); const id = parseInt(heart.dataset.idObra); if (typeof FavoritosUtils !== 'undefined') { FavoritosUtils.toggle(id, !heart.classList.contains('liked')); heart.classList.toggle('liked'); } });
                         
                         // Agregar evento click al botón de compra
                         const buyBtn = card.querySelector('.btn-buy');
@@ -215,7 +215,7 @@
                         
                         gallery.appendChild(card);
                     });
-                    FavoritosUtils.syncUI();
+                    if (typeof FavoritosUtils !== 'undefined') FavoritosUtils.syncUI();
                 } else {
                     document.getElementById('authorGallery').innerHTML = '<p style="text-align:center; width:100%; color:#444; padding: 50px;">Este artista no tiene obras disponibles.</p>';
                 }
@@ -240,8 +240,7 @@
             cargarPerfil();
 
             // Sincronizar favoritos después de cargar perfil
-            FavoritosUtils.syncFromServer().then(() => {
-            });
+            if (typeof FavoritosUtils !== 'undefined') FavoritosUtils.syncFromServer().then(() => {});
             
             // Verificar estado de usuario para mostrar/ocultar botones de autenticación
             AuthController.checkSession()

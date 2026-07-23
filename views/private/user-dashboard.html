@@ -202,6 +202,12 @@
         </div>
         <div class="card">
             <div id="lista-compras"><p class="status-msg">Consultando tu colección...</p></div>
+
+            <div class="card-divider" id="recomendaciones-section" style="display:none;">
+                <h3>Obras Recomendadas</h3>
+                <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:16px;">Basadas en tus compras anteriores</p>
+                <div id="lista-recomendaciones"><p class="status-msg">Buscando obras que podrían interesarte...</p></div>
+            </div>
         </div>
     </section>
 
@@ -498,7 +504,7 @@ async function cargarCompras() {
     try {
         const obras = await UserController.getMyPurchases();
         contenedor.innerHTML = '';
-        if (obras.length === 0) { contenedor.innerHTML = '<div class="empty-state">Aún no has realizado ninguna compra. Explora el catálogo para encontrar obras que te inspiren.</div>'; return; }
+        if (obras.length === 0) { contenedor.innerHTML = '<div class="empty-state">Aún no has realizado ninguna compra. Explora el catálogo para encontrar obras que te inspiren.</div>'; cargarRecomendaciones(); return; }
         obras.forEach(obra => {
             const estadoColor = obra.Estado === 'Pagado' ? 'var(--accent)' : '#ffaa00';
             contenedor.innerHTML += `<div class="obra-comprada-card"><div>
@@ -508,7 +514,57 @@ async function cargarCompras() {
                 <div class="obra-fecha">${new Date(obra.Fecha_emision).toLocaleDateString()}</div>
                 <span class="obra-estado-badge" style="color:${estadoColor};border:1px solid ${estadoColor};">${obra.Estado}</span></div></div>`;
         });
+        cargarRecomendaciones();
     } catch (error) { console.error(error); contenedor.innerHTML = '<div class="empty-state" style="color:#ff4d4d;">Error al conectar con la base de datos.</div>'; }
+}
+
+// ==================== RECOMENDACIONES ====================
+async function cargarRecomendaciones() {
+    const section = document.getElementById('recomendaciones-section');
+    const container = document.getElementById('lista-recomendaciones');
+    if (!currentUserId) { section.style.display = 'none'; return; }
+    try {
+        let obras = [];
+        const res = await fetch(`/api/recomendaciones/para-usuario/${currentUserId}`);
+        if (res.ok) {
+            const data = await res.json();
+            obras = (data.obras || []).slice(0, 5);
+        }
+        if (obras.length === 0) {
+            const fallbackRes = await fetch('/api/recomendaciones/obras-destacadas');
+            if (fallbackRes.ok) {
+                const data = await fallbackRes.json();
+                obras = (Array.isArray(data) ? data : []).slice(0, 5);
+            }
+        }
+        if (obras.length === 0) { section.style.display = 'none'; return; }
+        section.style.display = 'block';
+
+        const detalles = await Promise.all(obras.map(o =>
+            fetch(`/api/artworks/${o.idObra}`).then(r => r.ok ? r.json() : {}).catch(() => ({}))
+        ));
+
+        let html = '<div class="fav-grid">';
+        obras.forEach((obra, i) => {
+            const idObra = obra.idObra;
+            const imgSrc = detalles[i]?.fotografia || obra.fotografia || '';
+            const nombreArtista = detalles[i]?.artista_nombre ? (detalles[i].artista_nombre + ' ' + (detalles[i].artista_apellido || '')).trim() : '';
+            const artista = obra.artista || obra.autor || nombreArtista || '';
+            html += `<div class="fav-card" style="cursor:pointer;" onclick="window.location.href='/catalog/artwork?obra=${idObra}'" title="Ver detalle">
+                <img src="${imgSrc}" alt="${obra.nombre || ''}" onerror="this.style.display='none'">
+                <h4>${obra.nombre || 'Obra #' + idObra}</h4>
+                <div style="color:var(--text-muted);font-size:0.75rem;">${artista || obra.genero || ''}</div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+                    <span style="color:var(--accent);font-size:0.85rem;">$${obra.precio || ''}</span>
+                </div>
+            </div>`;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    } catch (err) {
+        console.error('Error cargando recomendaciones:', err);
+        section.style.display = 'none';
+    }
 }
 
 // ==================== FAVORITOS ====================

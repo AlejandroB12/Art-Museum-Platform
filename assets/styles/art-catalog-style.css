@@ -275,13 +275,15 @@ body { background-color: var(--bg-primary); color: var(--text-primary); line-hei
 body.modal-active { overflow: hidden; }
 body.modal-active > #main-content { filter: blur(15px); pointer-events: none; }
 
-.suggestions-section { padding: 0 8% 40px; }
+.suggestions-section { padding: 0 0 40px; }
 .suggestions-section h3 { color: var(--accent); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
 
 .modal-info-panel h2 { margin-top: 0; }
 .modal-info-panel p { color: var(--accent); font-size: 0.9rem; text-transform: uppercase; }
 .modal-divider { border: 0; border-top: 1px solid var(--border-color); margin: 25px 0; }
 .modal-tech-details { font-size: 0.85rem; line-height: 2; color: var(--text-secondary); }
+.modal-tech-details .dt-label { color: var(--accent); font-weight: 600; text-transform: uppercase; }
+.modal-tech-details .dt-value { color: #fff; text-transform: none; }
 .modal-related { font-size: 0.8rem; color: var(--text-muted); }
 
 .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; padding: 0 8% 40px; flex-wrap: wrap; }

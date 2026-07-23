@@ -263,51 +263,54 @@
             const precio = obra.precio_formateado || obra.PrecioFormateado || '';
             const fecha = obra.fecha_creacion || obra.Fecha_creacion || 'No especificada';
 
+            const L = t => `<span class='dt-label'>${t}</span>`;
+            const V = t => `<span class='dt-value'>${t}</span>`;
+
             let detalles = `
-            <p><strong>GÉNERO:</strong> ${genero}</p>
-            <p><strong>PRECIO:</strong> ${precio}</p>
-            <p><strong>FECHA CREACIÓN:</strong> ${fecha}</p>
+            <p>${L('GÉNERO:')} ${V(genero)}</p>
+            <p>${L('PRECIO:')} ${V(precio)}</p>
+            <p>${L('FECHA CREACIÓN:')} ${V(fecha)}</p>
         `;
 
             // Detalles específicos por género
             const tp = obra.Tecnica_Principal;
             if (tp) {
                 detalles += `
-                <p><strong>TÉCNICA PRINCIPAL:</strong> ${tp}</p>
-                <p><strong>SOPORTE:</strong> ${obra.Soporte_Base}</p>
-                <p><strong>REQUIERE ENMARCADO:</strong> ${obra.Requiere_Enmarcado ? 'Sí' : 'No'}</p>
+                <p>${L('TÉCNICA PRINCIPAL:')} ${V(tp)}</p>
+                <p>${L('SOPORTE:')} ${V(obra.Soporte_Base)}</p>
+                <p>${L('REQUIERE ENMARCADO:')} ${V(obra.Requiere_Enmarcado ? 'Sí' : 'No')}</p>
             `;
             }
 
             if (obra.Material_Predominante) {
                 detalles += `
-                <p><strong>MATERIAL PREDOMINANTE:</strong> ${obra.Material_Predominante}</p>
-                <p><strong>REQUIERE PEDESTAL:</strong> ${obra.Requiere_Pedestal ? 'Sí' : 'No'}</p>
-                <p><strong>CLASIFICACIÓN ESPACIO:</strong> ${obra.Clasificacion_Espacio}</p>
+                <p>${L('MATERIAL PREDOMINANTE:')} ${V(obra.Material_Predominante)}</p>
+                <p>${L('REQUIERE PEDESTAL:')} ${V(obra.Requiere_Pedestal ? 'Sí' : 'No')}</p>
+                <p>${L('CLASIFICACIÓN ESPACIO:')} ${V(obra.Clasificacion_Espacio)}</p>
             `;
             }
 
             if (obra.Formato_Origen) {
                 detalles += `
-                <p><strong>FORMATO ORIGEN:</strong> ${obra.Formato_Origen}</p>
-                <p><strong>TIPO IMPRESIÓN:</strong> ${obra.Tipo_Impresion_Estandar}</p>
-                <p><strong>REQUIERE REVELADO QUÍMICO:</strong> ${obra.Requiere_Revelado_Quimico ? 'Sí' : 'No'}</p>
+                <p>${L('FORMATO ORIGEN:')} ${V(obra.Formato_Origen)}</p>
+                <p>${L('TIPO IMPRESIÓN:')} ${V(obra.Tipo_Impresion_Estandar)}</p>
+                <p>${L('REQUIERE REVELADO QUÍMICO:')} ${V(obra.Requiere_Revelado_Quimico ? 'Sí' : 'No')}</p>
             `;
             }
 
             if (obra.Metal_Base_Dominante) {
                 detalles += `
-                <p><strong>METAL BASE:</strong> ${obra.Metal_Base_Dominante}</p>
-                <p><strong>KILATAJE:</strong> ${obra.Kilataje_Estandar}</p>
-                <p><strong>CERTIFICADO AUTENTICIDAD:</strong> ${obra.Requeres_Certificado_Autenticidad ? 'Incluido' : 'No incluye'}</p>
+                <p>${L('METAL BASE:')} ${V(obra.Metal_Base_Dominante)}</p>
+                <p>${L('KILATAJE:')} ${V(obra.Kilataje_Estandar)}</p>
+                <p>${L('CERTIFICADO AUTENTICIDAD:')} ${V(obra.Requeres_Certificado_Autenticidad ? 'Incluido' : 'No incluye')}</p>
             `;
             }
 
             if (obra.Tecnica_Acabado) {
                 detalles += `
-                <p><strong>TÉCNICA ACABADO:</strong> ${obra.Tecnica_Acabado}</p>
-                <p><strong>TIPO ARCILLA:</strong> ${obra.Tipo_Arcilla_Base}</p>
-                <p><strong>TEMPERATURA COCCIÓN:</strong> ${obra.Temperatura_Coccion_Promedio_Celsius}°C</p>
+                <p>${L('TÉCNICA ACABADO:')} ${V(obra.Tecnica_Acabado)}</p>
+                <p>${L('TIPO ARCILLA:')} ${V(obra.Tipo_Arcilla_Base)}</p>
+                <p>${L('TEMPERATURA COCCIÓN:')} ${V(obra.Temperatura_Coccion_Promedio_Celsius+'°C')}</p>
             `;
             }
 
