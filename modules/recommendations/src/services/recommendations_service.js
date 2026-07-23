@@ -50,11 +50,15 @@ async function personalizadas(idUsuario) {
 
 async function artistasPopulares() {
     const records = await neoRepo.findPopularArtists();
-    const Autor = require('../models/autor_model');
-    const ids = records.map(r => neoRepo.toNum(r.get('idArtista')));
-    const autores = await Autor.find({ _id: { $in: ids } }).select('_id fotografia').lean();
-    const fotosMap = {};
-    autores.forEach(a => { fotosMap[a._id] = a.fotografia || ''; });
+    let fotosMap = {};
+    try {
+        const Autor = require('../models/autor_model');
+        const ids = records.map(r => neoRepo.toNum(r.get('idArtista')));
+        const autores = await Autor.find({ _id: { $in: ids } }).select('_id fotografia').lean();
+        autores.forEach(a => { fotosMap[a._id] = a.fotografia || ''; });
+    } catch (e) {
+        console.warn('autor_model no disponible, se omite foto de artistas:', e.message);
+    }
 
     return records.map(r => {
         const id = neoRepo.toNum(r.get('idArtista'));

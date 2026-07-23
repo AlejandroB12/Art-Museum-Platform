@@ -1412,43 +1412,59 @@ function escHtml(str) {
 
 // === TENDENCIAS ===
 async function cargarTendencias() {
-    try {
-        // Artistas populares
-        const artistas = await RecommendationsController.getPopularArtists();
-        if (artistas) {
+    async function cargarArtistasPopulares() {
+        try {
+            const artistas = await RecommendationsController.getPopularArtists();
             const container = document.getElementById('pop-artistas');
-            if (artistas.length === 0) {
+            if (!container) return;
+            if (!artistas || artistas.length === 0) {
                 container.innerHTML = '<p style="color:#a0aec0;">Sin datos aún</p>';
-            } else {
-                container.innerHTML = artistas.slice(0, 5).map(a =>
-                    `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #222;">
-                        <span>${a.Artista}</span>
-                        <span style="color:#18b2af;font-weight:bold;">${a.ObrasVendidas} ventas</span>
-                    </div>`
-                ).join('');
+                return;
             }
+            container.innerHTML = artistas.slice(0, 5).map(a =>
+                `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #222;">
+                    <span>${a.artista}</span>
+                    <span style="color:#18b2af;font-weight:bold;">${a.obrasVendidas} ventas</span>
+                </div>`
+            ).join('');
+        } catch (e) {
+            console.error('Error en artistas populares:', e);
+            const container = document.getElementById('pop-artistas');
+            if (container) container.innerHTML = '<p style="color:#e53e3e;">Error al cargar</p>';
         }
+    }
 
-        // Géneros populares
-        const generos = await RecommendationsController.getPopularGenres();
-        if (generos) {
+    async function cargarGenerosPopulares() {
+        try {
+            const generos = await RecommendationsController.getPopularGenres();
             const container = document.getElementById('pop-generos');
-            if (generos.length === 0) {
+            if (!container) return;
+            if (!generos || generos.length === 0) {
                 container.innerHTML = '<p style="color:#a0aec0;">Sin datos aún</p>';
-            } else {
-                container.innerHTML = generos.slice(0, 5).map(g =>
-                    `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #222;">
-                        <span>${g.Genero}</span>
-                        <span style="color:#18b2af;font-weight:bold;">${g.ObrasVendidas} vendidas</span>
-                    </div>`
-                ).join('');
+                return;
             }
+            container.innerHTML = generos.slice(0, 5).map(g =>
+                `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #222;">
+                    <span>${g.Genero}</span>
+                    <span style="color:#18b2af;font-weight:bold;">${g.ObrasVendidas} vendidas</span>
+                </div>`
+            ).join('');
+        } catch (e) {
+            console.error('Error en géneros populares:', e);
+            const container = document.getElementById('pop-generos');
+            if (container) container.innerHTML = '<p style="color:#e53e3e;">Error al cargar</p>';
         }
+    }
 
-        // Estadísticas del grafo
-        const stats = await RecommendationsController.getGraphStats();
-        if (stats) {
+    async function cargarEstadisticasGrafo() {
+        try {
+            const stats = await RecommendationsController.getGraphStats();
             const container = document.getElementById('grafo-stats');
+            if (!container) return;
+            if (!stats) {
+                container.innerHTML = '<p style="color:#a0aec0;">Grafo vacío</p>';
+                return;
+            }
             let html = '';
             if (stats.nodos) {
                 stats.nodos.forEach(n => {
@@ -1467,10 +1483,18 @@ async function cargarTendencias() {
                 });
             }
             container.innerHTML = html || '<p style="color:#a0aec0;">Grafo vacío</p>';
+        } catch (e) {
+            console.error('Error en estadísticas del grafo:', e);
+            const container = document.getElementById('grafo-stats');
+            if (container) container.innerHTML = '<p style="color:#e53e3e;">Error al cargar</p>';
         }
-    } catch (e) {
-        console.error('Error cargando tendencias:', e);
     }
+
+    await Promise.all([
+        cargarArtistasPopulares(),
+        cargarGenerosPopulares(),
+        cargarEstadisticasGrafo()
+    ]);
 }
 
 // Data for modal (shared with shell)
