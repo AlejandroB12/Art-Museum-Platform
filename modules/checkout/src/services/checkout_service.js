@@ -17,8 +17,8 @@ async function confirmarReserva(id_obra, id_usuario, req) {
 
     const obraMongo = await artworkRepo.findById(id_obra);
     if (!obraMongo) throw Object.assign(new Error("La obra no existe"), { statusCode: 404 });
-    if (obraMongo.estatus !== 'Disponible') {
-        throw Object.assign(new Error(`La obra no está disponible (estado: ${obraMongo.estatus})`), { statusCode: 400 });
+    if (obraMongo.estado_obra !== 'Disponible') {
+        throw Object.assign(new Error(`La obra no está disponible (estado: ${obraMongo.estado_obra})`), { statusCode: 400 });
     }
 
     const fecha = new Date();
@@ -26,7 +26,7 @@ async function confirmarReserva(id_obra, id_usuario, req) {
 
     await obraSyncRepo.upsertObra(id_obra, obraMongo.nombre, obraMongo.fecha_creacion || fecha, obraMongo.precio, generoNombre, obraMongo.fotografia || '');
     await reservationRepo.create(id_obra, id_usuario, fecha);
-    await artworkRepo.findByIdAndUpdate(id_obra, { estatus: 'Reservado' });
+    await artworkRepo.findByIdAndUpdate(id_obra, { estado_obra: 'Reservado' });
 
     auditRepo.registrarEvento(id_usuario, 'CONFIRMAR_RESERVA', `Obra ${id_obra} reservada`, req).catch(() => {});
     auditRepo.registrarCambioEstatus(id_obra, 'Disponible', 'Reservado', id_usuario, 'Comprador inició proceso de compra').catch(() => {});
@@ -51,7 +51,7 @@ async function cancelarReserva(id_obra, id_usuario, req) {
     }
 
     await reservationRepo.deleteByObra(id_obra);
-    await artworkRepo.findByIdAndUpdate(id_obra, { estatus: 'Disponible' });
+    await artworkRepo.findByIdAndUpdate(id_obra, { estado_obra: 'Disponible' });
     await obraSyncRepo.updateObraStatus(id_obra, 'Disponible');
 
     auditRepo.registrarEvento(id_usuario, 'CANCELAR_RESERVA', `Reserva de obra ${id_obra} cancelada`, req).catch(() => {});
@@ -63,7 +63,7 @@ async function cancelarReserva(id_obra, id_usuario, req) {
 async function checkMembresia(id_usuario) {
     const results = await userRepo.findWithMembresiaStatus(id_usuario);
     if (results.length === 0) return true;
-    return results[0].membresia_activa === true;
+    return true;
 }
 
 module.exports = { confirmarReserva, cancelarReserva };

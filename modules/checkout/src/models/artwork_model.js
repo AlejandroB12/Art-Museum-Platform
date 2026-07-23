@@ -7,7 +7,7 @@ const artworkSchema = new mongoose.Schema({
     precio: Number,
     fecha_creacion: Date,
     fotografia: { type: String, trim: true },
-    estatus: { type: String, default: 'Disponible' },
+    estado_obra: { type: String, default: 'Disponible' },
     artista: { type: Number, ref: 'Artist' },
 
     genero: {
@@ -22,7 +22,7 @@ const artworkSchema = new mongoose.Schema({
     collection: 'obras'
 });
 
-artworkSchema.index({ estatus: 1, 'genero.nombre': 1, precio: 1 });
+artworkSchema.index({ estado_obra: 1, 'genero.nombre': 1, precio: 1 });
 artworkSchema.index({ nombre: 'text' });
 
 module.exports = mongoose.model('Artwork', artworkSchema);

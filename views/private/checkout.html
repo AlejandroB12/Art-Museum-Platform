@@ -134,18 +134,18 @@
 
             btn.innerText = "PROCESANDO..."; btn.disabled = true;
             try {
-                const resultado = await CheckoutController.confirmReservation({ id_obra: String(obra.id_Obra) });
+                const resultado = await CheckoutController.confirmReservation({ id_obra: Number(obra.id_Obra) });
                 if (resultado && resultado.success !== false) {
                     alert("\u00a1Pago procesado y reserva guardada!");
                     localStorage.removeItem('obraSeleccionada');
                     window.location.href = "/catalog/artwork";
                 } else {
-                    mostrarError(resultado?.error || "No se pudo procesar el pago");
+                    mostrarError(resultado?.error || resultado?.message || "No se pudo procesar el pago");
                     btn.innerText = "Pagar Ahora"; btn.disabled = false;
                 }
             } catch (err) {
                 console.error("Error en pago:", err);
-                mostrarError("Error de conexi\u00f3n con el servidor.");
+                mostrarError(err.message || "Error de conexi\u00f3n con el servidor.");
                 btn.innerText = "Pagar Ahora"; btn.disabled = false;
             }
         });
