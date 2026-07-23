@@ -1,42 +1,42 @@
 const path = require('path');
 const fs = require('fs');
+const { query } = require('../config/database');
 const obraRepo = require('../repositories/obra_repository');
 const autorRepo = require('../repositories/artista_repository');
 const generoRepo = require('../repositories/genero_repository');
 const nacionalidadRepo = require('../repositories/nacionalidad_repository');
-const userRepo = require('../repositories/user_repository');
 const invoiceRepo = require('../repositories/invoice_repository');
 const auditRepo = require('../repositories/audit_repository');
 
 const generoMap = { 'Pintura': 1, 'Escultura': 2, 'Fotografía': 3, 'Orfebreria': 4, 'Ceramica': 5 };
 
 async function listObras() {
-    const results = await userRepo.queryRaw("SELECT * FROM Obra");
+    const results = await query("SELECT * FROM obra");
     return results;
 }
 
 async function updateObra(id, data) {
-    const { Nombre, Precio, Estado_obra } = data;
-    const rows = await userRepo.queryRaw("SELECT Estado_obra FROM Obra WHERE id_Obra = ?", [id]);
+    const { nombre, precio, estado_obra } = data;
+    const rows = await query("SELECT estado_obra FROM obra WHERE id_obra = $1", [id]);
     if (rows.length === 0) throw new Error('Obra no encontrada');
 
-    const estadoAnterior = rows[0].Estado_obra;
-    await userRepo.queryRaw("UPDATE Obra SET Nombre = ?, Precio = ?, Estado_obra = ? WHERE id_Obra = ?",
-        [Nombre, Precio, Estado_obra, id]);
+    const estadoAnterior = rows[0].estado_obra;
+    await query("UPDATE obra SET nombre = $1, precio = $2, estado_obra = $3 WHERE id_obra = $4",
+        [nombre, precio, estado_obra, id]);
 
-    if (estadoAnterior !== Estado_obra) {
-        auditRepo.registrarCambioEstatus(parseInt(id), estadoAnterior, Estado_obra, null,
+    if (estadoAnterior !== estado_obra) {
+        auditRepo.registrarCambioEstatus(parseInt(id), estadoAnterior, estado_obra, null,
             'Cambio manual desde panel administrador').catch(e => console.error('Error Cassandra:', e.message));
     }
 }
 
 async function deleteObra(id) {
-    await userRepo.queryRaw("DELETE FROM Obra WHERE id_Obra = ?", [id]);
+    await query("DELETE FROM obra WHERE id_obra = $1", [id]);
 }
 
 async function listObrasReservadas() {
     const obras = await obraRepo.findReserved();
-    return obras.map(o => ({ id_Obra: o._id, Nombre: o.nombre, Precio: o.precio }));
+    return obras.map(o => ({ id_obra: o._id, nombre: o.nombre, precio: o.precio }));
 }
 
 async function listObrasAdmin() {
@@ -77,11 +77,7 @@ async function createObraAdmin(data) {
     });
 
     const idGenero = generoMap[genero_nombre] || null;
-    userRepo.queryRaw("SET FOREIGN_KEY_CHECKS = 0").then(() => {
-        invoiceRepo.upsertObra(newId, nombre.trim(), fecha_creacion || null, parseFloat(precio), idGenero, rutaFoto || '').then(() => {
-            userRepo.queryRaw("SET FOREIGN_KEY_CHECKS = 1");
-        }).catch(() => {});
-    }).catch(() => {});
+    invoiceRepo.upsertObra(newId, nombre.trim(), fecha_creacion || null, parseFloat(precio), idGenero, rutaFoto || '').catch(() => {});
 
     return { id: newId };
 }
@@ -95,7 +91,7 @@ async function updateObraAdmin(id, data) {
 
     const estadoAnterior = obra.estado_obra;
     await obraRepo.findByIdAndUpdate(id, { nombre: nombre.trim(), precio: parseFloat(precio), estado_obra: estado_obra || 'Disponible' });
-    userRepo.queryRaw("UPDATE Obra SET Nombre = ?, Precio = ?, Estado_obra = ? WHERE id_Obra = ?",
+    query("UPDATE obra SET nombre = $1, precio = $2, estado_obra = $3 WHERE id_obra = $4",
         [nombre.trim(), parseFloat(precio), estado_obra || 'Disponible', id]).catch(() => {});
 
     if (estadoAnterior !== (estado_obra || 'Disponible')) {
@@ -106,7 +102,7 @@ async function updateObraAdmin(id, data) {
 async function deleteObraAdmin(id) {
     const result = await obraRepo.findByIdAndDelete(id);
     if (!result) throw Object.assign(new Error("Obra no encontrada"), { statusCode: 404 });
-    userRepo.queryRaw("DELETE FROM Obra WHERE id_Obra = ?", [id]).catch(() => {});
+    query("DELETE FROM obra WHERE id_obra = $1", [id]).catch(() => {});
 }
 
 async function updateObraDetalles(id, detalles) {

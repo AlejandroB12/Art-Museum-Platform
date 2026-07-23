@@ -60,8 +60,6 @@
  *                     type: string
  *                   Estatus:
  *                     type: integer
- *                   PuedeAdquirir:
- *                     type: integer
  *                   MembresiaActiva:
  *                     type: integer
  */
@@ -136,35 +134,6 @@
  *     responses:
  *       200:
  *         description: Usuario eliminado
- */
-
-/**
- * @swagger
- * /api/usuarios/{id}/toggle-adquirir:
- *   put:
- *     summary: Habilita o deshabilita la capacidad de compra de un usuario
- *     tags: [Admin - Usuarios]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - PuedeAdquirir
- *             properties:
- *               PuedeAdquirir:
- *                 type: integer
- *                 enum: [0, 1]
- *     responses:
- *       200:
- *         description: Compra habilitada/deshabilitada
  */
 
 /**

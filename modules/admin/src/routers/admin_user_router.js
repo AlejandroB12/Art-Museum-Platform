@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const adminService = require('../services/admin_services');
 const { validate } = require('../../../../shared/middlewares/validate_middleware');
-const { adminRegisterSchema, userStatusSchema, toggleBuyerSchema, searchBuyerSchema } = require('../schema/usuario.schema');
+const { adminRegisterSchema, userStatusSchema, searchBuyerSchema } = require('../schema/usuario.schema');
 const { approvePaymentSchema, registerPaymentSchema } = require('../schema/membresia.schema');
 
 router.post('/registrar-admin', validate(adminRegisterSchema), async (req, res) => {
@@ -16,28 +16,32 @@ router.post('/registrar-admin', validate(adminRegisterSchema), async (req, res) 
 
 router.get('/api/todos-los-usuarios', async (req, res) => {
     try {
-        const users = await adminService.listUsers();
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const users = await adminService.listUsers(page, limit);
         res.json(users);
     } catch (err) {
-        res.status(500).json([]);
+        res.status(500).json({ data: [], total: 0, page: 1, totalPages: 1 });
     }
 });
 
 router.get('/api/usuarios-pendientes', async (req, res) => {
     try {
-        const pendientes = await adminService.listPendingUsers();
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const pendientes = await adminService.listPendingUsers(page, limit);
         res.json(pendientes);
     } catch (err) {
-        res.status(500).json([]);
+        res.status(500).json({ data: [], total: 0, page: 1, totalPages: 1 });
     }
 });
 
 router.patch('/aprobar-usuario/:id', async (req, res) => {
     try {
         await adminService.approveUser(req.params.id, req);
-        res.send("<h2>Usuario aprobado y activo. Correo enviado.</h2>");
+        res.json({ success: true, message: "Usuario aprobado y activo. Correo enviado." });
     } catch (err) {
-        res.status(500).send("Error al aprobar usuario: " + err.message);
+        res.status(500).json({ success: false, message: "Error al aprobar usuario: " + err.message });
     }
 });
 
@@ -51,50 +55,39 @@ router.put('/api/usuarios/:id', validate(userStatusSchema), async (req, res) => 
     }
 });
 
-router.put('/api/usuarios/:id/toggle-adquirir', validate(toggleBuyerSchema), async (req, res) => {
-    try {
-        await adminService.togglePuedeAdquirir(req.params.id, req.body.PuedeAdquirir);
-        const estado = req.body.PuedeAdquirir == 1 ? 'habilitada' : 'deshabilitada';
-        res.json({ success: true, message: `Compra ${estado} para este usuario` });
-    } catch (err) {
-        if (err.message === "Comprador no encontrado") return res.status(404).json({ success: false, message: err.message });
-        res.status(500).json({ success: false, message: "Error al actualizar: " + err.message });
-    }
-});
-
 router.delete('/api/eliminar-reservas-usuario/:id', async (req, res) => {
     try {
         await adminService.deleteUserReservations(req.params.id);
-        res.send("Reservas eliminadas");
+        res.json({ success: true, message: "Reservas eliminadas" });
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ success: false, message: err.message });
     }
 });
 
 router.delete('/api/eliminar-membresias-usuario/:id', async (req, res) => {
     try {
         await adminService.deleteUserMemberships(req.params.id);
-        res.send("Membresías eliminadas");
+        res.json({ success: true, message: "Membresías eliminadas" });
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ success: false, message: err.message });
     }
 });
 
 router.delete('/api/eliminar-comprador/:id', async (req, res) => {
     try {
         await adminService.deleteComprador(req.params.id);
-        res.send("Comprador eliminado");
+        res.json({ success: true, message: "Comprador eliminado" });
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ success: false, message: err.message });
     }
 });
 
 router.delete('/api/usuarios/:id', async (req, res) => {
     try {
         await adminService.deleteUser(req.params.id);
-        res.send("Usuario eliminado");
+        res.json({ success: true, message: "Usuario eliminado" });
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ success: false, message: err.message });
     }
 });
 
@@ -111,10 +104,12 @@ router.post('/api/buscar-comprador', validate(searchBuyerSchema), async (req, re
 
 router.get('/api/solicitudes-pago', async (req, res) => {
     try {
-        const solicitudes = await adminService.listPaymentRequests();
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const solicitudes = await adminService.listPaymentRequests(page, limit);
         res.json(solicitudes);
     } catch (err) {
-        res.status(500).send("Error consultando pagos");
+        res.status(500).json({ data: [], total: 0, page: 1, totalPages: 1 });
     }
 });
 

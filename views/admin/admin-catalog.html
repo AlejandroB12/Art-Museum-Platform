@@ -17,6 +17,7 @@
             </thead>
             <tbody id="body-gestion-obras"></tbody>
         </table>
+        <div id="pag-inv"></div>
     </div>
 </div>
 
@@ -38,6 +39,7 @@
             </thead>
             <tbody id="lista-reservadas"></tbody>
         </table>
+        <div id="pag-fact"></div>
     </div>
 </div>
 
@@ -193,6 +195,7 @@
                 </thead>
                 <tbody id="body-artistas"></tbody>
             </table>
+            <div id="pag-artistas"></div>
         </div>
     </div>
 </div>
@@ -266,6 +269,7 @@
                 </thead>
                 <tbody id="body-obras"></tbody>
             </table>
+            <div id="pag-obras"></div>
         </div>
     </div>
 </div>
@@ -374,10 +378,15 @@ function filtrarInventario() {
     const filtradas = inventarioData.filter(o =>
         String(o.id).includes(q) || (o.nombre || '').toLowerCase().includes(q)
     );
-    renderizarInventario(filtradas);
+    PAG['inv'] = { page: 1, fullData: filtradas };
+    pagRender('pag-inv','inv',renderizarInventario);
 }
 
 function renderizarInventario(data) {
+    if (data.length === 0) {
+        document.getElementById('body-gestion-obras').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;">Sin resultados</td></tr>';
+        return;
+    }
     document.getElementById('body-gestion-obras').innerHTML = data.map(o => `
         <tr id="obra-fila-${o.id}">
             <td>${o.id}</td>
@@ -400,7 +409,8 @@ function renderizarInventario(data) {
 async function cargarObrasGestion() {
     try {
         inventarioData = await AdminController.getArtworks();
-        renderizarInventario(inventarioData);
+        PAG['inv'] = { page: 1, fullData: inventarioData };
+        pagRender('pag-inv','inv',renderizarInventario);
         document.getElementById('buscador-inventario').value = '';
     } catch (error) {
         console.error('Error cargando obras:', error);
@@ -437,7 +447,8 @@ function filtrarFacturacion() {
     const filtradas = facturacionData.filter(o =>
         String(o.id_Obra).includes(q) || (o.Nombre || '').toLowerCase().includes(q)
     );
-    renderizarFacturacion(filtradas);
+    PAG['fact'] = { page: 1, fullData: filtradas };
+    pagRender('pag-fact','fact',renderizarFacturacion);
 }
 
 function renderizarFacturacion(data) {
@@ -478,7 +489,8 @@ async function cargarReservadas() {
         console.log('Obras reservadas obtenidas:', facturacionData);
 
         document.getElementById('buscador-facturacion').value = '';
-        renderizarFacturacion(facturacionData);
+        PAG['fact'] = { page: 1, fullData: facturacionData };
+        pagRender('pag-fact','fact',renderizarFacturacion);
 
     } catch (error) {
         console.error('Error cargando reservas:', error);
@@ -970,9 +982,11 @@ async function cargarArtistas() {
         if (data.length === 0) {
             tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;">No hay artistas registrados</td></tr>';
             document.getElementById('artistas-count').textContent = '';
+            document.getElementById('pag-artistas').innerHTML = '';
             return;
         }
-        renderizarArtistas(data);
+        PAG['artistas'] = { page: 1, fullData: data };
+        pagRender('pag-artistas','artistas',renderizarArtistas);
     } catch (error) {
         console.error('Error cargando artistas:', error);
     }
@@ -980,6 +994,11 @@ async function cargarArtistas() {
 
 function renderizarArtistas(lista) {
     const tbody = document.getElementById('body-artistas');
+    if (lista.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;">Sin resultados</td></tr>';
+        document.getElementById('artistas-count').textContent = '0 artista(s)';
+        return;
+    }
     tbody.innerHTML = lista.map(a => `
         <tr>
             <td>${a.id}</td>
@@ -993,17 +1012,22 @@ function renderizarArtistas(lista) {
             </td>
         </tr>
     `).join('');
-    document.getElementById('artistas-count').textContent = `${lista.length} de ${todosLosArtistas.length} artista(s)`;
+    const total = PAG['artistas']?.fullData?.length || todosLosArtistas.length;
+    document.getElementById('artistas-count').textContent = `${lista.length} de ${total} artista(s)`;
 }
 
 function filtrarArtistas() {
     const q = document.getElementById('buscador-artistas').value.toLowerCase();
-    if (!q) return renderizarArtistas(todosLosArtistas);
+    if (!q) {
+        PAG['artistas'] = { page: 1, fullData: todosLosArtistas };
+        return pagRender('pag-artistas','artistas',renderizarArtistas);
+    }
     const filtrados = todosLosArtistas.filter(a =>
         (a.nombre + ' ' + a.apellido).toLowerCase().includes(q) ||
         (a.nacionalidad || '').toLowerCase().includes(q)
     );
-    renderizarArtistas(filtrados);
+    PAG['artistas'] = { page: 1, fullData: filtrados };
+    pagRender('pag-artistas','artistas',renderizarArtistas);
 }
 
 function limpiarFormArtista() {
@@ -1189,9 +1213,11 @@ async function cargarObrasAdmin() {
         if (data.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;">No hay obras registradas</td></tr>';
             document.getElementById('obras-count').textContent = '';
+            document.getElementById('pag-obras').innerHTML = '';
             return;
         }
-        renderizarObras(data);
+        PAG['obras'] = { page: 1, fullData: data };
+        pagRender('pag-obras','obras',renderizarObras);
     } catch (error) {
         console.error('Error cargando obras:', error);
     }
@@ -1199,6 +1225,11 @@ async function cargarObrasAdmin() {
 
 function renderizarObras(lista) {
     const tbody = document.getElementById('body-obras');
+    if (lista.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;">Sin resultados</td></tr>';
+        document.getElementById('obras-count').textContent = '0 obra(s)';
+        return;
+    }
     tbody.innerHTML = lista.map(o => `
         <tr>
             <td>${o.id}</td>
@@ -1211,18 +1242,23 @@ function renderizarObras(lista) {
             </td>
         </tr>
     `).join('');
-    document.getElementById('obras-count').textContent = `${lista.length} de ${todasLasObras.length} obra(s)`;
+    const total = PAG['obras']?.fullData?.length || todasLasObras.length;
+    document.getElementById('obras-count').textContent = `${lista.length} de ${total} obra(s)`;
 }
 
 function filtrarObras() {
     const q = document.getElementById('buscador-obras').value.toLowerCase();
-    if (!q) return renderizarObras(todasLasObras);
+    if (!q) {
+        PAG['obras'] = { page: 1, fullData: todasLasObras };
+        return pagRender('pag-obras','obras',renderizarObras);
+    }
     const filtrados = todasLasObras.filter(o =>
         o.nombre.toLowerCase().includes(q) ||
         (o.genero_nombre || '').toLowerCase().includes(q) ||
         (o.estado_obra || '').toLowerCase().includes(q)
     );
-    renderizarObras(filtrados);
+    PAG['obras'] = { page: 1, fullData: filtrados };
+    pagRender('pag-obras','obras',renderizarObras);
 }
 
 function limpiarFormObra() {

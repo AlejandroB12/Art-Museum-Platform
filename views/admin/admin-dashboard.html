@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Panel Administrativo - Museo</title>
+    <title>DoArt Magic | Panel Administrativo</title>
     <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -13,47 +13,59 @@
 <body>
 
     <div class="sidebar">
-        <h2>Museo UNEG</h2>
+        <div style="padding:0 15px 20px;border-bottom:1px solid #1a1a1a;margin-bottom:20px;">
+            <img src="/images/DoArt_Magic_Logo.png" alt="DoArt Magic" style="width:100%;display:block;">
+            <span style="display:block;text-align:center;color:#832aa0;font-size:0.65rem;font-weight:700;letter-spacing:3px;margin-top:6px;text-transform:uppercase;">ADMIN</span>
+        </div>
 
         <div class="nav-group">
             <div class="nav-parent open" onclick="toggleGroup('catalog-group')">
-                <span>🖼️ Gestión de Catálogo</span>
+                <span>
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-right:8px;"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                    Catálogo
+                </span>
                 <span class="arrow" id="arrow-catalog-group">▾</span>
             </div>
             <div id="catalog-group" class="sub-nav open">
-                <div class="nav-item active" id="btn-gestion" onclick="mostrarTab('gestion')">📦 Inventario</div>
-                <div class="nav-item" id="btn-facturacion" onclick="mostrarTab('facturacion')">🧾 Facturar Reservas</div>
-                <div class="nav-item" id="btn-artistas" onclick="mostrarTab('artistas')">✍️ Artistas</div>
-                <div class="nav-item" id="btn-generos" onclick="mostrarTab('generos')">🎭 Géneros</div>
-                <div class="nav-item" id="btn-obras" onclick="mostrarTab('obras')">🖼️ Obras</div>
-                <div class="nav-item" id="btn-rep-obras" onclick="mostrarTab('rep-obras')">📊 Obras Vendidas</div>
-                <div class="nav-item" id="btn-rep-facturas" onclick="mostrarTab('rep-facturas')">📈 Resumen Facturación</div>
-                <div class="nav-item" id="btn-rep-membresias" onclick="mostrarTab('rep-membresias')">🎫 Reporte Membresías</div>
-                <div class="nav-item" id="btn-tendencias" onclick="mostrarTab('tendencias')">📈 Tendencias</div>
+                <div class="nav-item active" id="btn-gestion" onclick="mostrarTab('gestion')"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg> Inventario</div>
+                <div class="nav-item" id="btn-facturacion" onclick="mostrarTab('facturacion')"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> Facturar Reservas</div>
+                <div class="nav-item" id="btn-artistas" onclick="mostrarTab('artistas')"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg> Artistas</div>
+                <div class="nav-item" id="btn-generos" onclick="mostrarTab('generos')"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg> Géneros</div>
+                <div class="nav-item" id="btn-obras" onclick="mostrarTab('obras')"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> Obras</div>
+                <div class="nav-item" id="btn-rep-obras" onclick="mostrarTab('rep-obras')"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg> Obras Vendidas</div>
+                <div class="nav-item" id="btn-rep-facturas" onclick="mostrarTab('rep-facturas')"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg> Resumen Facturación</div>
+                <div class="nav-item" id="btn-rep-membresias" onclick="mostrarTab('rep-membresias')"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg> Reporte Membresías</div>
+                <div class="nav-item" id="btn-tendencias" onclick="mostrarTab('tendencias')"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/></svg> Tendencias</div>
             </div>
         </div>
 
         <div class="nav-group">
             <div class="nav-parent" onclick="toggleGroup('users-group')">
-                <span>👥 Administración de Usuarios</span>
+                <span>
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-right:8px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    Usuarios
+                </span>
                 <span class="arrow" id="arrow-users-group">▾</span>
             </div>
             <div id="users-group" class="sub-nav">
-                <div class="nav-item" id="btn-usuarios" onclick="mostrarTab('usuarios')">👥 Usuarios</div>
-                <div class="nav-item" id="btn-usuarios-pagos" onclick="mostrarTab('usuarios-pagos')">💳 Pagos Membresía</div>
-                <div class="nav-item" id="btn-validar-usuarios" onclick="mostrarTab('validar-usuarios')">✅ Validar Registros</div>
+                <div class="nav-item" id="btn-usuarios" onclick="mostrarTab('usuarios')"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg> Usuarios</div>
+                <div class="nav-item" id="btn-usuarios-pagos" onclick="mostrarTab('usuarios-pagos')"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg> Pagos Membresía</div>
+                <div class="nav-item" id="btn-validar-usuarios" onclick="mostrarTab('validar-usuarios')"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Validar Registros</div>
             </div>
         </div>
 
         <div class="nav-group">
             <div class="nav-parent" onclick="toggleGroup('security-group')">
-                <span>🔒 Seguridad</span>
+                <span>
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;vertical-align:middle;margin-right:8px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+                    Seguridad
+                </span>
                 <span class="arrow" id="arrow-security-group">▾</span>
             </div>
             <div id="security-group" class="sub-nav">
-                <div class="nav-item" id="btn-historial-estatus" onclick="mostrarTab('historial-estatus')">📋 Historial Estatus</div>
-                <div class="nav-item" id="btn-logs-seguridad" onclick="mostrarTab('logs-seguridad')">🔒 Bitácora Seguridad</div>
-                <div class="nav-item text-danger" onclick="cerrarSesion()">🚪 Cerrar Sesión</div>
+                <div class="nav-item" id="btn-historial-estatus" onclick="mostrarTab('historial-estatus')"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Historial Estatus</div>
+                <div class="nav-item" id="btn-logs-seguridad" onclick="mostrarTab('logs-seguridad')"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg> Bitácora Seguridad</div>
+                <div class="nav-item text-danger" onclick="cerrarSesion()"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg> Cerrar Sesión</div>
             </div>
         </div>
     </div>
@@ -80,6 +92,31 @@
             if (!el || !parent) return;
             const isOpen = el.classList.toggle('open');
             parent.classList.toggle('open', isOpen);
+        }
+
+        // === PAGINATION HELPERS ===
+        const PAG = {};
+        function pagRender(containerId, stateKey, renderFn, data) {
+            const LIMIT = 10;
+            if (!PAG[stateKey]) PAG[stateKey] = { page: 1 };
+            const s = PAG[stateKey];
+            if (data) s.fullData = data;
+            if (!s.fullData) return;
+            const totalPages = Math.ceil(s.fullData.length / LIMIT) || 1;
+            if (s.page > totalPages) s.page = totalPages;
+            const start = (s.page - 1) * LIMIT;
+            const pageData = s.fullData.slice(start, start + LIMIT);
+            renderFn(pageData);
+            const c = document.getElementById(containerId);
+            if (!c) return;
+            if (totalPages <= 1) { c.innerHTML = ''; return; }
+            const prev = s.page > 1 ? `<button class="btn btn-sm" onclick="PAG['${stateKey}'].page--;pagRender('${containerId}','${stateKey}',${renderFn.name});">&laquo; Ant</button>` : '<button class="btn btn-sm" disabled>&laquo; Ant</button>';
+            const next = s.page < totalPages ? `<button class="btn btn-sm" onclick="PAG['${stateKey}'].page++;pagRender('${containerId}','${stateKey}',${renderFn.name});">Sig &raquo;</button>` : '<button class="btn btn-sm" disabled>Sig &raquo;</button>';
+            let pages = '';
+            for (let i = Math.max(1, s.page - 2); i <= Math.min(totalPages, s.page + 2); i++) {
+                pages += `<button class="btn btn-sm ${i === s.page ? 'btn-active' : ''}" onclick="PAG['${stateKey}'].page=${i};pagRender('${containerId}','${stateKey}',${renderFn.name});">${i}</button>`;
+            }
+            c.innerHTML = `<div style="display:flex;align-items:center;gap:6px;justify-content:center;padding:10px 0;flex-wrap:wrap;">${prev}${pages}${next}<span style="font-size:0.75rem;color:#888;margin-left:8px;">${s.page}/${totalPages}</span></div>`;
         }
 
         const tabToModule = {

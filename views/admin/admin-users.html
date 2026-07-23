@@ -13,6 +13,7 @@
             </thead>
             <tbody id="body-gestion-admins"></tbody>
         </table>
+        <div id="pag-users"></div>
     </div>
     <div class="card">
         <h3>👤 Compradores</h3>
@@ -23,7 +24,6 @@
                     <th>Email</th>
                     <th>Estatus</th>
                     <th>Membresía</th>
-                    <th>Puede Adquirir</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -45,6 +45,7 @@
             </thead>
             <tbody id="lista-pagos"></tbody>
         </table>
+        <div id="pag-pagos"></div>
     </div>
 </div>
 
@@ -63,10 +64,28 @@
             </thead>
             <tbody id="lista-usuarios-pendientes"></tbody>
         </table>
+        <div id="pag-pending"></div>
     </div>
 </div>
 
 <script>
+    // ===== PAGINATION STATE =====
+    const pagState = { users: { page: 1 }, pending: { page: 1 }, pagos: { page: 1 } };
+
+    function renderPagination(containerId, stateKey, loadFn, totalPages) {
+        const s = pagState[stateKey];
+        const c = document.getElementById(containerId);
+        if (!c) return;
+        if (totalPages <= 1) { c.innerHTML = ''; return; }
+        const prev = s.page > 1 ? `<button class="btn btn-sm" onclick="pagState['${stateKey}'].page=${s.page-1};${loadFn}()">&laquo; Anterior</button>` : '<button class="btn btn-sm" disabled>&laquo; Anterior</button>';
+        const next = s.page < totalPages ? `<button class="btn btn-sm" onclick="pagState['${stateKey}'].page=${s.page+1};${loadFn}()">Siguiente &raquo;</button>` : '<button class="btn btn-sm" disabled>Siguiente &raquo;</button>';
+        let pages = '';
+        for (let i = Math.max(1, s.page-2); i <= Math.min(totalPages, s.page+2); i++) {
+            pages += `<button class="btn btn-sm ${i===s.page?'btn-active':''}" onclick="pagState['${stateKey}'].page=${i};${loadFn}()">${i}</button>`;
+        }
+        c.innerHTML = `<div style="display:flex;align-items:center;gap:6px;justify-content:center;padding:10px 0;flex-wrap:wrap;">${prev}${pages}${next}<span style="font-size:0.75rem;color:#888;margin-left:8px;">Pág ${s.page} de ${totalPages}</span></div>`;
+    }
+
     // ===== HELPERS =====
     function deshabilitarBoton(btn, tiempo = 1500) {
         if (!btn) return;
@@ -113,9 +132,9 @@
     // === USUARIOS ===
     async function cargarUsuariosGestion() {
         try {
-            const data = await AdminController.getAllUsers();
-            const admins = data.filter(u => u.Rol === 'administrador');
-            const compradores = data.filter(u => u.Rol === 'comprador');
+            const result = await AdminController.getAllUsers(pagState.users.page);
+            const admins = result.data.filter(u => u.Rol === 'administrador');
+            const compradores = result.data.filter(u => u.Rol === 'comprador');
 
             document.getElementById('body-gestion-admins').innerHTML = admins.map(u => `
                 <tr id="usuario-fila-${u.id_usuario}">
@@ -135,7 +154,6 @@
             `).join('');
 
             document.getElementById('body-gestion-compradores').innerHTML = compradores.map(u => {
-                const puedeAdquirir = u.PuedeAdquirir == 1;
                 const membresiaActiva = u.MembresiaActiva == 1;
                 return `
                 <tr id="usuario-fila-${u.id_usuario}">
@@ -153,38 +171,14 @@
                         </span>
                     </td>
                     <td>
-                        <button class="btn ${puedeAdquirir ? 'btn-green' : 'btn-red'}" id="btn-adquirir-${u.id_usuario}" onclick="toggleAdquirir(${u.id_usuario}, ${puedeAdquirir ? 0 : 1}, this)" style="padding:5px 12px;font-size:0.75rem;">
-                            ${puedeAdquirir ? '✅ Habilitado' : '🚫 Deshabilitado'}
-                        </button>
-                    </td>
-                    <td>
                         <button class="btn btn-blue" onclick="actualizarUsuario(${u.id_usuario}, this)">💾 Actualizar</button>
                         <button class="btn btn-red" onclick="borrarUsuario(${u.id_usuario}, this)">🗑️ Borrar</button>
                     </td>
                 </tr>
             `}).join('');
+            renderPagination('pag-users', 'users', 'cargarUsuariosGestion', result.totalPages);
         } catch (error) {
             console.error('Error cargando usuarios:', error);
-        }
-    }
-
-    async function toggleAdquirir(id, nuevoValor, btn) {
-        if (!confirm(`¿${nuevoValor == 1 ? 'Habilitar' : 'Deshabilitar'} la compra para este usuario?`)) return;
-        btn.disabled = true;
-        btn.innerHTML = '⏳...';
-        try {
-            const result = await AdminController.togglePurchaseAbility(id);
-            if (result.success) {
-                mostrarNotificacion(result.message, 'success');
-                cargarUsuariosGestion();
-            } else {
-                mostrarNotificacion('❌ ' + (result.message || 'Error'), 'error');
-                btn.disabled = false;
-            }
-        } catch (error) {
-            console.error('Error toggling adquirir:', error);
-            mostrarNotificacion('❌ Error al cambiar estado', 'error');
-            btn.disabled = false;
         }
     }
 
@@ -282,15 +276,16 @@
     // === USUARIOS PENDIENTES ===
     async function cargarUsuariosPendientes() {
         try {
-            const usuarios = await AdminController.getPendingUsers();
+            const result = await AdminController.getPendingUsers(pagState.pending.page);
             const tbody = document.getElementById('lista-usuarios-pendientes');
 
-            if (usuarios.length === 0) {
+            if (result.data.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:30px;">No hay usuarios pendientes de registro</td></tr>`;
+                renderPagination('pag-pending', 'pending', 'cargarUsuariosPendientes', result.totalPages);
                 return;
             }
 
-            tbody.innerHTML = usuarios.map(u => `
+            tbody.innerHTML = result.data.map(u => `
                 <tr id="usuario-pendiente-${u.id_usuario}">
                     <td>${u.id_usuario}</td>
                     <td>${u.Email || ''}</td>
@@ -300,6 +295,7 @@
                     </td>
                 </tr>
             `).join('');
+            renderPagination('pag-pending', 'pending', 'cargarUsuariosPendientes', result.totalPages);
         } catch (error) {
             console.error('Error cargando usuarios pendientes:', error);
         }
@@ -337,15 +333,16 @@
     // === PAGOS MEMBRESÍA ===
     async function cargarPagos() {
         try {
-            const pagos = await AdminController.getPendingPayments();
+            const result = await AdminController.getPendingPayments(pagState.pagos.page);
             const tbody = document.getElementById('lista-pagos');
 
-            if (pagos.length === 0) {
+            if (result.data.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; padding:30px;">No hay solicitudes de pago pendientes</td></tr>`;
+                renderPagination('pag-pagos', 'pagos', 'cargarPagos', result.totalPages);
                 return;
             }
 
-            tbody.innerHTML = pagos.map(p => `
+            tbody.innerHTML = result.data.map(p => `
                 <tr id="pago-fila-${p.id_solicitud}">
                     <td>${p.Email}</td>
                     <td>
@@ -353,6 +350,7 @@
                     </td>
                 </tr>
             `).join('');
+            renderPagination('pag-pagos', 'pagos', 'cargarPagos', result.totalPages);
         } catch (error) {
             console.error('Error cargando pagos:', error);
         }

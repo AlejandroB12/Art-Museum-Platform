@@ -2,14 +2,14 @@ const AdminController = {
   // ============================================================
   // USUARIOS
   // ============================================================
-  async getAllUsers() {
-    const res = await fetch('/api/todos-los-usuarios');
+  async getAllUsers(page = 1, limit = 10) {
+    const res = await fetch(`/api/todos-los-usuarios?page=${page}&limit=${limit}`);
     if (!res.ok) throw new Error('Error al obtener usuarios');
     return res.json();
   },
 
-  async getPendingUsers() {
-    const res = await fetch('/api/usuarios-pendientes');
+  async getPendingUsers(page = 1, limit = 10) {
+    const res = await fetch(`/api/usuarios-pendientes?page=${page}&limit=${limit}`);
     if (!res.ok) throw new Error('Error al obtener usuarios pendientes');
     return res.json();
   },
@@ -27,15 +27,6 @@ const AdminController = {
       ...(estatus !== undefined ? { body: JSON.stringify({ Estatus: estatus }) } : {})
     });
     if (!res.ok) throw new Error('Error al cambiar estado del usuario');
-    return res.json();
-  },
-
-  async togglePurchaseAbility(id) {
-    const res = await fetch(`/api/usuarios/${id}/toggle-adquirir`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' }
-    });
-    if (!res.ok) throw new Error('Error al cambiar permiso de compra');
     return res.json();
   },
 
@@ -73,8 +64,8 @@ const AdminController = {
     return res.json();
   },
 
-  async getPendingPayments() {
-    const res = await fetch('/api/solicitudes-pago');
+  async getPendingPayments(page = 1, limit = 10) {
+    const res = await fetch(`/api/solicitudes-pago?page=${page}&limit=${limit}`);
     if (!res.ok) throw new Error('Error al obtener solicitudes de pago');
     return res.json();
   },
