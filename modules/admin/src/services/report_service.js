@@ -38,8 +38,8 @@ async function generarFactura(data, req) {
                 const fechaStr = new Date().toISOString();
 
                 query(
-                    `INSERT INTO factura (monto_neto, iva, total_pagado, ganancia_usd, porcentaje_comision, id_obra, id_comprador, id_admin, nombre_comprador, email_comprador, cedula_comprador, fecha_venta) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id_factura`,
-                    [precio_neto, iva, total, gananciaMuseo, porcentaje_comision, String(id_obra), id_comp, adminId, nombreCompradorFinal || null, emailFinal || null, cedulaFinal || null, fechaStr]
+                    `INSERT INTO factura (monto_neto, iva, total_pagado, ganancia_usd, porcentaje_comision, id_obra, id_comprador, id_admin, fecha_venta) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id_factura`,
+                    [precio_neto, iva, total, gananciaMuseo, porcentaje_comision, String(id_obra), id_comp, adminId, fechaStr]
                 ).then(result => {
                     const idFactura = result[0].id_factura;
                     invoiceRepo.updateObraStatus(id_obra, 'Vendida').catch(() => {});
@@ -110,7 +110,7 @@ async function generarFactura(data, req) {
                     if (!obraMongo || obraMongo.estado_obra !== 'Reservado') {
                         return reject(Object.assign(new Error("La obra no existe o no está reservada"), { statusCode: 404 }));
                     }
-                    const idGenero = generoMap[obraMongo.genero?.nombre] || null;
+                    const idGenero = generoMap[obraMongo.genero?.nombre] || 1;
                     invoiceRepo.upsertObra(id_obra, obraMongo.nombre, obraMongo.fecha_creacion || null, obraMongo.precio, idGenero, obraMongo.fotografia || '').then(() => {
                         continuarFacturacion(obraMongo.nombre || '');
                     }).catch(err => reject(err));

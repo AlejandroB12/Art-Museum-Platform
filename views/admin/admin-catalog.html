@@ -33,6 +33,7 @@
                 <tr>
                     <th>ID Obra</th>
                     <th>Obra</th>
+                    <th>Cliente</th>
                     <th>Precio Base</th>
                     <th>Acción</th>
                 </tr>
@@ -463,17 +464,22 @@ function renderizarFacturacion(data) {
         return;
     }
     document.getElementById('lista-reservadas').innerHTML = data.map(obra => {
-        const nombreObraEscapado = (obra.Nombre || '').replace(/'/g, "\\'");
+        const idObra = obra.id_obra ?? obra.id_Obra;
+        const nombre = obra.nombre ?? obra.Nombre ?? 'Sin nombre';
+        const precio = obra.precio ?? obra.Precio ?? 0;
+        const cliente = obra.cliente || '—';
+        const nombreEscapado = nombre.replace(/'/g, "\\'");
         return `
             <tr>
-                <td>${obra.id_Obra}</td>
-                <td>${obra.Nombre || 'Sin nombre'}</td>
-                <td>$${(obra.Precio || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td>${idObra}</td>
+                <td>${nombre}</td>
+                <td>${cliente}</td>
+                <td>$${Number(precio).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 <td>
                     <button class="btn btn-green" onclick="prepararFactura(
-                        ${obra.id_Obra}, 
-                        ${obra.Precio || 0}, 
-                        '${nombreObraEscapado}', 
+                        ${idObra}, 
+                        ${precio}, 
+                        '${nombreEscapado}', 
                         this
                     )">🧾 Facturar</button>
                 </td>
@@ -801,7 +807,7 @@ async function consultarObras() {
     try {
         const data = await AdminController.getSoldArtworks(inicio, fin);
         renderizarReporte('tabla-obras-vendidas', data.map(d =>
-            `<tr><td>${d.id_factura}</td><td>${d.Obra || ''}</td><td>$${(d.Total_Pagado || 0).toLocaleString()}</td><td>${d.Fecha || ''}</td></tr>`
+            `<tr><td>${d.id_factura}</td><td>${d.obra || ''}</td><td>$${(d.total_pagado || 0).toLocaleString()}</td><td>${d.fecha || ''}</td></tr>`
         ).join(''), 4);
     } catch (error) {
         console.error('Error consultando obras:', error);
@@ -822,7 +828,7 @@ async function consultarFacturacion() {
     try {
         const data = await AdminController.getBillingSummary(inicio, fin);
         renderizarReporte('tabla-facturacion', data.map(d =>
-            `<tr><td>${d.id_factura}</td><td>${d.Obra || ''}</td><td>$${(d.Precio_Obra || 0).toLocaleString()}</td><td>${d.Porcentaje_Museo || 0}%</td><td>$${(d.Ganancia_Museo || 0).toLocaleString()}</td><td>$${(d.Total_Recaudado || 0).toLocaleString()}</td><td>${d.Fecha || ''}</td></tr>`
+            `<tr><td>${d.id_factura}</td><td>${d.obra || ''}</td><td>$${(d.precio_obra || 0).toLocaleString()}</td><td>${d.porcentaje_museo || 0}%</td><td>$${(d.ganancia_museo || 0).toLocaleString()}</td><td>$${(d.total_recaudado || 0).toLocaleString()}</td><td>${d.fecha || ''}</td></tr>`
         ).join(''), 7);
     } catch (error) {
         console.error('Error consultando facturación:', error);
@@ -857,10 +863,10 @@ async function consultarMembresias() {
         } else {
             tbody.innerHTML = data.map(d =>
                 `<tr>
-                    <td>${d.idMembresia}</td>
-                    <td>${d.Email || 'N/A'}</td>
-                    <td>${d.FechaPago || 'N/A'}</td>
-                    <td>$${(d.MontoPagado || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td>${d.id_membresia}</td>
+                    <td>${d.email || 'N/A'}</td>
+                    <td>${d.fecha_pago || 'N/A'}</td>
+                    <td>$${(d.monto_pagado || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 </tr>`
             ).join('');
         }

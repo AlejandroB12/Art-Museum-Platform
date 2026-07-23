@@ -5,7 +5,7 @@ const { mapObraToFrontend, mapSearchResult } = require('./mapper_service');
 // Función para listar obras filtradas por género, artista y orden, con paginación.
 async function listObrasFiltradas(genero, artista, orden, pagina = 1, limite = 12) 
 {
-    const filter = { estatus: 'Disponible' };
+    const filter = { estado_obra: 'Disponible' };
 
     if (genero && genero !== 'all') 
     {
@@ -42,7 +42,7 @@ async function listObrasDestacadas()
 {
     const todas = await artworkRepo.findWithPopulate(
 
-        { estatus: 'Disponible' },
+        { estado_obra: 'Disponible' },
         { path: 'artista', select: '_id nombre apellido fotografia' },
         { precio: -1 }
     );
@@ -78,7 +78,7 @@ async function buscarObras(query)
     {
         const obrasExtra = await artworkRepo.findAll({
 
-            estatus: 'Disponible',
+            estado_obra: 'Disponible',
             artista: { $in: artistaIds }
         });
 

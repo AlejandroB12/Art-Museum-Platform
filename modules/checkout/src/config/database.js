@@ -6,7 +6,7 @@ const sequelize = new Sequelize(process.env.SUPABASE_URL, {
 
     dialect: 'postgres',
     dialectOptions: { ssl: { rejectUnauthorized: false } },
-    pool: { max: 5, min: 0, idle: 30000 },
+    pool: { max: 2, min: 0, idle: 30000 },
     logging: false
 });
 

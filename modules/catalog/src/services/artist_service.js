@@ -20,7 +20,7 @@ async function getArtistaDetalle(id, ordenDate)
     const artista = await artistRepo.findById(parseInt(id));
     if (!artista) return null;
 
-    const obraFilter = { artista: parseInt(id), estatus: 'Disponible' };
+    const obraFilter = { artista: parseInt(id), estado_obra: 'Disponible' };
     const obraSort = ordenDate === 'asc' ? { fecha_creacion: 1 } : { fecha_creacion: -1 };
     const obras = await artworkRepo.findWithPopulate(
         

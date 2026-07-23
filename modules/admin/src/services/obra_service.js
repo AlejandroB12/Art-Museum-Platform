@@ -36,7 +36,27 @@ async function deleteObra(id) {
 
 async function listObrasReservadas() {
     const obras = await obraRepo.findReserved();
-    return obras.map(o => ({ id_obra: o._id, nombre: o.nombre, precio: o.precio }));
+    const reservas = await query(
+        `SELECT r.id_obra, u.nombre AS nombre_cliente, u.apellido AS apellido_cliente
+         FROM reserva r
+         JOIN usuario u ON r.id_usuario = u.id_usuario`
+    );
+    const reservaMap = {};
+    for (const r of reservas) {
+        reservaMap[r.id_obra] = r;
+    }
+    const result = [];
+    for (const o of obras) {
+        const r = reservaMap[String(o._id)];
+        if (!r) continue;
+        result.push({
+            id_obra: o._id,
+            nombre: o.nombre,
+            precio: o.precio,
+            cliente: `${r.nombre_cliente} ${r.apellido_cliente}`
+        });
+    }
+    return result;
 }
 
 async function listObrasAdmin() {
@@ -76,7 +96,7 @@ async function createObraAdmin(data) {
         fotografia: rutaFoto, genero: { nombre: genero_nombre || 'General' }, autores: autores_ids || []
     });
 
-    const idGenero = generoMap[genero_nombre] || null;
+    const idGenero = generoMap[genero_nombre] || 1;
     invoiceRepo.upsertObra(newId, nombre.trim(), fecha_creacion || null, parseFloat(precio), idGenero, rutaFoto || '').catch(() => {});
 
     return { id: newId };

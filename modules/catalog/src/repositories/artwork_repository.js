@@ -33,7 +33,7 @@ async function findByIdAndDelete(id) {
 }
 
 async function findReserved() {
-    return Artwork.find({ estatus: 'Reservado' }).select('_id nombre precio').lean();
+    return Artwork.find({ estado_obra: 'Reservado' }).select('_id nombre precio').lean();
 }
 
 async function count(filters = {}) {
@@ -48,7 +48,7 @@ async function search(query, limit = 15) {
     const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = { $regex: escaped, $options: 'i' };
     const filter = {
-        estatus: 'Disponible',
+        estado_obra: 'Disponible',
         $or: [
             { nombre: regex },
             { 'genero.nombre': regex }

@@ -21,7 +21,7 @@ function mapObraToFrontend(obra)
         fecha_creacion: obra.fecha_creacion ? obra.fecha_creacion.toISOString().split('T')[0] : null,
         precio: obra.precio,
         precio_formateado: formatPrice(obra.precio),
-        estatus: obra.estatus,
+        estatus: obra.estado_obra,
         fotografia: obra.fotografia,
         artista_nombre: artista ? artista.nombre : null,
         artista_apellido: artista ? artista.apellido : null,
@@ -48,7 +48,7 @@ function mapObraDetailToFrontend(obra)
         fecha_creacion: obra.fecha_creacion ? obra.fecha_creacion.toISOString().split('T')[0] : null,
         precio: obra.precio,
         precio_formateado: formatPrice(obra.precio),
-        estatus: obra.estatus,
+        estatus: obra.estado_obra,
         fotografia: obra.fotografia || null,
         genero_nombre: obra.genero ? obra.genero.nombre : null,
         ...Object.fromEntries(

@@ -5,7 +5,10 @@ const CheckoutController = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-    if (!res.ok) throw new Error('Error al confirmar reserva');
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      throw new Error(errBody.error || errBody.message || 'Error al confirmar reserva');
+    }
     return res.json();
   },
 
