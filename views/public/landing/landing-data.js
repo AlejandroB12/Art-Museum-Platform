@@ -225,3 +225,36 @@ const DEMO_STEPS = [
   { label: "Reporte histórico", db: "Cassandra", method: "GET", path: "/consultas/obras-vendidas" },
   { label: "Recomendación", db: "Neo4j", method: "GET", path: "/api/recomendaciones/obras-destacadas" }
 ];
+
+const MOCK_RESPONSES = [
+  {
+    status: 200,
+    data: { success: true, id_usuario: 11, nombre: "Demo", email: "demo@museo.com", rol: "comprador" }
+  },
+  {
+    status: 200,
+    data: { success: true, message: "Reserva confirmada y obra actualizada" }
+  },
+  {
+    status: 200,
+    data: [
+      { _id: 1, nombre: "First Humanoid Sculpture", precio: 150000, estatus: "Disponible", genero: { nombre: "Escultura" } },
+      { _id: 3, nombre: "Abstract Dreamscape", precio: 420000, estatus: "Disponible", genero: { nombre: "Pintura" } },
+      { _id: 7, nombre: "Bronze Age Revival", precio: 890000, estatus: "Disponible", genero: { nombre: "Escultura" } }
+    ]
+  },
+  {
+    status: 200,
+    data: [
+      { anio_mes: "2026-01", fecha_venta: "2026-01-15", id_factura: 1, nombre_obra: "Balloon Dog Orange", precio_venta: 58400000, ganancia_museo_usd: 5840000 },
+      { anio_mes: "2026-02", fecha_venta: "2026-02-05", id_factura: 3, nombre_obra: "727", precio_venta: 3800000, ganancia_museo_usd: 380000 }
+    ]
+  },
+  {
+    status: 200,
+    data: [
+      { nombre: "Starry Night Over the Rhone", precio: 52000000, artista: "Vincent van Gogh", genero: "Pintura" },
+      { nombre: "The Persistence of Memory", precio: 48000000, artista: "Salvador Dali", genero: "Pintura" }
+    ]
+  }
+];

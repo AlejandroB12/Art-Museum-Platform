@@ -258,7 +258,6 @@ function renderDemoSteps() {
 }
 
 async function runDemo() {
-  const base = document.getElementById('api-base').value.replace(/\/$/, '');
   const btn = document.getElementById('btn-run-demo');
   btn.disabled = true;
   btn.textContent = '⏳ Ejecutando...';
@@ -269,27 +268,15 @@ async function runDemo() {
     el.classList.add('active');
     el.querySelector('.status').textContent = 'Ejecutando…';
 
-    try {
-      const opts = { method: step.method, headers: { 'Content-Type': 'application/json' } };
-      if (step.body) opts.body = JSON.stringify(step.body);
-      const res = await fetch(base + step.path, opts);
-      const data = await res.json().catch(() => ({}));
+    await new Promise(r => setTimeout(r, 800));
 
-      el.classList.remove('active');
-      el.classList.add(res.ok ? 'done' : 'error');
-      el.querySelector('.status').textContent = res.ok ? `OK · ${res.status}` : `Error · ${res.status}`;
-      const pre = el.querySelector('pre');
-      pre.style.display = 'block';
-      pre.textContent = JSON.stringify(data, null, 2).slice(0, 400);
-    } catch (err) {
-      el.classList.remove('active');
-      el.classList.add('error');
-      el.querySelector('.status').textContent = 'Sin conexión';
-      const pre = el.querySelector('pre');
-      pre.style.display = 'block';
-      pre.textContent = `No se pudo contactar ${base}${step.path}\n${err.message}`;
-    }
-    await new Promise(r => setTimeout(r, 300));
+    const mock = MOCK_RESPONSES[i];
+    el.classList.remove('active');
+    el.classList.add(mock.status >= 200 && mock.status < 300 ? 'done' : 'error');
+    el.querySelector('.status').textContent = `OK · ${mock.status}`;
+    const pre = el.querySelector('pre');
+    pre.style.display = 'block';
+    pre.textContent = JSON.stringify(mock.data, null, 2).slice(0, 400);
   }
 
   btn.disabled = false;
