@@ -26,7 +26,7 @@ const viewsPath = path.join(__dirname, '..', '..', 'views');
 
 // Clean URL routes
 // Public
-app.get('/', (req, res) => res.sendFile(path.join(viewsPath, 'public', 'home.html')));
+app.get('/', (req, res) => res.sendFile(path.join(viewsPath, 'public', 'landing', 'index.html')));
 app.get('/home', (req, res) => res.sendFile(path.join(viewsPath, 'public', 'home.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(viewsPath, 'public', 'login.html')));
 app.get('/register', (req, res) => res.sendFile(path.join(viewsPath, 'public', 'register.html')));
