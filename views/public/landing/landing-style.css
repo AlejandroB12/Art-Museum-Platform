@@ -15,9 +15,15 @@ body{
   color:var(--text);line-height:1.6;overflow-x:hidden;width:100%;min-height:100vh;
   font-family:var(--sans);
   background-color:var(--bg);
-  background-image:radial-gradient(800px circle at 20% 10%, rgba(37,228,174,.04), transparent 60%),
-    radial-gradient(800px circle at 80% 90%, rgba(90,160,255,.035), transparent 60%);
-  background-repeat:no-repeat,no-repeat;
+  background-image:
+    radial-gradient(1400px circle at -10% 35%,   rgba(37,228,174,.06),  transparent 60%),
+    radial-gradient(1200px circle at 110% 40%,   rgba(90,160,255,.045), transparent 55%),
+    radial-gradient(1000px circle at 105% 70%,   rgba(200,120,255,.04), transparent 55%),
+    radial-gradient(1100px circle at -5% 80%,    rgba(255,200,0,.035),  transparent 55%),
+    radial-gradient(900px  circle at 40% 20%,   rgba(37,228,174,.03),  transparent 50%),
+    radial-gradient(rgba(255,255,255,.022) 1px, transparent 1px);
+  background-repeat:no-repeat,no-repeat,no-repeat,no-repeat,no-repeat,repeat;
+  background-size:auto,auto,auto,auto,auto,28px 28px;
   background-attachment:fixed;
 }
 img,svg{max-width:100%;vertical-align:middle;}
@@ -297,53 +303,18 @@ a:focus-visible,button:focus-visible,input:focus-visible{
 /* El hero-glow original respira; el punteado ahora vive en el body (ver arriba), así hay una sola fuente de textura */
 
 /* Glow ambiental detrás del diagrama de arquitectura, mismo lenguaje visual que el hero */
-.diagram-mount{position:relative;}
-.diagram-mount::before{
-  content:'';position:absolute;inset:-60px;z-index:-1;pointer-events:none;
-  background:radial-gradient(ellipse 80% 80% at 50% 30%, rgba(37,228,174,.08), transparent 70%);
-}
 
 /* Bookend: el CTA final recupera el glow del hero para cerrar el recorrido */
-.cta-final{position:relative;}
-.cta-final::before{
-  content:'';position:absolute;top:-40px;left:-10%;right:-10%;bottom:-40px;z-index:-1;pointer-events:none;
-  background:radial-gradient(ellipse 70% 80% at 50% 100%, rgba(37,228,174,.1), transparent 70%);
-}
 
 /* CAP carousel glow */
-#cap{position:relative;}
-#cap::before{
-  content:'';position:absolute;top:-60px;left:-10%;right:-10%;bottom:-60px;z-index:-1;pointer-events:none;
-  background:
-    radial-gradient(600px circle at 20% 30%, rgba(90,160,255,.06), transparent 60%),
-    radial-gradient(600px circle at 80% 70%, rgba(37,228,174,.06), transparent 60%);
-}
 
 /* Brillo de barrido en botones primarios, encapsulado (no requiere HTML nuevo) */
-.btn-primary{position:relative;overflow:hidden;}
-.btn-primary::after{
-  content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;
-  background:linear-gradient(120deg, transparent, rgba(255,255,255,.55), transparent);
-  transform:skewX(-20deg);transition:left .55s ease;
-}
-.btn-primary:hover::after{left:130%;}
 
 /* Vidrio esmerilado sutil en tarjetas, con borde que se ilumina en hover */
 .schema-card,.fault-card,.team-card,.api-group,.demo-step,.security-card{
   position:relative;
   background:linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,0)), var(--bg-alt);
   backdrop-filter:blur(6px);
-}
-.schema-card::before,.fault-card::before,.team-card::before,.security-card::before{
-  content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
-  background:linear-gradient(135deg, rgba(37,228,174,0), rgba(37,228,174,0));
-  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite:xor;
-  mask-composite:exclude;
-  transition:background .3s ease;
-}
-.schema-card:hover::before,.fault-card:hover::before,.team-card:hover::before,.security-card:hover::before{
-  background:linear-gradient(135deg, rgba(37,228,174,.35), rgba(37,228,174,0) 60%);
 }
 .schema-card:hover,.fault-card:hover,.team-card:hover,.security-card:hover{
   box-shadow:0 14px 32px -12px rgba(0,0,0,.55);
@@ -364,7 +335,6 @@ a:focus-visible,button:focus-visible,input:focus-visible{
 .hero-stack span:not(.dot):hover{color:var(--accent);}
 
 @media (prefers-reduced-motion: reduce){
-  .btn-primary::after{transition:none;}
 }
 
 /* ============================================================

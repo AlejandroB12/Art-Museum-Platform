@@ -36,12 +36,10 @@
         <span class="line-2">Políglota</span>
       </h1>
       <p class="hero-sub">
-        DoArt Magic es un museo digital, basado en una arquitectura de microservicios
-        robusta, donde su core transaccional opera sobre cuatro motores de base de datos
-        simultáneamente. PostgreSQL, MongoDB, CassandraDB y Neo4j, estas bases de datos
-        conviven detrás de un mismo API Gateway, cada una resolviendo la necesidad para
-        la cual fue diseñada. Modernidad, estilo, integración poliglota y una arquitectura
-        sólida es lo que nos define.
+        DoArt Magic es un museo digital que usa cuatro bases de datos distintas
+        trabajando juntas: PostgreSQL, MongoDB, Cassandra y Neo4j. Cada una hace lo
+        que mejor sabe hacer, y todas se comunican a través de un único punto de
+        entrada. Esto nos da velocidad, seguridad y flexibilidad.
       </p>
       <div class="hero-actions">
         <a href="/home" class="btn-primary">Entrar a la plataforma</a>
@@ -64,7 +62,7 @@
   <div class="section-head">
     <span class="section-eyebrow">01 · Microservicios</span>
     <h2>Un Gateway, siete servicios, cuatro persistencias</h2>
-    <p class="section-desc">El Gateway es el único punto de entrada público; enruta cada petición al microservicio dueño de ese dominio de datos.</p>
+    <p class="section-desc">El Gateway es la puerta de entrada única. Él recibe cada solicitud y la envía al microservicio encargado de ese tipo de información.</p>
   </div>
   <div id="diagram-mount" class="diagram-mount"></div>
 </section>
@@ -74,7 +72,7 @@
   <div class="section-head">
     <span class="section-eyebrow">02 · Documentación de APIs</span>
     <h2>Endpoints reales, por microservicio</h2>
-    <p class="section-desc">Extraídos directamente del código fuente (<code>routers/</code>) de cada módulo. No es una spec aparte — es lo que corre hoy.</p>
+    <p class="section-desc">Estos son los endpoints reales del sistema, extraídos directamente del código de cada microservicio. Lo que ves aquí es lo que realmente está corriendo.</p>
   </div>
   <div class="api-accordion" id="api-accordion"></div>
 </section>
@@ -84,8 +82,7 @@
   <div class="section-head">
     <span class="section-eyebrow">03 · Diccionario de Datos Políglota</span>
     <h2>Cada motor, su propia gramática</h2>
-    <p class="section-desc">La misma "Obra" se representa de cuatro formas distintas según qué pregunta
-      necesita responder el sistema en cada capa.</p>
+    <p class="section-desc">Una misma obra se guarda de forma distinta en cada base de datos, dependiendo de para qué se necesite: transacciones, catálogo, auditoría o recomendaciones.</p>
   </div>
   <div class="tabs" id="dict-tabs">
     <button class="tab-btn active" data-tab="sql">PostgreSQL <span class="tab-tag">Core CP</span></button>
@@ -101,37 +98,37 @@
   <div class="section-head">
     <span class="section-eyebrow">04 · Justificación Teórica</span>
     <h2>Teorema CAP: ¿por qué cada nodo eligió su bando?</h2>
-    <p class="section-desc">Cada base de datos fue seleccionada según su posición en el teorema CAP. Navega por los motores para entender la decisión detrás de cada uno.</p>
+    <p class="section-desc">El Teorema CAP dice que una base de datos solo puede cumplir bien dos de tres cosas: Consistencia, Disponibilidad o Tolerancia a Particiones. Aquí te explicamos qué eligió cada motor y por qué.</p>
   </div>
   <div class="cap-carousel">
     <div class="cap-carousel-track" id="cap-track">
       <div class="cap-slide" data-cap="CP" data-color="#5aa0ff">
         <div class="cap-slide-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Postgresql_elephant.svg/250px-Postgresql_elephant.svg.png" alt="PostgreSQL" class="cap-logo-img"></div>
         <span class="cap-badge" style="background:#5aa0ff">CP</span>
-        <h3>PostgreSQL — Core Transaccional</h3>
-        <p class="cap-slide-desc">Facturas, inventario de obras y estado de reservas exigen <strong>Consistencia</strong> antes que disponibilidad: dos compradores no pueden pagar por la misma obra.</p>
-        <p class="cap-slide-reason">Prioriza Consistencia y Tolerancia a Particiones, sacrificando disponibilidad en caso de partición de red — bloquea escrituras antes que arriesgar un doble cobro.</p>
+        <h3>PostgreSQL — Pagos y reservas</h3>
+        <p class="cap-slide-desc">Las facturas, el inventario y las reservas necesitan que los datos sean <strong>correctos siempre</strong>: si dos personas compran la misma obra, solo una debe pagar.</p>
+        <p class="cap-slide-reason">Elige Consistencia ante todo. Si hay una falla de red, prefiere detener la compra antes que permitir un error que duplique el cobro.</p>
       </div>
       <div class="cap-slide" data-cap="AP" data-color="#ffc800">
         <div class="cap-slide-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Cassandra_logo.svg" alt="Cassandra" class="cap-logo-img"></div>
         <span class="cap-badge" style="background:#ffc800">AP</span>
-        <h3>Cassandra — Auditoría y Reportes</h3>
-        <p class="cap-slide-desc">La bitácora de seguridad y los resúmenes de facturación deben poder <strong>escribirse siempre</strong>, incluso si un nodo del clúster cae.</p>
-        <p class="cap-slide-reason">Prioriza Disponibilidad; acepta <em>consistencia eventual</em> entre réplicas porque un reporte gerencial puede tardar en reflejar el último evento sin romper nada crítico.</p>
+        <h3>Cassandra — Registro de actividades</h3>
+        <p class="cap-slide-desc">La bitácora de seguridad y los reportes de facturación deben poder <strong>seguir escribiéndose</strong> aunque un nodo del clúster se caiga.</p>
+        <p class="cap-slide-reason">Elige Disponibilidad. Acepta que los datos se actualicen con unos segundos de retraso (consistencia eventual), porque un reporte puede esperar, pero no puede dejar de guardarse.</p>
       </div>
       <div class="cap-slide" data-cap="AP" data-color="#25E4AE">
         <div class="cap-slide-logo"><img src="https://d2lgmzy8vjj79z.cloudfront.net/mongodb.svg" alt="MongoDB" class="cap-logo-img"></div>
         <span class="cap-badge" style="background:#25E4AE">AP</span>
-        <h3>MongoDB — Catálogo</h3>
-        <p class="cap-slide-desc">El catálogo público debe seguir sirviendo obras aunque haya latencia entre réplicas. Los esquemas polimórficos se benefician de la flexibilidad documental.</p>
-        <p class="cap-slide-reason">Prioriza disponibilidad sobre consistencia estricta inmediata — es aceptable que un usuario vea datos ligeramente desactualizados mientras la réplica se actualiza.</p>
+        <h3>MongoDB — Catálogo de obras</h3>
+        <p class="cap-slide-desc">El catálogo debe seguir funcionando aunque haya demoras entre las copias de los datos. Además, cada obra puede tener características distintas (polimorfismo).</p>
+        <p class="cap-slide-reason">Elige Disponibilidad. Es aceptable que un usuario vea datos ligeramente desactualizados mientras la réplica se actualiza, porque lo importante es que el catálogo nunca deje de verse.</p>
       </div>
       <div class="cap-slide" data-cap="CP" data-color="#c878ff">
         <div class="cap-slide-logo"><img src="https://miro.medium.com/v2/resize:fit:500/1*Q-FJ98wBsDaImvKxKuXhpg.png" alt="Neo4j" class="cap-logo-img"></div>
         <span class="cap-badge" style="background:#c878ff">CP</span>
-        <h3>Neo4j — Grafo de Recomendaciones</h3>
-        <p class="cap-slide-desc">Las relaciones <code>(Comprador)-[:COMPRO]-&gt;(Obra)&lt;-[:CREO]-(Artista)</code> necesitan integridad referencial fuerte.</p>
-        <p class="cap-slide-reason">Los recorridos de recomendación no pueden devolver nodos huérfanos o inconsistentes. Prioriza Consistencia sobre disponibilidad para preservar la integridad del grafo.</p>
+        <h3>Neo4j — Recomendaciones</h3>
+        <p class="cap-slide-desc">Las conexiones entre compradores, obras y artistas deben estar <strong>siempre bien relacionadas</strong>. Una recomendación no puede mostrar datos incorrectos.</p>
+        <p class="cap-slide-reason">Elige Consistencia. Los recorridos de recomendación necesitan integridad total: si la base de datos dice que un usuario compró una obra, esa relación debe ser verdadera siempre.</p>
       </div>
     </div>
     <div class="cap-controls">
@@ -151,19 +148,19 @@
   <div class="fault-grid">
     <div class="fault-card">
       <h4>Caída de Recomendaciones (Neo4j)</h4>
-      <p>El Gateway captura el timeout y el catálogo se sirve sin la fila de recomendados — degradación elegante, no error 500 para el usuario final.</p>
+      <p>El catálogo se muestra sin recomendaciones si Neo4j falla. El usuario no ve un error, solo menos contenido.</p>
     </div>
     <div class="fault-card">
       <h4>Caída de un nodo Cassandra</h4>
-      <p>Con <code>QUORUM</code> (2 de 3 réplicas) las escrituras de auditoría siguen aceptándose; solo se pierde tolerancia si caen 2 nodos simultáneamente.</p>
+      <p>Cassandra tiene 3 copias de cada dato. Mientras al menos 2 estén funcionando, las escrituras continúan. Solo falla si se caen 2 nodos a la vez.</p>
     </div>
     <div class="fault-card">
       <h4>Partición de red hacia PostgreSQL</h4>
-      <p>El core transaccional prioriza Consistencia: ante duda, bloquea la escritura de una compra antes que arriesgar un doble cobro. El usuario ve "intenta de nuevo".</p>
+      <p>Si hay una falla de red, PostgreSQL prefiere bloquear una compra antes que arriesgarse a cobrar dos veces. El usuario ve un mensaje para que intente de nuevo.</p>
     </div>
     <div class="fault-card">
       <h4>Fallas bizantinas (nodo comprometido)</h4>
-      <p>Mitigación vía consenso PBFT entre réplicas de auditoría: una escritura solo se considera válida si <em>2f+1</em> de los <em>3f+1</em> nodos coinciden, tolerando hasta <code>f</code> nodos bizantinos.</p>
+      <p>Si un nodo es comprometido, los demás verifican la información entre ellos. Una escritura solo se acepta si la mayoría de los nodos están de acuerdo.</p>
     </div>
   </div>
 </section>
@@ -173,11 +170,10 @@
   <div class="section-head">
     <span class="section-eyebrow">06 · Live Demo</span>
     <h2>Flujo Completo (Live Demo)</h2>
-    <p class="section-desc">Recorrido simulado por los cinco endpoints clave del ecosistema:
-      SQL → MongoDB → Cassandra → Neo4j, con datos mock que replican las respuestas reales.</p>
+    <p class="section-desc">Recorre en vivo los cinco pasos principales del sistema: inicio de sesión, compra, catálogo, historial de compras y recomendaciones.</p>
   </div>
   <div class="demo-config">
-    <span style="color:var(--text-dim);font-size:.72rem;text-transform:uppercase;letter-spacing:1px;">Simulación de endpoints reales</span>
+    <span style="color:var(--text-dim);font-size:.72rem;text-transform:uppercase;letter-spacing:1px;">Prueba el flujo completo del sistema</span>
     <button id="btn-run-demo" class="btn-primary">▶ Ejecutar flujo completo</button>
   </div>
   <div class="demo-progress" id="demo-progress">
@@ -192,38 +188,38 @@
   <div class="section-head">
     <span class="section-eyebrow">07 · Robustez y Seguridad</span>
     <h2>Una arquitectura pensada para producción</h2>
-    <p class="section-desc">Cada capa del sistema incorpora mecanismos de seguridad, resiliencia y auditoría desde el diseño.</p>
+    <p class="section-desc">Cada parte del sistema está diseñada para ser segura, tolerante a fallos y fácil de monitorear.</p>
   </div>
   <div class="security-grid">
     <div class="security-card">
       <div class="security-icon">🔐</div>
       <h4>Autenticación y Autorización</h4>
-      <p>JWT con refresh tokens, bcryptjs para hash de contraseñas, preguntas de seguridad como segundo factor. Cada microservicio valida el token contra el Gateway antes de procesar cualquier petición.</p>
+      <p>Usamos JWT con tokens de actualización, contraseñas encriptadas con bcryptjs y preguntas de seguridad como segundo factor. Cada microservicio verifica la identidad del usuario antes de procesar cualquier solicitud.</p>
     </div>
     <div class="security-card">
       <div class="security-icon">🛡️</div>
       <h4>Rate Limiting y DDoS</h4>
-      <p>El Gateway implementa rate limiting por IP y por ruta, con backpressure controlada vía middleware. Las conexiones a bases de datos usan pool limitado para evitar agotamiento de recursos.</p>
+      <p>El Gateway limita las solicitudes por IP y por ruta para evitar ataques. Las conexiones a las bases de datos también están controladas para no saturarlas.</p>
     </div>
     <div class="security-card">
       <div class="security-icon">📋</div>
       <h4>Auditoría Inmutable (Cassandra)</h4>
-      <p>Toda operación crítica queda registrada en una bitácora solo-append en Cassandra: inicios de sesión, cambios de estatus de obras, transacciones financieras. Escritura siempre disponible incluso bajo partición de red.</p>
+      <p>Cassandra guarda un registro permanente de cada acción importante: inicios de sesión, cambios en obras y transacciones. Una vez escritos, estos datos no se pueden modificar.</p>
     </div>
     <div class="security-card">
       <div class="security-icon">⚡</div>
       <h4>Tolerancia a Fallos</h4>
-      <p>Degradación elegante ante caída de microservicios: el catálogo se sirve sin recomendaciones si Neo4j falla, las escrituras de auditoría continúan si un nodo Cassandra cae (QUORUM 2/3), y PostgreSQL bloquea escrituras antes que permitir un doble cobro.</p>
+      <p>Si un microservicio falla, el sistema se adapta: el catálogo se muestra sin recomendaciones si Neo4j no responde, las auditorías siguen escribiéndose si un nodo de Cassandra falla, y PostgreSQL detiene una compra antes que cobrar de más.</p>
     </div>
     <div class="security-card">
       <div class="security-icon">🔒</div>
       <h4>Cifrado en Tránsito y Reposo</h4>
-      <p>Todas las conexiones entre microservicios y bases de datos utilizan TLS/SSL. Las contraseñas se almacenan con bcryptjs (salt rounds = 12) y los datos sensibles en PostgreSQL usan cifrado a nivel de columna.</p>
+      <p>Todas las comunicaciones entre servicios usan cifrado TLS/SSL. Las contraseñas se guardan con bcryptjs y los datos sensibles se encriptan directamente en la base de datos.</p>
     </div>
     <div class="security-card">
       <div class="security-icon">📊</div>
       <h4>Monitoreo y Alertas</h4>
-      <p>Cada microservicio expone métricas en formato Prometheus. El Gateway centraliza logs estructurados y tiempos de respuesta. Alertas ante picos de latencia, tasas de error elevadas o caída de nodos de base de datos.</p>
+      <p>Cada servicio expone métricas de rendimiento. El Gateway centraliza los registros y envía alertas cuando hay demoras, errores o caídas en las bases de datos.</p>
     </div>
   </div>
 </section>
@@ -245,7 +241,7 @@
 
 <section class="section cta-final">
   <h2>¿Listo para verlo correr?</h2>
-  <p>La arquitectura ya está montada. Entra a la plataforma y navega el catálogo real.</p>
+  <p>La plataforma ya está funcionando. Entra y explora el catálogo real de obras.</p>
   <a href="/home" class="btn-primary btn-large">Entrar a la plataforma</a>
 </section>
 
