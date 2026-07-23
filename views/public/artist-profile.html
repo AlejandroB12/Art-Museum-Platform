@@ -78,7 +78,9 @@
     </div>
 
     <script src="/controllers/authController.js"></script>
-<script src="/controllers/catalogController.js"></script>
+    <script src="/controllers/catalogController.js"></script>
+    <script src="/controllers/userController.js"></script>
+    <script src="/scripts/favoritos-utils.js"></script>
     <script>
         const modal = document.getElementById('obra-modal');
 
@@ -182,7 +184,7 @@
                         card.className = 'art-card';
                         card.innerHTML = `
                             <div class="art-img" style="background-image: url('${imgPath}'); position: relative;">
-                                <svg class="heart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg class="heart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-id-obra="${obra.id_obra}">
                                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
                                 </svg>
                             </div>
@@ -202,7 +204,7 @@
                             abrirModal(imgPath, obra.nombre || 'Sin título', nombreAutor, fichaTecnica);
                         });
                         const heart = card.querySelector('.heart-icon');
-                        if (heart) heart.addEventListener('click', (e) => { e.stopPropagation(); e.currentTarget.classList.toggle('liked'); });
+                        if (heart) heart.addEventListener('click', (e) => { e.stopPropagation(); const id = parseInt(heart.dataset.idObra); FavoritosUtils.toggle(id, !heart.classList.contains('liked')); heart.classList.toggle('liked'); });
                         
                         // Agregar evento click al botón de compra
                         const buyBtn = card.querySelector('.btn-buy');
@@ -213,6 +215,7 @@
                         
                         gallery.appendChild(card);
                     });
+                    FavoritosUtils.syncUI();
                 } else {
                     document.getElementById('authorGallery').innerHTML = '<p style="text-align:center; width:100%; color:#444; padding: 50px;">Este artista no tiene obras disponibles.</p>';
                 }
@@ -235,6 +238,10 @@
         // Cargar el perfil cuando la página esté lista
         document.addEventListener('DOMContentLoaded', () => {
             cargarPerfil();
+
+            // Sincronizar favoritos después de cargar perfil
+            FavoritosUtils.syncFromServer().then(() => {
+            });
             
             // Verificar estado de usuario para mostrar/ocultar botones de autenticación
             AuthController.checkSession()

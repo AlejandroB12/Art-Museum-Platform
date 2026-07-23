@@ -449,6 +449,7 @@
 <script src="/controllers/authController.js"></script>
 <script src="/controllers/userController.js"></script>
 <script src="/controllers/checkoutController.js"></script>
+<script src="/scripts/favoritos-utils.js"></script>
 <script>
 let currentUserId = null;
 let intervaloMembresia = null;
@@ -516,6 +517,7 @@ async function cargarFavoritos() {
     container.innerHTML = '<p class="status-msg">Cargando tus favoritos...</p>';
     try {
         const ids = await UserController.getFavoritos();
+        if (ids && Array.isArray(ids)) FavoritosUtils.save(ids.map(i => (typeof i === 'object' ? i.id_obra : i)));
         if (!ids || ids.length === 0) { container.innerHTML = '<div class="empty-state">No tienes obras favoritas aún. Explora el catálogo y marca las que más te gusten.</div>'; return; }
         let html = '<div class="fav-grid">';
         for (const id of ids) {
@@ -541,6 +543,7 @@ async function cargarFavoritos() {
 async function quitarFavorito(id_obra) {
     try {
         await UserController.toggleFavorito(id_obra, false);
+        FavoritosUtils.remove(id_obra);
         cargarFavoritos();
     } catch (err) { alert('Error al quitar favorito.'); }
 }

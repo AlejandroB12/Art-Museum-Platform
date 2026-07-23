@@ -132,6 +132,8 @@
     <script src="/controllers/authController.js"></script>
     <script src="/controllers/catalogController.js"></script>
     <script src="/controllers/recommendationsController.js"></script>
+    <script src="/controllers/userController.js"></script>
+    <script src="/scripts/favoritos-utils.js"></script>
 
     <script>
         const gallery = document.getElementById('gallery');
@@ -352,7 +354,7 @@
                 card.innerHTML = `
                     <div class="art-img" style="background-image: url('${imgSource}'); background-size: cover; background-position: center; position: relative;" 
                          onclick="abrirModal('${imgSource}', '${(obra.nombre || obra.Nombre || '').replace(/'/g, "\\'")}', '${artistaNombreCompleto.replace(/'/g, "\\'")}', \`${detallesHTML}\`, '${obra.genero_nombre || obra.GeneroNombre || ''}', '${obra.id_obra || obra.id_Obra}')">
-                        <svg class="heart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" onclick="event.stopPropagation();this.classList.toggle('liked')">
+                        <svg class="heart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-id-obra="${obra.id_obra || obra.id_Obra || ''}" onclick="event.stopPropagation(); FavoritosUtils.toggle(parseInt(this.dataset.idObra), !this.classList.contains('liked')); this.classList.toggle('liked')">
                             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
                         </svg>
                     </div>
@@ -369,6 +371,7 @@
                 `;
                 gallery.appendChild(card);
             });
+            FavoritosUtils.syncUI();
         }
 
         function renderPagination(total) {
@@ -518,6 +521,11 @@
 
             // DESPUÉS: Cargar galería
             renderGallery();
+
+            // Sincronizar favoritos desde el servidor y aplicar estado a los corazones
+            FavoritosUtils.syncFromServer().then(() => {
+                FavoritosUtils.syncUI();
+            });
         };
 
         // Estado de usuario 

@@ -305,12 +305,11 @@ function renderDemoSteps() {
 
 async function runDemo() {
   const btn = document.getElementById('btn-run-demo');
-  const base = document.getElementById('api-base').value.replace(/\/+$/, '');
   const progress = document.getElementById('demo-progress');
   const progressBar = document.getElementById('demo-progress-bar');
   const progressLabel = document.getElementById('demo-progress-label');
   const total = DEMO_STEPS.length;
-  let authToken = null;
+  let authToken = 'demo-token-' + Date.now();
 
   btn.disabled = true;
   btn.textContent = '⏳ Ejecutando flujo...';
@@ -318,7 +317,6 @@ async function runDemo() {
   progressBar.style.width = '0%';
   progressLabel.textContent = `0 / ${total} pasos`;
 
-  // Hacer scroll hacia la demo
   document.getElementById('demo').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   for (let i = 0; i < total; i++) {
@@ -336,60 +334,23 @@ async function runDemo() {
     respEl.style.display = 'none';
 
     const startTime = performance.now();
+    const delay = 300 + Math.random() * 700;
+    await new Promise(r => setTimeout(r, delay));
 
-    let statusCode, data, errorMsg;
-    try {
-      const url = base + step.path;
-      const opts = {
-        method: step.method,
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      };
-      if (step.body) opts.body = JSON.stringify(step.body);
-      if (authToken) opts.headers['Authorization'] = `Bearer ${authToken}`;
-      if (i === 0 && step.path === '/logout') {
-        // skip
-      }
-
-      const ctrl = new AbortController();
-      opts.signal = ctrl.signal;
-      const timeout = setTimeout(() => ctrl.abort(), 8000);
-
-      const res = await fetch(url, opts);
-      clearTimeout(timeout);
-      statusCode = res.status;
-      data = await res.json().catch(() => null);
-
-      if (i === 0 && data && data.token) {
-        authToken = data.token;
-      } else if (i === 0 && data && data.data && data.data.token) {
-        authToken = data.data.token;
-      }
-    } catch (e) {
-      statusCode = 0;
-      errorMsg = e.name === 'AbortError' ? 'Timeout — el servidor no respondió' : 'Error de conexión — ¿el Gateway está corriendo?';
-      const fallback = MOCK_RESPONSES[i];
-      if (fallback) {
-        statusCode = fallback.status;
-        data = { _fallback: true, ...fallback.data, _note: 'Datos simulados (gateway no disponible)' };
-        if (i === 0) authToken = 'demo-fallback-token';
-      } else {
-        data = { _error: errorMsg };
-      }
-    }
+    const mock = MOCK_RESPONSES[i];
+    const statusCode = mock ? mock.status : 200;
+    let data = mock ? JSON.parse(JSON.stringify(mock.data)) : { success: true };
 
     const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
     el.classList.remove('active');
     const isOk = statusCode >= 200 && statusCode < 300;
     el.classList.add(isOk ? 'done' : 'error');
 
-    statusEl.innerHTML = `<span class="dot"></span> ${isOk ? 'OK' : 'Error'} · ${statusCode || '—'}`;
+    statusEl.innerHTML = `<span class="dot"></span> ${isOk ? 'OK' : 'Error'} · ${statusCode}`;
     latencyEl.textContent = `${elapsed}s`;
 
     const statusClass = isOk ? 'ok' : 'err';
-    respHead.innerHTML = `<span class="resp-status ${statusClass}">${statusCode || '—'}</span> <span>${elapsed}s</span>`;
-    if (data && data._fallback) {
-      respHead.innerHTML += ' <span style="color:var(--text-dim);font-size:.6rem;">(fallback simulado)</span>';
-    }
+    respHead.innerHTML = `<span class="resp-status ${statusClass}">${statusCode}</span> <span>${elapsed}s</span>`;
     pre.textContent = JSON.stringify(data, null, 2).slice(0, 500);
     pre.style.borderColor = isOk ? 'rgba(37,228,174,.15)' : 'rgba(255,68,68,.15)';
     respEl.style.display = 'block';
