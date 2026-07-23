@@ -5,14 +5,22 @@
 // ============================================================
 
 const SERVICES = [
-  { name: "gateway",         port: 3000, label: "API Gateway",  db: null },
-  { name: "auth",            port: 3001, label: "Auth",         db: "postgres" },
-  { name: "catalog",         port: 3002, label: "Catalog",      db: "mongo" },
-  { name: "user",            port: 3003, label: "User",         db: "postgres" },
-  { name: "checkout",        port: 3004, label: "Checkout",     db: "postgres" },
-  { name: "recommendations", port: 3005, label: "Recommendations", db: "neo4j" },
-  { name: "chatbot",         port: 3006, label: "Chatbot",       db: null, external: "OpenRouter / Gemini" },
-  { name: "admin",           port: 3007, label: "Admin",        db: "cassandra" }
+  { name: "gateway",         port: 3000, label: "API Gateway",  db: null,
+    desc: "Punto de entrada único que enruta cada petición al microservicio correspondiente. Valida tokens JWT, aplica rate limiting y centraliza logs." },
+  { name: "auth",            port: 3001, label: "Auth",         db: "postgres",
+    desc: "Registro, inicio de sesión y recuperación de contraseñas. Utiliza JWT con refresh tokens y bcryptjs para hash de contraseñas." },
+  { name: "catalog",         port: 3002, label: "Catalog",      db: "mongo",
+    desc: "Catálogo público de obras de arte con soporte de esquemas polimórficos (Pintura, Escultura, Cerámica, Orfebrería) sobre MongoDB." },
+  { name: "user",            port: 3003, label: "User",         db: "postgres",
+    desc: "Gestión de perfiles de usuario, membresías, favoritos, direcciones de envío y métodos de pago." },
+  { name: "checkout",        port: 3004, label: "Checkout",     db: "postgres",
+    desc: "Procesa reservas y compras de obras con transacciones ACID sobre PostgreSQL. Bloquea escrituras para evitar doble cobro." },
+  { name: "recommendations", port: 3005, label: "Recommendations", db: "neo4j",
+    desc: "Motor de recomendaciones basado en grafos. Usa Neo4j para recorridos de mismo género, filtrado colaborativo y obras destacadas." },
+  { name: "chatbot",         port: 3006, label: "Chatbot",       db: null, external: "OpenRouter / Gemini",
+    desc: "Asistente virtual impulsado por IA (OpenRouter / Gemini) para consultas sobre obras, artistas y navegación del museo." },
+  { name: "admin",           port: 3007, label: "Admin",        db: "cassandra",
+    desc: "Panel de administración con reportes de facturación, bitácora de seguridad inmutable en Cassandra y gestión de usuarios." }
 ];
 
 const SCHEMAS = {
@@ -219,10 +227,10 @@ const API_GROUPS = [
 const DEMO_STEPS = [
   { label: "Iniciar sesión", db: "PostgreSQL", method: "POST", path: "/login",
     body: { email: "demo@museo.com", password: "demo123" } },
-  { label: "Comprar obra (core Postgres)", db: "PostgreSQL", method: "POST", path: "/confirmar-reserva",
+  { label: "Comprar obra", db: "PostgreSQL", method: "POST", path: "/confirmar-reserva",
     body: { id_obra: 1 } },
-  { label: "Ver catálogo actualizado", db: "MongoDB", method: "GET", path: "/api/artworks" },
-  { label: "Reporte histórico", db: "Cassandra", method: "GET", path: "/consultas/obras-vendidas" },
+  { label: "Ver catálogo", db: "MongoDB", method: "GET", path: "/api/artworks" },
+  { label: "Mis compras", db: "PostgreSQL", method: "GET", path: "/api/mis-compras" },
   { label: "Recomendación", db: "Neo4j", method: "GET", path: "/api/recomendaciones/obras-destacadas" }
 ];
 
@@ -246,15 +254,15 @@ const MOCK_RESPONSES = [
   {
     status: 200,
     data: [
-      { anio_mes: "2026-01", fecha_venta: "2026-01-15", id_factura: 1, nombre_obra: "Balloon Dog Orange", precio_venta: 58400000, ganancia_museo_usd: 5840000 },
-      { anio_mes: "2026-02", fecha_venta: "2026-02-05", id_factura: 3, nombre_obra: "727", precio_venta: 3800000, ganancia_museo_usd: 380000 }
+      { id_factura: 1, nombre_obra: "Balloon Dog Orange", precio_venta: 58400000, fecha_compra: "2026-01-15", estado: "Entregada" },
+      { id_factura: 3, nombre_obra: "727", precio_venta: 3800000, fecha_compra: "2026-02-05", estado: "En tránsito" }
     ]
   },
   {
     status: 200,
     data: [
-      { nombre: "Starry Night Over the Rhone", precio: 52000000, artista: "Vincent van Gogh", genero: "Pintura" },
-      { nombre: "The Persistence of Memory", precio: 48000000, artista: "Salvador Dali", genero: "Pintura" }
+      { nombre: "Starry Night Over the Rhone", precio: 52000000, artista: "Vincent van Gogh", genero: "Pintura", score: 0.95 },
+      { nombre: "The Persistence of Memory", precio: 48000000, artista: "Salvador Dali", genero: "Pintura", score: 0.92 }
     ]
   }
 ];

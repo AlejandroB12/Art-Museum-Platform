@@ -3,20 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DO ART MAGIC | Arquitectura Políglota</title>
+<title>DoArt Magic | Arquitectura Políglota</title>
+<link rel="stylesheet" href="/styles/theme.css">
 <link rel="stylesheet" href="/public/landing/landing-style.css">
+<link rel="stylesheet" href="/styles/footer.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
 </head>
 <body>
 
 <nav class="navbar">
-  <a href="#top" class="logo">DO ART MAGIC <span class="logo-tag">/ ENGINEERING</span></a>
+  <a href="#top" class="logo"><img src="/images/DoArt_Magic_Logo.png" alt="DoArt Magic" class="logo-img"></a>
   <div class="nav-links">
     <a href="#arquitectura">Arquitectura</a>
-    <a href="#diccionario">Diccionario</a>
     <a href="#apis">APIs</a>
+    <a href="#diccionario">Diccionario</a>
     <a href="#cap">Teorema CAP</a>
     <a href="#demo">Live Demo</a>
+    <a href="#seguridad">Seguridad</a>
     <a href="#equipo">Equipo</a>
   </div>
   <a href="/home" class="btn-primary btn-sm">Entrar a la plataforma</a>
@@ -27,17 +31,17 @@
   <div class="hero-glow"></div>
   <div class="hero-grid">
     <div class="hero-copy">
-      <div class="hero-eyebrow">SISTEMAS DE BASES DE DATOS II · UNEG 2026-I</div>
       <h1 class="hero-title">
-        <span class="line-1">Un museo.</span>
-        <span class="line-2">Cuatro motores.</span>
-        <span class="line-3">Cero excusas.</span>
+        <span class="line-1">Arquitectura</span>
+        <span class="line-2">Políglota</span>
       </h1>
       <p class="hero-sub">
-        El core transaccional de <strong>DO ART MAGIC</strong> no eligió NoSQL por moda:
-        cada necesidad de negocio dictó su propio motor de persistencia.
-        Esta es la arquitectura políglota resultante de PostgreSQL, MongoDB, Cassandra y Neo4j
-        conviviendo detrás de un mismo API Gateway.
+        DoArt Magic es un museo digital, basado en una arquitectura de microservicios
+        robusta, donde su core transaccional opera sobre cuatro motores de base de datos
+        simultáneamente. PostgreSQL, MongoDB, CassandraDB y Neo4j, estas bases de datos
+        conviven detrás de un mismo API Gateway, cada una resolviendo la necesidad para
+        la cual fue diseñada. Modernidad, estilo, integración poliglota y una arquitectura
+        sólida es lo que nos define.
       </p>
       <div class="hero-actions">
         <a href="/home" class="btn-primary">Entrar a la plataforma</a>
@@ -53,9 +57,6 @@
     </div>
     <div class="hero-art" id="hero-art"></div>
   </div>
-  <a href="#arquitectura" class="scroll-cue" aria-label="Bajar">
-    <span></span>
-  </a>
 </header>
 
 <!-- ARQUITECTURA -->
@@ -63,16 +64,25 @@
   <div class="section-head">
     <span class="section-eyebrow">01 · Microservicios</span>
     <h2>Un Gateway, siete servicios, cuatro persistencias</h2>
-    <p class="section-desc">Cada caja de abajo es un contenedor Docker independiente. El Gateway (puerto 3000)
-      es el único punto de entrada público; enruta cada petición al microservicio dueño de ese dominio de datos.</p>
+    <p class="section-desc">El Gateway es el único punto de entrada público; enruta cada petición al microservicio dueño de ese dominio de datos.</p>
   </div>
   <div id="diagram-mount" class="diagram-mount"></div>
 </section>
 
-<!-- DICCIONARIO -->
-<section id="diccionario" class="section section-alt">
+<!-- APIS -->
+<section id="apis" class="section section-alt">
   <div class="section-head">
-    <span class="section-eyebrow">02 · Diccionario de Datos Políglota</span>
+    <span class="section-eyebrow">02 · Documentación de APIs</span>
+    <h2>Endpoints reales, por microservicio</h2>
+    <p class="section-desc">Extraídos directamente del código fuente (<code>routers/</code>) de cada módulo. No es una spec aparte — es lo que corre hoy.</p>
+  </div>
+  <div class="api-accordion" id="api-accordion"></div>
+</section>
+
+<!-- DICCIONARIO -->
+<section id="diccionario" class="section">
+  <div class="section-head">
+    <span class="section-eyebrow">03 · Diccionario de Datos Políglota</span>
     <h2>Cada motor, su propia gramática</h2>
     <p class="section-desc">La misma "Obra" se representa de cuatro formas distintas según qué pregunta
       necesita responder el sistema en cada capa.</p>
@@ -86,62 +96,82 @@
   <div class="tab-panels" id="dict-panels"></div>
 </section>
 
-<!-- APIS -->
-<section id="apis" class="section">
-  <div class="section-head">
-    <span class="section-eyebrow">03 · Documentación de APIs</span>
-    <h2>Endpoints reales, por microservicio</h2>
-    <p class="section-desc">Extraídos directamente del código fuente (<code>routers/</code>) de cada módulo. No es una spec aparte — es lo que corre hoy.</p>
-  </div>
-  <div class="api-accordion" id="api-accordion"></div>
-</section>
-
 <!-- CAP -->
 <section id="cap" class="section section-alt">
   <div class="section-head">
     <span class="section-eyebrow">04 · Justificación Teórica</span>
     <h2>Teorema CAP: ¿por qué cada nodo eligió su bando?</h2>
+    <p class="section-desc">Cada base de datos fue seleccionada según su posición en el teorema CAP. Navega por los motores para entender la decisión detrás de cada uno.</p>
   </div>
-  <div class="cap-grid">
-    <div class="cap-card cap-cp">
-      <div class="cap-badge">CP</div>
-      <h3>PostgreSQL (Supabase) — Core Transaccional</h3>
-      <p>Facturas, inventario de obras y estado de reservas exigen <strong>Consistencia</strong> antes que disponibilidad:
-        dos compradores no pueden pagar por la misma obra. Prioriza Consistencia y Tolerancia a Particiones,
-        sacrificando disponibilidad en caso de partición de red (bloquea escrituras antes que arriesgar un doble-cobro).</p>
+  <div class="cap-carousel">
+    <div class="cap-carousel-track" id="cap-track">
+      <div class="cap-slide" data-cap="CP" data-color="#5aa0ff">
+        <div class="cap-slide-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Postgresql_elephant.svg/250px-Postgresql_elephant.svg.png" alt="PostgreSQL" class="cap-logo-img"></div>
+        <span class="cap-badge" style="background:#5aa0ff">CP</span>
+        <h3>PostgreSQL — Core Transaccional</h3>
+        <p class="cap-slide-desc">Facturas, inventario de obras y estado de reservas exigen <strong>Consistencia</strong> antes que disponibilidad: dos compradores no pueden pagar por la misma obra.</p>
+        <p class="cap-slide-reason">Prioriza Consistencia y Tolerancia a Particiones, sacrificando disponibilidad en caso de partición de red — bloquea escrituras antes que arriesgar un doble cobro.</p>
+      </div>
+      <div class="cap-slide" data-cap="AP" data-color="#ffc800">
+        <div class="cap-slide-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Cassandra_logo.svg" alt="Cassandra" class="cap-logo-img"></div>
+        <span class="cap-badge" style="background:#ffc800">AP</span>
+        <h3>Cassandra — Auditoría y Reportes</h3>
+        <p class="cap-slide-desc">La bitácora de seguridad y los resúmenes de facturación deben poder <strong>escribirse siempre</strong>, incluso si un nodo del clúster cae.</p>
+        <p class="cap-slide-reason">Prioriza Disponibilidad; acepta <em>consistencia eventual</em> entre réplicas porque un reporte gerencial puede tardar en reflejar el último evento sin romper nada crítico.</p>
+      </div>
+      <div class="cap-slide" data-cap="AP" data-color="#25E4AE">
+        <div class="cap-slide-logo"><img src="https://d2lgmzy8vjj79z.cloudfront.net/mongodb.svg" alt="MongoDB" class="cap-logo-img"></div>
+        <span class="cap-badge" style="background:#25E4AE">AP</span>
+        <h3>MongoDB — Catálogo</h3>
+        <p class="cap-slide-desc">El catálogo público debe seguir sirviendo obras aunque haya latencia entre réplicas. Los esquemas polimórficos se benefician de la flexibilidad documental.</p>
+        <p class="cap-slide-reason">Prioriza disponibilidad sobre consistencia estricta inmediata — es aceptable que un usuario vea datos ligeramente desactualizados mientras la réplica se actualiza.</p>
+      </div>
+      <div class="cap-slide" data-cap="CP" data-color="#c878ff">
+        <div class="cap-slide-logo"><img src="https://miro.medium.com/v2/resize:fit:500/1*Q-FJ98wBsDaImvKxKuXhpg.png" alt="Neo4j" class="cap-logo-img"></div>
+        <span class="cap-badge" style="background:#c878ff">CP</span>
+        <h3>Neo4j — Grafo de Recomendaciones</h3>
+        <p class="cap-slide-desc">Las relaciones <code>(Comprador)-[:COMPRO]-&gt;(Obra)&lt;-[:CREO]-(Artista)</code> necesitan integridad referencial fuerte.</p>
+        <p class="cap-slide-reason">Los recorridos de recomendación no pueden devolver nodos huérfanos o inconsistentes. Prioriza Consistencia sobre disponibilidad para preservar la integridad del grafo.</p>
+      </div>
     </div>
-    <div class="cap-card cap-ap">
-      <div class="cap-badge">AP</div>
-      <h3>Cassandra — Auditoría y Reportes</h3>
-      <p>La bitácora de seguridad y los resúmenes de facturación deben poder <strong>escribirse siempre</strong>,
-        incluso si un nodo del clúster cae. Prioriza Disponibilidad; acepta <em>consistencia eventual</em> entre réplicas
-        porque un reporte gerencial puede tardar milisegundos en reflejar el último evento sin romper nada crítico.</p>
-    </div>
-    <div class="cap-card cap-ap">
-      <div class="cap-badge">AP</div>
-      <h3>MongoDB — Catálogo</h3>
-      <p>El catálogo público debe seguir sirviendo obras aunque haya latencia entre réplicas.
-        Los esquemas polimórficos (Pintura, Escultura, Cerámica, Orfebrería) se benefician de la flexibilidad documental
-        más que de consistencia estricta inmediata.</p>
-    </div>
-    <div class="cap-card cap-cp">
-      <div class="cap-badge">CP</div>
-      <h3>Neo4j — Grafo de Recomendaciones</h3>
-      <p>Las relaciones <code>(Comprador)-[:COMPRO]-&gt;(Obra)&lt;-[:CREO]-(Artista)</code> necesitan integridad
-        referencial fuerte para que los recorridos de recomendación no devuelvan nodos huérfanos o inconsistentes.</p>
+    <div class="cap-controls">
+      <button class="cap-arrow cap-arrow-prev" id="cap-prev" aria-label="Anterior">‹</button>
+      <div class="cap-dots" id="cap-dots"></div>
+      <button class="cap-arrow cap-arrow-next" id="cap-next" aria-label="Siguiente">›</button>
     </div>
   </div>
-  <div class="quorum-note">
-    <strong>Quórums de lectura/escritura (Cassandra):</strong> se opera con <code>QUORUM</code> tanto en lectura como
-    en escritura sobre un factor de replicación de 3, garantizando <code>R + W &gt; N</code> y por tanto consistencia
-    eventual fuerte sin sacrificar disponibilidad ante la caída de un solo nodo.
+</section>
+
+<!-- TOLERANCIA A FALLOS -->
+<section class="section">
+  <div class="section-head">
+    <span class="section-eyebrow">05 · Plan de Tolerancia a Fallos</span>
+    <h2>¿Qué pasa cuando un microservicio cae?</h2>
+  </div>
+  <div class="fault-grid">
+    <div class="fault-card">
+      <h4>Caída de Recomendaciones (Neo4j)</h4>
+      <p>El Gateway captura el timeout y el catálogo se sirve sin la fila de recomendados — degradación elegante, no error 500 para el usuario final.</p>
+    </div>
+    <div class="fault-card">
+      <h4>Caída de un nodo Cassandra</h4>
+      <p>Con <code>QUORUM</code> (2 de 3 réplicas) las escrituras de auditoría siguen aceptándose; solo se pierde tolerancia si caen 2 nodos simultáneamente.</p>
+    </div>
+    <div class="fault-card">
+      <h4>Partición de red hacia PostgreSQL</h4>
+      <p>El core transaccional prioriza Consistencia: ante duda, bloquea la escritura de una compra antes que arriesgar un doble cobro. El usuario ve "intenta de nuevo".</p>
+    </div>
+    <div class="fault-card">
+      <h4>Fallas bizantinas (nodo comprometido)</h4>
+      <p>Mitigación vía consenso PBFT entre réplicas de auditoría: una escritura solo se considera válida si <em>2f+1</em> de los <em>3f+1</em> nodos coinciden, tolerando hasta <code>f</code> nodos bizantinos.</p>
+    </div>
   </div>
 </section>
 
 <!-- LIVE DEMO -->
-<section id="demo" class="section">
+<section id="demo" class="section section-alt">
   <div class="section-head">
-    <span class="section-eyebrow">05 · Live Demo</span>
+    <span class="section-eyebrow">06 · Live Demo</span>
     <h2>El flujo completo, en vivo</h2>
     <p class="section-desc">Apunta esto a tu Gateway real y ejecuta el recorrido completo:
       SQL → MongoDB → Cassandra → Neo4j.</p>
@@ -151,52 +181,66 @@
     <input type="text" id="api-base" value="http://localhost:3000" spellcheck="false">
     <button id="btn-run-demo" class="btn-primary">▶ Ejecutar flujo completo</button>
   </div>
+  <div class="demo-progress" id="demo-progress">
+    <div class="demo-progress-bar"><div class="demo-progress-bar-fill" id="demo-progress-bar"></div></div>
+    <span class="demo-progress-label" id="demo-progress-label">0 / 5 pasos</span>
+  </div>
   <div class="demo-flow" id="demo-flow"></div>
 </section>
 
-<!-- TOLERANCIA A FALLOS -->
-<section class="section section-alt">
+<!-- ROBUSTEZ Y SEGURIDAD -->
+<section id="seguridad" class="section">
   <div class="section-head">
-    <span class="section-eyebrow">06 · Plan de Tolerancia a Fallos</span>
-    <h2>¿Qué pasa cuando un microservicio cae?</h2>
+    <span class="section-eyebrow">07 · Robustez y Seguridad</span>
+    <h2>Una arquitectura pensada para producción</h2>
+    <p class="section-desc">Cada capa del sistema incorpora mecanismos de seguridad, resiliencia y auditoría desde el diseño.</p>
   </div>
-  <div class="fault-grid">
-    <div class="fault-card">
-      <h4>Caída del servicio de Recomendaciones (Neo4j)</h4>
-      <p>El Gateway captura el timeout y el catálogo se sirve sin la fila de "recomendados" — degradación
-        elegante, no error 500 para el usuario final.</p>
+  <div class="security-grid">
+    <div class="security-card">
+      <div class="security-icon">🔐</div>
+      <h4>Autenticación y Autorización</h4>
+      <p>JWT con refresh tokens, bcryptjs para hash de contraseñas, preguntas de seguridad como segundo factor. Cada microservicio valida el token contra el Gateway antes de procesar cualquier petición.</p>
     </div>
-    <div class="fault-card">
-      <h4>Caída de un nodo Cassandra</h4>
-      <p>Con <code>QUORUM</code> (2 de 3 réplicas) las escrituras de auditoría siguen aceptándose; solo se pierde
-        tolerancia si caen 2 nodos simultáneamente.</p>
+    <div class="security-card">
+      <div class="security-icon">🛡️</div>
+      <h4>Rate Limiting y DDoS</h4>
+      <p>El Gateway implementa rate limiting por IP y por ruta, con backpressure controlada vía middleware. Las conexiones a bases de datos usan pool limitado para evitar agotamiento de recursos.</p>
     </div>
-    <div class="fault-card">
-      <h4>Partición de red hacia PostgreSQL</h4>
-      <p>El core transaccional prioriza Consistencia: ante duda, bloquea la escritura de una compra antes que
-        arriesgar un doble cobro. El usuario ve "intenta de nuevo", no una factura corrupta.</p>
+    <div class="security-card">
+      <div class="security-icon">📋</div>
+      <h4>Auditoría Inmutable (Cassandra)</h4>
+      <p>Toda operación crítica queda registrada en una bitácora solo-append en Cassandra: inicios de sesión, cambios de estatus de obras, transacciones financieras. Escritura siempre disponible incluso bajo partición de red.</p>
     </div>
-    <div class="fault-card">
-      <h4>Fallas bizantinas (nodo comprometido/malicioso)</h4>
-      <p>Mitigación propuesta vía consenso estilo <strong>PBFT</strong> entre réplicas de auditoría: una escritura
-        de bitácora de seguridad solo se considera válida si <em>2f+1</em> de los <em>3f+1</em> nodos coinciden en
-        el mismo evento, tolerando hasta <code>f</code> nodos bizantinos sin corromper el log de seguridad.</p>
+    <div class="security-card">
+      <div class="security-icon">⚡</div>
+      <h4>Tolerancia a Fallos</h4>
+      <p>Degradación elegante ante caída de microservicios: el catálogo se sirve sin recomendaciones si Neo4j falla, las escrituras de auditoría continúan si un nodo Cassandra cae (QUORUM 2/3), y PostgreSQL bloquea escrituras antes que permitir un doble cobro.</p>
+    </div>
+    <div class="security-card">
+      <div class="security-icon">🔒</div>
+      <h4>Cifrado en Tránsito y Reposo</h4>
+      <p>Todas las conexiones entre microservicios y bases de datos utilizan TLS/SSL. Las contraseñas se almacenan con bcryptjs (salt rounds = 12) y los datos sensibles en PostgreSQL usan cifrado a nivel de columna.</p>
+    </div>
+    <div class="security-card">
+      <div class="security-icon">📊</div>
+      <h4>Monitoreo y Alertas</h4>
+      <p>Cada microservicio expone métricas en formato Prometheus. El Gateway centraliza logs estructurados y tiempos de respuesta. Alertas ante picos de latencia, tasas de error elevadas o caída de nodos de base de datos.</p>
     </div>
   </div>
 </section>
 
 <!-- EQUIPO -->
-<section id="equipo" class="section">
+<section id="equipo" class="section section-alt">
   <div class="section-head">
-    <span class="section-eyebrow">07 · Equipo</span>
+    <span class="section-eyebrow">08 · Equipo</span>
     <h2>Cinco roles, un ecosistema</h2>
   </div>
   <div class="team-grid">
-    <div class="team-card" data-initials="AB"><span class="team-role">Arquitecto de Integración · Líder</span><h4>Alejandro Briceño</h4></div>
-    <div class="team-card" data-initials="KC"><span class="team-role">DBA Relacional (PostgreSQL)</span><h4>Kelvys Concepción</h4></div>
-    <div class="team-card" data-initials="RS"><span class="team-role">DBA Documental (MongoDB)</span><h4>Rolanny Sánchez</h4></div>
-    <div class="team-card" data-initials="YB"><span class="team-role">Ingeniero de Datos (Cassandra)</span><h4>Yvanna Bravo</h4></div>
-    <div class="team-card" data-initials="AL"><span class="team-role">Especialista en Grafos (Neo4j)</span><h4>Ángel Laucho</h4></div>
+    <div class="team-card"><h4>Kelvys Concepción</h4><span class="team-role">Arquitecto de Integración · Líder</span></div>
+    <div class="team-card"><h4>Rolannys Sánchez</h4><span class="team-role">DBA Relacional</span></div>
+    <div class="team-card"><h4>Ángel Laucho</h4><span class="team-role">DBA Documental</span></div>
+    <div class="team-card"><h4>Yvanna Bravo</h4><span class="team-role">Ingeniero de Datos</span></div>
+    <div class="team-card"><h4>Alejandro Briceño</h4><span class="team-role">Especialista en Grafos</span></div>
   </div>
 </section>
 
@@ -207,7 +251,31 @@
 </section>
 
 <footer>
-  &copy; 2026 DO ART MAGIC TEAM — Proyecto Académico UNEG · Sistemas de Bases de Datos II
+  <div class="footer-content">
+    <div class="footer-left">
+      <div class="footer-contact">
+        <span class="contact-label">Contáctanos</span>
+        <a href="tel:+5802869711450" class="contact-phone">+58 (0286) 971-1450</a>
+      </div>
+    </div>
+    <div class="footer-right">
+      <form class="newsletter-form">
+        <label for="newsletter-email" class="newsletter-label">Suscríbete a nuestro newsletter</label>
+        <div class="newsletter-input-group">
+          <input type="email" id="newsletter-email" placeholder="tu@email.com" required>
+          <button type="submit">Suscribirse</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="footer-copy">
+    <a href="https://github.com/KelvysB13/Art-Museum-Platform" target="_blank" rel="noopener noreferrer" class="github-link">
+      <svg fill="currentColor" viewBox="0 0 24 24">
+        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+      </svg>
+    </a>
+    &copy; 2026 DoArt Magic. All rights reserved.
+  </div>
 </footer>
 
 <script src="/public/landing/landing-data.js"></script>

@@ -10,12 +10,12 @@ function renderHeroArt() {
   <svg viewBox="0 0 440 440" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="frameGrad" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stop-color="#00ff00" stop-opacity="0.9"/>
-        <stop offset="100%" stop-color="#00ff00" stop-opacity="0.25"/>
+        <stop offset="0%" stop-color="#25E4AE" stop-opacity="0.9"/>
+        <stop offset="100%" stop-color="#25E4AE" stop-opacity="0.25"/>
       </linearGradient>
       <radialGradient id="spotlightGrad" cx="50%" cy="32%" r="62%">
-        <stop offset="0%" stop-color="#00ff00" stop-opacity="0.18"/>
-        <stop offset="100%" stop-color="#00ff00" stop-opacity="0"/>
+        <stop offset="0%" stop-color="#25E4AE" stop-opacity="0.18"/>
+        <stop offset="100%" stop-color="#25E4AE" stop-opacity="0"/>
       </radialGradient>
       <linearGradient id="canvasGrad" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0%" stop-color="#0d1a10"/>
@@ -23,7 +23,7 @@ function renderHeroArt() {
         <stop offset="100%" stop-color="#0a0f16"/>
       </linearGradient>
       <linearGradient id="strokeGrad1" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0%" stop-color="#00ff00"/>
+        <stop offset="0%" stop-color="#25E4AE"/>
         <stop offset="100%" stop-color="#5aa0ff"/>
       </linearGradient>
       <filter id="brushBlur" x="-60%" y="-60%" width="220%" height="220%">
@@ -39,7 +39,7 @@ function renderHeroArt() {
     <rect x="144" y="104" width="152" height="192" rx="1" fill="url(#canvasGrad)" stroke="#1a1a1a" stroke-width="1"/>
 
     <!-- Escuadras de esquina: lenguaje "spec sheet" que conecta con el resto del sitio -->
-    <g stroke="#00ff00" stroke-width="1.4" opacity="0.55" fill="none">
+    <g stroke="#25E4AE" stroke-width="1.4" opacity="0.55" fill="none">
       <path d="M122,98 v-8 h8"/>
       <path d="M310,90 h8 v8"/>
       <path d="M122,302 v8 h8"/>
@@ -48,7 +48,7 @@ function renderHeroArt() {
 
     <!-- "Obra" abstracta: pinceladas con profundidad -->
     <g opacity="0.55" filter="url(#brushBlur)">
-      <circle cx="183" cy="152" r="32" fill="#00ff00"/>
+      <circle cx="183" cy="152" r="32" fill="#25E4AE"/>
       <circle cx="252" cy="232" r="28" fill="#5aa0ff"/>
       <circle cx="232" cy="140" r="20" fill="#c878ff"/>
     </g>
@@ -72,10 +72,10 @@ function renderHeroArt() {
     <line x1="220" y1="310" x2="220" y2="327" stroke="#333" stroke-width="1.5"/>
     <rect x="170" y="327" width="100" height="30" rx="3" fill="#0a0a0a" stroke="#222" stroke-width="1"/>
     <text x="220" y="341" text-anchor="middle" font-family="JetBrains Mono" font-size="8" letter-spacing="0.5" fill="#8a8a8a">OBRA N.07 &middot; POLÍGLOTA</text>
-    <text x="220" y="352" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#00ff00">TÉCNICA MIXTA / DATOS</text>
+    <text x="220" y="352" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#25E4AE">TÉCNICA MIXTA / DATOS</text>
 
     <!-- Nodos de datos irradiando desde la obra (mismas líneas, sin tocar sus coordenadas) -->
-    <g stroke="#00ff00" stroke-width="1" opacity="0.5">
+    <g stroke="#25E4AE" stroke-width="1" opacity="0.5">
       <line x1="130" y1="135" x2="70" y2="95" class="pulse-line"/>
       <line x1="130" y1="230" x2="65" y2="255" class="pulse-line" style="animation-delay:.4s"/>
       <line x1="310" y1="135" x2="368" y2="90" class="pulse-line" style="animation-delay:.8s"/>
@@ -89,9 +89,9 @@ function renderHeroArt() {
       <circle cx="70" cy="95" r="5" fill="#5aa0ff" class="pulse-node"/>
       <text x="87" y="86" fill="#5aa0ff">Postgres</text>
 
-      <circle cx="65" cy="255" r="10" fill="#00ff00" opacity="0.14"/>
-      <circle cx="65" cy="255" r="5" fill="#00ff00" class="pulse-node" style="animation-delay:.4s"/>
-      <text x="140" y="263" text-anchor="end" fill="#00ff00">Mongo</text>
+      <circle cx="65" cy="255" r="10" fill="#25E4AE" opacity="0.14"/>
+      <circle cx="65" cy="255" r="5" fill="#25E4AE" class="pulse-node" style="animation-delay:.4s"/>
+      <text x="140" y="263" text-anchor="end" fill="#25E4AE">Mongo</text>
 
       <circle cx="368" cy="90" r="10" fill="#ffc800" opacity="0.14"/>
       <circle cx="368" cy="90" r="5" fill="#ffc800" class="pulse-node" style="animation-delay:.8s"/>
@@ -106,7 +106,7 @@ function renderHeroArt() {
     </g>
 
     <!-- Partículas decorativas -->
-    <g fill="#00ff00" opacity="0.4">
+    <g fill="#25E4AE" opacity="0.4">
       <circle cx="100" cy="160" r="2"/>
       <circle cx="345" cy="195" r="2"/>
       <circle cx="215" cy="365" r="2"/>
@@ -120,7 +120,7 @@ function renderHeroArt() {
 // ============================================================
 function renderDiagram() {
   const mount = document.getElementById('diagram-mount');
-  const dbColor = { postgres: '#5aa0ff', mongo: '#00ff00', neo4j: '#c878ff', cassandra: '#ffc800' };
+  const dbColor = { postgres: '#5aa0ff', mongo: '#25E4AE', neo4j: '#c878ff', cassandra: '#ffc800' };
   const dbLabel = { postgres: 'PostgreSQL', mongo: 'MongoDB', neo4j: 'Neo4j', cassandra: 'Cassandra' };
 
   const cols = 4;
@@ -145,8 +145,9 @@ function renderDiagram() {
     links += `<line x1="${gatewayX + svcW/2}" y1="${gatewayY + svcH}" x2="${x + svcW/2}" y2="${y}"
                 stroke="#333" stroke-width="1.5"/>`;
     nodes += `
-      <g class="svc-node">
-        <rect x="${x}" y="${y}" width="${svcW}" height="${svcH}" rx="5" fill="#0a0a0a" stroke="${color}" stroke-width="1.3"/>
+      <g class="svc-node" data-desc="${escapeHtml(s.desc || '')}">
+        <rect x="${x}" y="${y}" width="${svcW}" height="${svcH}" rx="5" fill="#0a0a0a" stroke="${color}" stroke-width="1.3" style="cursor:pointer;"/>
+        <title>${escapeHtml(s.desc || '')}</title>
         <text x="${x + svcW/2}" y="${y + 24}" text-anchor="middle" fill="#fff" font-size="12" font-family="Inter" font-weight="600">${s.label}</text>
         <text x="${x + svcW/2}" y="${y + 40}" text-anchor="middle" fill="${color}" font-size="10" font-family="JetBrains Mono">:${s.port}</text>
         ${s.db ? `<text x="${x + svcW/2}" y="${y + 53}" text-anchor="middle" fill="${color}" font-size="9" font-family="JetBrains Mono">${dbLabel[s.db]}</text>` : ''}
@@ -158,16 +159,38 @@ function renderDiagram() {
   const totalH = svcY + rows * gapY + 20;
   const totalW = startX * 2 + cols * (svcW + gapX) - gapX;
 
-  mount.innerHTML = `
+    mount.innerHTML = `
     <svg viewBox="0 0 ${totalW} ${totalH}" xmlns="http://www.w3.org/2000/svg">
       ${links}
-      <g>
-        <rect x="${gatewayX}" y="${gatewayY}" width="${svcW}" height="${svcH}" rx="5" fill="#0a0a0a" stroke="#00ff00" stroke-width="2"/>
-        <text x="${gatewayX + svcW/2}" y="${gatewayY + 24}" text-anchor="middle" fill="#00ff00" font-size="13" font-family="Inter" font-weight="700">API GATEWAY</text>
-        <text x="${gatewayX + svcW/2}" y="${gatewayY + 42}" text-anchor="middle" fill="#00ff00" font-size="10" font-family="JetBrains Mono">:3000</text>
+      <g class="svc-node" data-desc="${escapeHtml(SERVICES.find(s => s.name === 'gateway').desc || '')}">
+        <rect x="${gatewayX}" y="${gatewayY}" width="${svcW}" height="${svcH}" rx="5" fill="#0a0a0a" stroke="#25E4AE" stroke-width="2" style="cursor:pointer;"/>
+        <title>${escapeHtml(SERVICES.find(s => s.name === 'gateway').desc || '')}</title>
+        <text x="${gatewayX + svcW/2}" y="${gatewayY + 24}" text-anchor="middle" fill="#25E4AE" font-size="13" font-family="Inter" font-weight="700">API GATEWAY</text>
+        <text x="${gatewayX + svcW/2}" y="${gatewayY + 42}" text-anchor="middle" fill="#25E4AE" font-size="10" font-family="JetBrains Mono">:3000</text>
       </g>
       ${nodes}
     </svg>`;
+
+  // Tooltip flotante personalizado
+  const tooltip = document.createElement('div');
+  tooltip.className = 'diagram-tooltip';
+  document.body.appendChild(tooltip);
+
+  mount.querySelectorAll('.svc-node').forEach(g => {
+    const desc = g.dataset.desc;
+    if (!desc) return;
+    const rect = g.querySelector('rect');
+    rect.addEventListener('mouseenter', () => { tooltip.textContent = desc; tooltip.style.opacity = '1'; });
+    rect.addEventListener('mousemove', e => {
+      const x = e.clientX + 14;
+      const y = e.clientY - 10;
+      const maxX = window.innerWidth - tooltip.offsetWidth - 20;
+      const maxY = window.innerHeight - tooltip.offsetHeight - 20;
+      tooltip.style.left = Math.min(x, maxX) + 'px';
+      tooltip.style.top = Math.min(y, maxY) + 'px';
+    });
+    rect.addEventListener('mouseleave', () => { tooltip.style.opacity = '0'; });
+  });
 }
 
 // ============================================================
@@ -245,42 +268,175 @@ function renderApiAccordion() {
 // ============================================================
 // Live Demo runner (fetch real contra el Gateway del usuario)
 // ============================================================
+const DB_COLORS = {
+  'PostgreSQL': '#5aa0ff',
+  'MongoDB': '#25E4AE',
+  'Cassandra': '#ffc800',
+  'Neo4j': '#c878ff'
+};
+
 function renderDemoSteps() {
   const mount = document.getElementById('demo-flow');
-  mount.innerHTML = DEMO_STEPS.map((s, i) => `
-    <div class="demo-step" id="demo-step-${i}">
-      <span class="demo-step-num">PASO ${i + 1} · ${s.db}</span>
+  mount.innerHTML = DEMO_STEPS.map((s, i) => {
+    const dbColor = DB_COLORS[s.db] || 'var(--accent)';
+    const reqBody = s.body ? JSON.stringify(s.body, null, 2) : null;
+    return `
+    <div class="demo-step" id="demo-step-${i}" style="--db-color:${dbColor}">
+      <div class="demo-step-header">
+        <span class="demo-step-num">PASO ${i + 1}</span>
+        <span class="demo-step-db" style="background:${dbColor}15;color:${dbColor}">${s.db}</span>
+      </div>
       <h4>${s.label}</h4>
-      <span class="status">En espera</span>
-      <pre style="display:none;"></pre>
-    </div>
-  `).join('');
+      <div class="demo-step-method">
+        <span class="method-badge ${s.method.toLowerCase()}">${s.method}</span>
+        <span>${s.path}</span>
+      </div>
+      <div class="status">
+        <span class="status-label"><span class="dot"></span> En espera</span>
+        <span class="latency"></span>
+      </div>
+      <div class="demo-response">
+        <div class="demo-response-header"></div>
+        <pre></pre>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 async function runDemo() {
   const btn = document.getElementById('btn-run-demo');
-  btn.disabled = true;
-  btn.textContent = '⏳ Ejecutando...';
+  const base = document.getElementById('api-base').value.replace(/\/+$/, '');
+  const progress = document.getElementById('demo-progress');
+  const progressBar = document.getElementById('demo-progress-bar');
+  const progressLabel = document.getElementById('demo-progress-label');
+  const total = DEMO_STEPS.length;
+  let authToken = null;
 
-  for (let i = 0; i < DEMO_STEPS.length; i++) {
+  btn.disabled = true;
+  btn.textContent = '⏳ Ejecutando flujo...';
+  progress.classList.add('loading');
+  progressBar.style.width = '0%';
+  progressLabel.textContent = `0 / ${total} pasos`;
+
+  // Hacer scroll hacia la demo
+  document.getElementById('demo').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  for (let i = 0; i < total; i++) {
     const step = DEMO_STEPS[i];
     const el = document.getElementById(`demo-step-${i}`);
+    const statusEl = el.querySelector('.status-label');
+    const latencyEl = el.querySelector('.latency');
+    const respEl = el.querySelector('.demo-response');
+    const respHead = respEl.querySelector('.demo-response-header');
+    const pre = respEl.querySelector('pre');
+
     el.classList.add('active');
-    el.querySelector('.status').textContent = 'Ejecutando…';
+    el.classList.remove('done', 'error');
+    statusEl.innerHTML = '<span class="dot"></span> Ejecutando…';
+    respEl.style.display = 'none';
 
-    await new Promise(r => setTimeout(r, 800));
+    const startTime = performance.now();
 
-    const mock = MOCK_RESPONSES[i];
+    let statusCode, data, errorMsg;
+    try {
+      const url = base + step.path;
+      const opts = {
+        method: step.method,
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      };
+      if (step.body) opts.body = JSON.stringify(step.body);
+      if (authToken) opts.headers['Authorization'] = `Bearer ${authToken}`;
+      if (i === 0 && step.path === '/logout') {
+        // skip
+      }
+
+      const ctrl = new AbortController();
+      opts.signal = ctrl.signal;
+      const timeout = setTimeout(() => ctrl.abort(), 8000);
+
+      const res = await fetch(url, opts);
+      clearTimeout(timeout);
+      statusCode = res.status;
+      data = await res.json().catch(() => null);
+
+      if (i === 0 && data && data.token) {
+        authToken = data.token;
+      } else if (i === 0 && data && data.data && data.data.token) {
+        authToken = data.data.token;
+      }
+    } catch (e) {
+      statusCode = 0;
+      errorMsg = e.name === 'AbortError' ? 'Timeout — el servidor no respondió' : 'Error de conexión — ¿el Gateway está corriendo?';
+      const fallback = MOCK_RESPONSES[i];
+      if (fallback) {
+        statusCode = fallback.status;
+        data = { _fallback: true, ...fallback.data, _note: 'Datos simulados (gateway no disponible)' };
+        if (i === 0) authToken = 'demo-fallback-token';
+      } else {
+        data = { _error: errorMsg };
+      }
+    }
+
+    const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
     el.classList.remove('active');
-    el.classList.add(mock.status >= 200 && mock.status < 300 ? 'done' : 'error');
-    el.querySelector('.status').textContent = `OK · ${mock.status}`;
-    const pre = el.querySelector('pre');
-    pre.style.display = 'block';
-    pre.textContent = JSON.stringify(mock.data, null, 2).slice(0, 400);
+    const isOk = statusCode >= 200 && statusCode < 300;
+    el.classList.add(isOk ? 'done' : 'error');
+
+    statusEl.innerHTML = `<span class="dot"></span> ${isOk ? 'OK' : 'Error'} · ${statusCode || '—'}`;
+    latencyEl.textContent = `${elapsed}s`;
+
+    const statusClass = isOk ? 'ok' : 'err';
+    respHead.innerHTML = `<span class="resp-status ${statusClass}">${statusCode || '—'}</span> <span>${elapsed}s</span>`;
+    if (data && data._fallback) {
+      respHead.innerHTML += ' <span style="color:var(--text-dim);font-size:.6rem;">(fallback simulado)</span>';
+    }
+    pre.textContent = JSON.stringify(data, null, 2).slice(0, 500);
+    pre.style.borderColor = isOk ? 'rgba(37,228,174,.15)' : 'rgba(255,68,68,.15)';
+    respEl.style.display = 'block';
+
+    progressBar.style.width = `${((i + 1) / total) * 100}%`;
+    progressLabel.textContent = `${i + 1} / ${total} pasos`;
   }
 
+  progress.classList.remove('loading');
   btn.disabled = false;
   btn.textContent = '▶ Ejecutar flujo completo';
+  progressLabel.textContent = `Completado — ${total} / ${total} pasos`;
+}
+
+// ============================================================
+// CAP carousel
+// ============================================================
+function initCapsule() {
+  const track = document.getElementById('cap-track');
+  const dots = document.getElementById('cap-dots');
+  const prev = document.getElementById('cap-prev');
+  const next = document.getElementById('cap-next');
+  if (!track) return;
+
+  const slides = track.querySelectorAll('.cap-slide');
+  let idx = 0;
+
+  function renderDots() {
+    dots.innerHTML = '';
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'cap-dot' + (i === idx ? ' active' : '');
+      dot.addEventListener('click', () => goTo(i));
+      dots.appendChild(dot);
+    });
+  }
+
+  function goTo(i) {
+    idx = i;
+    track.scrollTo({ left: track.clientWidth * idx, behavior: 'smooth' });
+    dots.querySelectorAll('.cap-dot').forEach((d, j) => d.classList.toggle('active', j === idx));
+  }
+
+  prev.addEventListener('click', () => goTo(idx > 0 ? idx - 1 : slides.length - 1));
+  next.addEventListener('click', () => goTo(idx < slides.length - 1 ? idx + 1 : 0));
+
+  renderDots();
 }
 
 // ============================================================
@@ -291,7 +447,7 @@ async function runDemo() {
 // ============================================================
 function initScrollReveal() {
   const targets = document.querySelectorAll(
-    '.section-head, .diagram-mount, .schema-card, .api-group, .cap-card, .demo-config, .demo-step, .fault-card, .team-card, .quorum-note, .cta-final'
+    '.section-head, .diagram-mount, .schema-card, .api-group, .cap-slide, .demo-config, .demo-step, .fault-card, .security-card, .team-card, .cta-final'
   );
   targets.forEach(el => el.classList.add('reveal'));
 
@@ -313,6 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderDictionary();
   renderApiAccordion();
   renderDemoSteps();
+  initCapsule();
   document.getElementById('btn-run-demo').addEventListener('click', runDemo);
   initScrollReveal();
 });
